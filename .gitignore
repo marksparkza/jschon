@@ -1,0 +1,9 @@
+*.pyc
+__pycache__/
+.pytest_cache/
+.hypothesis/
+.coverage
+*.egg-info/
+.idea/
+.venv/
+/build/
