@@ -24,5 +24,7 @@ def pytest_generate_tests(metafunc):
 
 
 def test_validate(schema, data, valid):
-    result = Schema(schema, metaschema_uri='https://json-schema.org/draft/2019-09/schema').evaluate(JSON(data))
+    s = Schema(schema, metaschema_uri='https://json-schema.org/draft/2019-09/schema')
+    assert (len(s.keywords) > 0) == (type(schema) is dict and len(schema) > 0)
+    result = s.evaluate(JSON(data))
     assert result.valid == valid
