@@ -48,7 +48,7 @@ class TypeKeyword(Keyword):
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.jsontype in self.value),
+            valid=(valid := any(instance.is_type(jsontype) for jsontype in self.value)),
             error=f"The value must be of type {self.value}" if not valid else None,
         )
 
@@ -60,7 +60,7 @@ class EnumKeyword(Keyword):
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value in self.value),
+            valid=(valid := instance in self.value),
             error=f"The value must be one of {self.value}" if not valid else None,
         )
 
@@ -72,7 +72,7 @@ class ConstKeyword(Keyword):
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value == self.value),
+            valid=(valid := instance == self.value),
             error=f"The value must be equal to {self.value}" if not valid else None,
         )
 
@@ -84,7 +84,7 @@ class MultipleOfKeyword(Keyword):
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value % self.value == 0),
+            valid=(valid := instance % self.value == 0),
             error=f"The value must be a multiple of {self.value}" if not valid else None,
         )
 
@@ -96,7 +96,7 @@ class MaximumKeyword(Keyword):
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value <= self.value),
+            valid=(valid := instance <= self.value),
             error=f"The value may not be greater than {self.value}" if not valid else None,
         )
 
@@ -108,7 +108,7 @@ class ExclusiveMaximumKeyword(Keyword):
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value < self.value),
+            valid=(valid := instance < self.value),
             error=f"The value must be less than {self.value}" if not valid else None,
         )
 
@@ -120,7 +120,7 @@ class MinimumKeyword(Keyword):
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value >= self.value),
+            valid=(valid := instance >= self.value),
             error=f"The value may not be less than {self.value}" if not valid else None,
         )
 
@@ -132,7 +132,7 @@ class ExclusiveMinimumKeyword(Keyword):
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := instance.value > self.value),
+            valid=(valid := instance > self.value),
             error=f"The value must be greater than {self.value}" if not valid else None,
         )
 
@@ -144,7 +144,7 @@ class MaxLengthKeyword(Keyword):
 
     def evaluate(self, instance: JSONString) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := len(instance.value) <= self.value),
+            valid=(valid := len(instance) <= self.value),
             error=f"The text is too long (maximum {self.value} characters)" if not valid else None,
         )
 
@@ -156,7 +156,7 @@ class MinLengthKeyword(Keyword):
 
     def evaluate(self, instance: JSONString) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := len(instance.value) >= self.value),
+            valid=(valid := len(instance) >= self.value),
             error=f"The text is too short (minimum {self.value} characters)" if not valid else None,
         )
 
@@ -188,7 +188,7 @@ class MaxItemsKeyword(Keyword):
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := len(instance.value) <= self.value),
+            valid=(valid := len(instance) <= self.value),
             error=f"The array has too many elements (maximum {self.value})" if not valid else None,
         )
 
@@ -200,7 +200,7 @@ class MinItemsKeyword(Keyword):
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := len(instance.value) >= self.value),
+            valid=(valid := len(instance) >= self.value),
             error=f"The array has too few elements (minimum {self.value})" if not valid else None,
         )
 
@@ -212,14 +212,14 @@ class UniqueItemsKeyword(Keyword):
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         try:
-            uniquified = set(instance.value)
+            uniquified = set(instance)
         except TypeError:  # unhashable type
             uniquified = []
-            for item in instance.value:
+            for item in instance:
                 if item not in uniquified:
                     uniquified += [item]
 
         return KeywordResult(
-            valid=(valid := not self.value or len(instance.value) == len(uniquified)),
+            valid=(valid := not self.value or len(instance) == len(uniquified)),
             error="The array's elements must all be unique'" if not valid else None,
         )

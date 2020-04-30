@@ -12,11 +12,23 @@ from tests.strategies import *
 @given(kwvalue=jsontype | jsontypes, instance=json)
 def test_type(kwvalue, instance):
     kw = TypeKeyword(Schema(True), kwvalue)
-    result = kw.evaluate(instance := JSON(instance))
+    result = kw.evaluate(JSON(instance))
     if type(kwvalue) is str:
-        assert result.valid == (instance.jsontype == kwvalue)
-    else:
-        assert result.valid == (instance.jsontype in kwvalue)
+        kwvalue = [kwvalue]
+    if instance is None:
+        assert result.valid == ("null" in kwvalue)
+    elif type(instance) is bool:
+        assert result.valid == ("boolean" in kwvalue)
+    elif type(instance) is float:
+        assert result.valid == ("number" in kwvalue)
+    elif type(instance) is int:
+        assert result.valid == ("number" in kwvalue or "integer" in kwvalue)
+    elif type(instance) is str:
+        assert result.valid == ("string" in kwvalue)
+    elif type(instance) is list:
+        assert result.valid == ("array" in kwvalue)
+    elif type(instance) is dict:
+        assert result.valid == ("object" in kwvalue)
 
 
 @given(kwvalue=jsonarray, instance=json)

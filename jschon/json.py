@@ -54,7 +54,7 @@ class JSON:
         self.location = location or Pointer('')
 
     def __eq__(self, other: _t.Union[JSON, 'JSONCompatible']) -> bool:
-        if isinstance(other, JSON):
+        if isinstance(other, type(self)):
             return self.value == other.value
         if isinstance(other, JSONCompatible):
             return self.value == other
@@ -65,6 +65,9 @@ class JSON:
 
     def __repr__(self) -> str:
         return f"JSON({self})"
+
+    def is_type(self, jsontype: str):
+        return self.jsontype == jsontype
 
     @property
     def value(self) -> JSONCompatible:
@@ -88,12 +91,61 @@ class JSONBoolean(JSON):
     def jsontype(self) -> str:
         return "boolean"
 
+    def __eq__(self, other: _t.Union[JSONBoolean, bool]) -> bool:
+        if isinstance(other, JSONBoolean):
+            return self.value is other.value
+        if isinstance(other, bool):
+            return self.value is other
+        return NotImplemented
+
 
 class JSONNumber(JSON):
 
     @property
     def jsontype(self) -> str:
         return "number"
+
+    def __eq__(self, other: _t.Union[JSONNumber, int, float]) -> bool:
+        if isinstance(other, JSONNumber):
+            return self.value == other.value
+        if isinstance(other, (int, float)) and not isinstance(other, bool):
+            return self.value == other
+        return NotImplemented
+
+    def __ge__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+        if isinstance(other, JSONNumber):
+            return self.value >= other.value
+        if isinstance(other, (int, float)) and not isinstance(other, bool):
+            return self.value >= other
+        return NotImplemented
+
+    def __gt__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+        if isinstance(other, JSONNumber):
+            return self.value > other.value
+        if isinstance(other, (int, float)) and not isinstance(other, bool):
+            return self.value > other
+        return NotImplemented
+
+    def __le__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+        if isinstance(other, JSONNumber):
+            return self.value <= other.value
+        if isinstance(other, (int, float)) and not isinstance(other, bool):
+            return self.value <= other
+        return NotImplemented
+
+    def __lt__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+        if isinstance(other, JSONNumber):
+            return self.value < other.value
+        if isinstance(other, (int, float)) and not isinstance(other, bool):
+            return self.value < other
+        return NotImplemented
+
+    def __mod__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+        if isinstance(other, JSONNumber):
+            return self.value % other.value
+        if isinstance(other, (int, float)) and not isinstance(other, bool):
+            return self.value % other
+        return NotImplemented
 
 
 class JSONInteger(JSONNumber):
@@ -102,8 +154,14 @@ class JSONInteger(JSONNumber):
     def jsontype(self) -> str:
         return "integer"
 
+    def is_type(self, jsontype: str):
+        return jsontype in ("integer", "number")
 
-class JSONString(JSON):
+
+class JSONString(JSON, _t.Sized):
+
+    def __len__(self) -> int:
+        return len(self.value)
 
     @property
     def jsontype(self) -> str:
@@ -129,6 +187,11 @@ class JSONArray(JSON, _t.Sequence[JSON]):
 
     def __len__(self) -> int:
         return len(self._items)
+
+    def __eq__(self, other: _t.Union[JSONArray, _t.Sequence]) -> bool:
+        if isinstance(other, (JSONArray, _t.Sequence)) and not isinstance(other, str):
+            return len(self) == len(other) and all(item == other[i] for i, item in enumerate(self))
+        return NotImplemented
 
     @property
     def jsontype(self) -> str:
@@ -158,6 +221,11 @@ class JSONObject(JSON, _t.Mapping[str, JSON]):
 
     def __len__(self) -> int:
         return len(self._properties)
+
+    def __eq__(self, other: _t.Union[JSONObject, _t.Mapping]) -> bool:
+        if isinstance(other, (JSONObject, _t.Mapping)):
+            return self.keys() == other.keys() and all(item == other[k] for k, item in self.items())
+        return NotImplemented
 
     @property
     def jsontype(self) -> str:
