@@ -1,3 +1,4 @@
+import re
 import typing as _t
 
 from jschon.json import *
@@ -151,8 +152,9 @@ class NotKeyword(Keyword):
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := not self.subschema.evaluate(instance).valid),
+            valid=(valid := not (subresult := self.subschema.evaluate(instance)).valid),
             error="The instance must not be valid against the given subschema" if not valid else None,
+            subresults=[subresult],
         )
 
 
@@ -412,12 +414,33 @@ class PatternPropertiesKeyword(Keyword):
     ) -> None:
         super().__init__(superschema, value)
         self.subschemas = {
-            name: Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
+            re.compile(name): Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
             for name, item in value.items()
         }
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
-        raise NotImplementedError
+        result = KeywordResult(
+            valid=True,
+            subresults=[],
+        )
+        matched_names = set()
+        for name, item in instance.items():
+            for regex, subschema in self.subschemas.items():
+                if regex.search(name) is not None:
+                    result.subresults += [subresult := subschema.evaluate(item)]
+                    if subresult.valid:
+                        matched_names |= {name}
+                    else:
+                        result.valid = False
+                        result.error = "One or more object properties is invalid"
+                        break
+            if not result.valid:
+                break
+
+        if result.valid:
+            result.annotation = list(matched_names)
+
+        return result
 
 
 class AdditionalPropertiesKeyword(Keyword):
@@ -468,4 +491,7 @@ class PropertyNamesKeyword(Keyword):
         self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
-        raise NotImplementedError
+        return KeywordResult(
+            valid=(valid := all(self.subschema.evaluate(JSON(name)).valid for name in instance)),
+            error="One or more property names is invalid" if not valid else None,
+        )
