@@ -124,3 +124,38 @@ def test_unique_items(kwvalue, instance):
         if item not in uniquified:
             uniquified += [item]
     assert result.valid == (not kwvalue or len(instance) == len(uniquified))
+
+
+@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instance=jsonobject)
+def test_max_properties(kwvalue, instance):
+    kw = MaxPropertiesKeyword(Schema(True), kwvalue)
+    result = kw.evaluate(JSON(instance))
+    assert result.valid == (len(instance) <= kwvalue)
+
+
+@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instance=jsonobject)
+def test_min_properties(kwvalue, instance):
+    kw = MinPropertiesKeyword(Schema(True), kwvalue)
+    result = kw.evaluate(JSON(instance))
+    assert result.valid == (len(instance) >= kwvalue)
+
+
+@given(kwvalue=propnames, instance=jsonproperties)
+def test_required(kwvalue, instance):
+    kw = RequiredKeyword(Schema(True), kwvalue)
+    result = kw.evaluate(JSON(instance))
+    missing = any(name for name in kwvalue if name not in instance)
+    assert result.valid == (not missing)
+
+
+@given(kwvalue=hs.dictionaries(propname, propnames), instance=jsonproperties)
+def test_dependent_required(kwvalue, instance):
+    kw = DependentRequiredKeyword(Schema(True), kwvalue)
+    result = kw.evaluate(JSON(instance))
+    missing = False
+    for name, deps in kwvalue.items():
+        if name in instance:
+            if any(dep for dep in deps if dep not in instance):
+                missing = True
+                break
+    assert result.valid == (not missing)

@@ -19,6 +19,12 @@ __all__ = [
     'MaxItemsKeyword',
     'MinItemsKeyword',
     'UniqueItemsKeyword',
+    'MaxContainsKeyword',
+    'MinContainsKeyword',
+    'MaxPropertiesKeyword',
+    'MinPropertiesKeyword',
+    'RequiredKeyword',
+    'DependentRequiredKeyword',
 ]
 
 
@@ -151,7 +157,7 @@ class MaxLengthKeyword(Keyword):
 
 class MinLengthKeyword(Keyword):
     __keyword__ = "minLength"
-    __schema__ = {"type": "integer", "minimum": 0}
+    __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = JSONString
 
     def evaluate(self, instance: JSONString) -> KeywordResult:
@@ -195,7 +201,7 @@ class MaxItemsKeyword(Keyword):
 
 class MinItemsKeyword(Keyword):
     __keyword__ = "minItems"
-    __schema__ = {"type": "integer", "minimum": 0}
+    __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = JSONArray
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
@@ -207,19 +213,103 @@ class MinItemsKeyword(Keyword):
 
 class UniqueItemsKeyword(Keyword):
     __keyword__ = "uniqueItems"
-    __schema__ = {"type": "boolean"}
+    __schema__ = {"type": "boolean", "default": False}
     __types__ = JSONArray
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
-        try:
-            uniquified = set(instance)
-        except TypeError:  # unhashable type
-            uniquified = []
-            for item in instance:
-                if item not in uniquified:
-                    uniquified += [item]
+        uniquified = []
+        for item in instance:
+            if item not in uniquified:
+                uniquified += [item]
 
         return KeywordResult(
             valid=(valid := not self.value or len(instance) == len(uniquified)),
             error="The array's elements must all be unique'" if not valid else None,
+        )
+
+
+class MaxContainsKeyword(Keyword):
+    __keyword__ = "maxContains"
+    __schema__ = {"type": "integer", "minimum": 0}
+    __types__ = JSONArray
+
+    def evaluate(self, instance: JSONArray) -> KeywordResult:
+        raise NotImplementedError
+
+
+class MinContainsKeyword(Keyword):
+    __keyword__ = "minContains"
+    __schema__ = {"type": "integer", "minimum": 0, "default": 1}
+    __types__ = JSONArray
+
+    def evaluate(self, instance: JSONArray) -> KeywordResult:
+        raise NotImplementedError
+
+
+class MaxPropertiesKeyword(Keyword):
+    __keyword__ = "maxProperties"
+    __schema__ = {"type": "integer", "minimum": 0}
+    __types__ = JSONObject
+
+    def evaluate(self, instance: JSONObject) -> KeywordResult:
+        return KeywordResult(
+            valid=(valid := len(instance) <= self.value),
+            error=f"The object has too many properties (maximum {self.value})" if not valid else None,
+        )
+
+
+class MinPropertiesKeyword(Keyword):
+    __keyword__ = "minProperties"
+    __schema__ = {"type": "integer", "minimum": 0, "default": 0}
+    __types__ = JSONObject
+
+    def evaluate(self, instance: JSONObject) -> KeywordResult:
+        return KeywordResult(
+            valid=(valid := len(instance) >= self.value),
+            error=f"The object has too few properties (minimum {self.value})" if not valid else None,
+        )
+
+
+class RequiredKeyword(Keyword):
+    __keyword__ = "required"
+    __schema__ = {
+        "type": "array",
+        "items": {"type": "string"},
+        "uniqueItems": True,
+        "default": []
+    }
+    __types__ = JSONObject
+
+    def evaluate(self, instance: JSONObject) -> KeywordResult:
+        missing = [name for name in self.value if name not in instance]
+        return KeywordResult(
+            valid=(valid := len(missing) == 0),
+            error=f"The object is missing required properties {missing}" if not valid else None,
+        )
+
+
+class DependentRequiredKeyword(Keyword):
+    __keyword__ = "dependentRequired"
+    __schema__ = {
+        "type": "object",
+        "additionalProperties": {
+            "type": "array",
+            "items": {"type": "string"},
+            "uniqueItems": True,
+            "default": []
+        }
+    }
+    __types__ = JSONObject
+
+    def evaluate(self, instance: JSONObject) -> KeywordResult:
+        missing = {}
+        for name, dependents in self.value.items():
+            if name in instance:
+                missing_deps = [dep for dep in dependents if dep not in instance]
+                if missing_deps:
+                    missing[name] = missing_deps
+
+        return KeywordResult(
+            valid=(valid := len(missing) == 0),
+            error=f"The object is missing dependent properties {missing}" if not valid else None,
         )

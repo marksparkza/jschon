@@ -17,11 +17,23 @@ Vocabulary.register(
 Vocabulary.register(
     uri="https://json-schema.org/draft/2019-09/vocab/applicator",
     kwclasses=(
+        AllOfKeyword,
+        AnyOfKeyword,
+        OneOfKeyword,
+        NotKeyword,
+        IfKeyword,
+        ThenKeyword,
+        ElseKeyword,
+        DependentSchemasKeyword,
         ItemsKeyword,
         AdditionalItemsKeyword,
         UnevaluatedItemsKeyword,
         ContainsKeyword,
         PropertiesKeyword,
+        PatternPropertiesKeyword,
+        AdditionalPropertiesKeyword,
+        UnevaluatedPropertiesKeyword,
+        PropertyNamesKeyword,
     )
 )
 
@@ -42,6 +54,12 @@ Vocabulary.register(
         MaxItemsKeyword,
         MinItemsKeyword,
         UniqueItemsKeyword,
+        MaxContainsKeyword,
+        MinContainsKeyword,
+        MaxPropertiesKeyword,
+        MinPropertiesKeyword,
+        RequiredKeyword,
+        DependentRequiredKeyword,
     )
 )
 

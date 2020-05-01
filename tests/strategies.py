@@ -11,6 +11,9 @@ __all__ = [
     'json',
     'jsonarray',
     'jsonobject',
+    'propname',
+    'propnames',
+    'jsonproperties',
     'jsonpointer_regex',
     'jsonpointer',
 ]
@@ -29,8 +32,12 @@ json = hs.recursive(
     extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
     max_leaves=10,
 )
-jsonarray = hs.lists(json)
-jsonobject = hs.dictionaries(jsonstring, json)
+jsonarray = hs.lists(json, max_size=10)
+jsonobject = hs.dictionaries(jsonstring, json, max_size=10)
+
+propname = hs.characters(min_codepoint=ord('a'), max_codepoint=ord('z'))
+propnames = hs.lists(propname, unique=True, max_size=10)
+jsonproperties = hs.dictionaries(propname, json, max_size=10)
 
 jsonpointer_regex = r'^(/([^~/]|(~[01]))*)*$'
 jsonpointer = hs.from_regex(jsonpointer_regex, fullmatch=True)
