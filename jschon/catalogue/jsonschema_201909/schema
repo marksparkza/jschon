@@ -34,7 +34,7 @@
             "additionalProperties": {
                 "anyOf": [
                     { "$recursiveRef": "#" },
-                    { "$ref": "meta/validation#/$defs/stringArray"}
+                    { "$ref": "meta/validation#/$defs/stringArray" }
                 ]
             }
         }
