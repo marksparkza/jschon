@@ -1,10 +1,7 @@
 import re
-import typing as _t
 
-from jschon.json import *
-from jschon.pointer import Pointer
-from jschon.schema import Schema, Keyword, KeywordResult
-from jschon.types import SchemaCompatible
+from jschon.json import JSON, JSONArray, JSONObject
+from jschon.schema import KeywordResult, ApplicatorKeyword, PropertyApplicatorKeyword
 
 __all__ = [
     'AllOfKeyword',
@@ -27,24 +24,13 @@ __all__ = [
 ]
 
 
-class AllOfKeyword(Keyword):
+class AllOfKeyword(ApplicatorKeyword):
     __keyword__ = "allOf"
     __schema__ = {
         "type": "array",
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Sequence['SchemaCompatible'],
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschemas = [
-            Schema(item, location=self.location + Pointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
-            for index, item in enumerate(value)
-        ]
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         result = KeywordResult(
@@ -61,24 +47,13 @@ class AllOfKeyword(Keyword):
         return result
 
 
-class AnyOfKeyword(Keyword):
+class AnyOfKeyword(ApplicatorKeyword):
     __keyword__ = "anyOf"
     __schema__ = {
         "type": "array",
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Sequence['SchemaCompatible'],
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschemas = [
-            Schema(item, location=self.location + Pointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
-            for index, item in enumerate(value)
-        ]
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         result = KeywordResult(
@@ -96,24 +71,13 @@ class AnyOfKeyword(Keyword):
         return result
 
 
-class OneOfKeyword(Keyword):
+class OneOfKeyword(ApplicatorKeyword):
     __keyword__ = "oneOf"
     __schema__ = {
         "type": "array",
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Sequence['SchemaCompatible'],
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschemas = [
-            Schema(item, location=self.location + Pointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
-            for index, item in enumerate(value)
-        ]
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         result = KeywordResult(
@@ -134,17 +98,9 @@ class OneOfKeyword(Keyword):
         return result
 
 
-class NotKeyword(Keyword):
+class NotKeyword(ApplicatorKeyword):
     __keyword__ = "not"
     __schema__ = {"$recursiveRef": "#"}
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
@@ -154,55 +110,31 @@ class NotKeyword(Keyword):
         )
 
 
-class IfKeyword(Keyword):
+class IfKeyword(ApplicatorKeyword):
     __keyword__ = "if"
     __schema__ = {"$recursiveRef": "#"}
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSON) -> KeywordResult:
         raise NotImplementedError
 
 
-class ThenKeyword(Keyword):
+class ThenKeyword(ApplicatorKeyword):
     __keyword__ = "then"
     __schema__ = {"$recursiveRef": "#"}
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSON) -> KeywordResult:
         raise NotImplementedError
 
 
-class ElseKeyword(Keyword):
+class ElseKeyword(ApplicatorKeyword):
     __keyword__ = "else"
     __schema__ = {"$recursiveRef": "#"}
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSON) -> KeywordResult:
         raise NotImplementedError
 
 
-class DependentSchemasKeyword(Keyword):
+class DependentSchemasKeyword(PropertyApplicatorKeyword):
     __keyword__ = "dependentSchemas"
     __schema__ = {
         "type": "object",
@@ -210,22 +142,11 @@ class DependentSchemasKeyword(Keyword):
     }
     __types__ = "object"
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Mapping[str, 'SchemaCompatible'],
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschemas = {
-            name: Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
-            for name, item in value.items()
-        }
-
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         raise NotImplementedError
 
 
-class ItemsKeyword(Keyword):
+class ItemsKeyword(ApplicatorKeyword):
     __keyword__ = "items"
     __schema__ = {
         "anyOf": [
@@ -238,20 +159,6 @@ class ItemsKeyword(Keyword):
         ]
     }
     __types__ = "array"
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Union['SchemaCompatible', _t.Sequence['SchemaCompatible']],
-    ) -> None:
-        super().__init__(superschema, value)
-        if isinstance(value, _t.Mapping):
-            self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-        elif isinstance(value, _t.Sequence):
-            self.subschemas = [
-                Schema(item, location=self.location + Pointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
-                for index, item in enumerate(value)
-            ]
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         result = KeywordResult(
@@ -287,54 +194,30 @@ class ItemsKeyword(Keyword):
         return result
 
 
-class AdditionalItemsKeyword(Keyword):
+class AdditionalItemsKeyword(ApplicatorKeyword):
     __keyword__ = "additionalItems"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
     __depends__ = "items"
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         raise NotImplementedError
 
 
-class UnevaluatedItemsKeyword(Keyword):
+class UnevaluatedItemsKeyword(ApplicatorKeyword):
     __keyword__ = "unevaluatedItems"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
     __depends__ = "items", "additionalItems"
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         raise NotImplementedError
 
 
-class ContainsKeyword(Keyword):
+class ContainsKeyword(ApplicatorKeyword):
     __keyword__ = "contains"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         result = KeywordResult(
@@ -352,7 +235,7 @@ class ContainsKeyword(Keyword):
         return result
 
 
-class PropertiesKeyword(Keyword):
+class PropertiesKeyword(PropertyApplicatorKeyword):
     __keyword__ = "properties"
     __schema__ = {
         "type": "object",
@@ -360,17 +243,6 @@ class PropertiesKeyword(Keyword):
         "default": {}
     }
     __types__ = "object"
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Mapping[str, 'SchemaCompatible'],
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschemas = {
-            name: Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
-            for name, item in value.items()
-        }
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         result = KeywordResult(
@@ -392,7 +264,7 @@ class PropertiesKeyword(Keyword):
         return result
 
 
-class PatternPropertiesKeyword(Keyword):
+class PatternPropertiesKeyword(PropertyApplicatorKeyword):
     __keyword__ = "patternProperties"
     __schema__ = {
         "type": "object",
@@ -402,17 +274,6 @@ class PatternPropertiesKeyword(Keyword):
     }
     __types__ = "object"
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: _t.Mapping[str, 'SchemaCompatible'],
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschemas = {
-            re.compile(name): Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
-            for name, item in value.items()
-        }
-
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         result = KeywordResult(
             valid=True,
@@ -421,7 +282,7 @@ class PatternPropertiesKeyword(Keyword):
         matched_names = set()
         for name, item in instance.items():
             for regex, subschema in self.subschemas.items():
-                if regex.search(name) is not None:
+                if re.search(regex, name) is not None:
                     result.subresults += [subresult := subschema.evaluate(item)]
                     if subresult.valid:
                         matched_names |= {name}
@@ -438,54 +299,30 @@ class PatternPropertiesKeyword(Keyword):
         return result
 
 
-class AdditionalPropertiesKeyword(Keyword):
+class AdditionalPropertiesKeyword(ApplicatorKeyword):
     __keyword__ = "additionalProperties"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
     __depends__ = "properties", "patternProperties"
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         raise NotImplementedError
 
 
-class UnevaluatedPropertiesKeyword(Keyword):
+class UnevaluatedPropertiesKeyword(ApplicatorKeyword):
     __keyword__ = "unevaluatedProperties"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
     __depends__ = "properties", "patternProperties", "additionalProperties"
 
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
-
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         raise NotImplementedError
 
 
-class PropertyNamesKeyword(Keyword):
+class PropertyNamesKeyword(ApplicatorKeyword):
     __keyword__ = "propertyNames"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
-
-    def __init__(
-            self,
-            superschema: Schema,
-            value: SchemaCompatible,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         return KeywordResult(

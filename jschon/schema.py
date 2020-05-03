@@ -134,14 +134,50 @@ class Keyword:
         self.location: Pointer = superschema.location + Pointer(f'/{self.__keyword__}')
         self.value: JSONCompatible = value
 
-        self.subschema: _t.Optional[Schema] = None
-        self.subschemas: _t.Optional[_t.Union[_t.Sequence[Schema], _t.Mapping[str, Schema]]] = None
-
     def evaluate(self, instance: JSON) -> KeywordResult:
         raise NotImplementedError
 
     def __repr__(self) -> str:
         return f'Keyword("{self.__keyword__}")'
+
+
+class ApplicatorKeyword(Keyword):
+
+    def __init__(
+            self,
+            superschema: Schema,
+            value: _t.Union['SchemaCompatible', _t.Sequence['SchemaCompatible']],
+    ) -> None:
+        super().__init__(superschema, value)
+        self.subschema: _t.Optional[Schema] = None
+        self.subschemas: _t.Optional[_t.Sequence[Schema]] = None
+
+        if isinstance(value, SchemaCompatible):
+            self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
+        elif isinstance(value, _t.Sequence):
+            self.subschemas = [
+                Schema(item, location=self.location + Pointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
+                for index, item in enumerate(value)
+            ]
+        else:
+            raise TypeError(f"Expecting one of {SchemaCompatible}, or a sequence thereof")
+
+
+class PropertyApplicatorKeyword(Keyword):
+
+    def __init__(
+            self,
+            superschema: Schema,
+            value: _t.Mapping[str, 'SchemaCompatible'],
+    ) -> None:
+        super().__init__(superschema, value)
+        if not isinstance(value, _t.Mapping):
+            raise TypeError("Expecting a mapping type")
+
+        self.subschemas: _t.Mapping[str, Schema] = {
+            name: Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
+            for name, item in value.items()
+        }
 
 
 @dataclasses.dataclass
