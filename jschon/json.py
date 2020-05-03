@@ -20,6 +20,8 @@ __all__ = [
 
 class JSON:
 
+    typemap: _t.Dict[str, _t.Type[JSON]] = ...
+
     def __new__(
             cls,
             value: JSONCompatible,
@@ -42,7 +44,7 @@ class JSON:
             return object.__new__(JSONArray)
         if isinstance(value, _t.Mapping):
             return object.__new__(JSONObject)
-        raise TypeError(f"value must be one of {JSONCompatible}")
+        raise TypeError(f"{value=} is not one of {JSONCompatible}")
 
     def __init__(
             self,
@@ -112,28 +114,28 @@ class JSONNumber(JSON):
             return self.value == other
         return NotImplemented
 
-    def __ge__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+    def __ge__(self, other: _t.Union[JSONNumber, int, float]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value >= other.value
         if isinstance(other, (int, float)) and not isinstance(other, bool):
             return self.value >= other
         return NotImplemented
 
-    def __gt__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+    def __gt__(self, other: _t.Union[JSONNumber, int, float]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value > other.value
         if isinstance(other, (int, float)) and not isinstance(other, bool):
             return self.value > other
         return NotImplemented
 
-    def __le__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+    def __le__(self, other: _t.Union[JSONNumber, int, float]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value <= other.value
         if isinstance(other, (int, float)) and not isinstance(other, bool):
             return self.value <= other
         return NotImplemented
 
-    def __lt__(self, other: _t.Union[JSONNumber, int, float]) -> _t.Union[int, float]:
+    def __lt__(self, other: _t.Union[JSONNumber, int, float]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value < other.value
         if isinstance(other, (int, float)) and not isinstance(other, bool):
@@ -230,3 +232,14 @@ class JSONObject(JSON, _t.Mapping[str, JSON]):
     @property
     def jsontype(self) -> str:
         return "object"
+
+
+JSON.typemap = {
+    "null": JSONNull,
+    "boolean": JSONBoolean,
+    "number": JSONNumber,
+    "integer": JSONInteger,
+    "string": JSONString,
+    "array": JSONArray,
+    "object": JSONObject,
+}

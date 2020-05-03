@@ -34,7 +34,6 @@ class AllOfKeyword(Keyword):
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-    __types__ = JSON
 
     def __init__(
             self,
@@ -69,7 +68,6 @@ class AnyOfKeyword(Keyword):
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-    __types__ = JSON
 
     def __init__(
             self,
@@ -105,7 +103,6 @@ class OneOfKeyword(Keyword):
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-    __types__ = JSON
 
     def __init__(
             self,
@@ -140,7 +137,6 @@ class OneOfKeyword(Keyword):
 class NotKeyword(Keyword):
     __keyword__ = "not"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSON
 
     def __init__(
             self,
@@ -161,7 +157,6 @@ class NotKeyword(Keyword):
 class IfKeyword(Keyword):
     __keyword__ = "if"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSON
 
     def __init__(
             self,
@@ -178,7 +173,6 @@ class IfKeyword(Keyword):
 class ThenKeyword(Keyword):
     __keyword__ = "then"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSON
 
     def __init__(
             self,
@@ -195,7 +189,6 @@ class ThenKeyword(Keyword):
 class ElseKeyword(Keyword):
     __keyword__ = "else"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSON
 
     def __init__(
             self,
@@ -215,7 +208,7 @@ class DependentSchemasKeyword(Keyword):
         "type": "object",
         "additionalProperties": {"$recursiveRef": "#"}
     }
-    __types__ = JSONObject
+    __types__ = "object"
 
     def __init__(
             self,
@@ -244,7 +237,7 @@ class ItemsKeyword(Keyword):
             }
         ]
     }
-    __types__ = JSONArray
+    __types__ = "array"
 
     def __init__(
             self,
@@ -297,7 +290,8 @@ class ItemsKeyword(Keyword):
 class AdditionalItemsKeyword(Keyword):
     __keyword__ = "additionalItems"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSONArray
+    __types__ = "array"
+    __depends__ = "items"
 
     def __init__(
             self,
@@ -314,7 +308,8 @@ class AdditionalItemsKeyword(Keyword):
 class UnevaluatedItemsKeyword(Keyword):
     __keyword__ = "unevaluatedItems"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSONArray
+    __types__ = "array"
+    __depends__ = "items", "additionalItems"
 
     def __init__(
             self,
@@ -331,7 +326,7 @@ class UnevaluatedItemsKeyword(Keyword):
 class ContainsKeyword(Keyword):
     __keyword__ = "contains"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSONArray
+    __types__ = "array"
 
     def __init__(
             self,
@@ -364,7 +359,7 @@ class PropertiesKeyword(Keyword):
         "additionalProperties": {"$recursiveRef": "#"},
         "default": {}
     }
-    __types__ = JSONObject
+    __types__ = "object"
 
     def __init__(
             self,
@@ -405,7 +400,7 @@ class PatternPropertiesKeyword(Keyword):
         "propertyNames": {"format": "regex"},
         "default": {}
     }
-    __types__ = JSONObject
+    __types__ = "object"
 
     def __init__(
             self,
@@ -446,7 +441,8 @@ class PatternPropertiesKeyword(Keyword):
 class AdditionalPropertiesKeyword(Keyword):
     __keyword__ = "additionalProperties"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSONObject
+    __types__ = "object"
+    __depends__ = "properties", "patternProperties"
 
     def __init__(
             self,
@@ -463,7 +459,8 @@ class AdditionalPropertiesKeyword(Keyword):
 class UnevaluatedPropertiesKeyword(Keyword):
     __keyword__ = "unevaluatedProperties"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSONObject
+    __types__ = "object"
+    __depends__ = "properties", "patternProperties", "additionalProperties"
 
     def __init__(
             self,
@@ -480,7 +477,7 @@ class UnevaluatedPropertiesKeyword(Keyword):
 class PropertyNamesKeyword(Keyword):
     __keyword__ = "propertyNames"
     __schema__ = {"$recursiveRef": "#"}
-    __types__ = JSONObject
+    __types__ = "object"
 
     def __init__(
             self,

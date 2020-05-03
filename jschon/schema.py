@@ -9,7 +9,7 @@ from jschon.exceptions import SchemaError, MetaschemaError
 from jschon.json import JSON
 from jschon.pointer import Pointer
 from jschon.types import JSONCompatible, SchemaCompatible
-from jschon.utils import validate_uri
+from jschon.utils import validate_uri, tuplify
 
 
 class Schema:
@@ -20,10 +20,10 @@ class Schema:
             *,
             location: Pointer = None,
             metaschema_uri: str = None,
-            is_metaschema: bool = False,
+            validate: bool = True,
     ) -> None:
         if not isinstance(value, SchemaCompatible):
-            raise TypeError(f"value must be one of {SchemaCompatible}")
+            raise TypeError(f"{value=} is not one of {SchemaCompatible}")
 
         self.value: SchemaCompatible = value
         self.location: Pointer = location or Pointer('')
@@ -41,16 +41,37 @@ class Schema:
                 raise SchemaError("Metaschema URI not specified")
 
             self.metaschema = Metaschema.load(metaschema_uri)
-            if self.is_root and not is_metaschema:
-                if not (result := Schema(self.metaschema.value, is_metaschema=True).evaluate(JSON(value))).valid:
+            if self.is_root and validate:
+                if not (result := Schema(self.metaschema.value, validate=False).evaluate(JSON(value))).valid:
                     errors = "\n".join(result.errors())
                     raise SchemaError(f"The schema is invalid against its metaschema:\n{errors}")
 
-            self.keywords = [
-                kwclass(self, kwvalue)
-                for kw, kwvalue in value.items()
+            kwclasses = {
+                kw: kwclass for kw in value
                 if (kwclass := self.metaschema.kwclasses.get(kw))
+            }
+            self.keywords = [
+                kwclass(self, value[kwclass.__keyword__])
+                for kwclass in self._resolve_keyword_dependencies(kwclasses)
             ]
+
+    @staticmethod
+    def _resolve_keyword_dependencies(kwclasses: _t.Dict[str, KeywordClass]) -> _t.Iterator[KeywordClass]:
+        dependencies = {
+            kwclass: [depclass for dep in tuplify(kwclass.__depends__) if (depclass := kwclasses.get(dep))]
+            for kwclass in kwclasses.values()
+        }
+        while dependencies:
+            for kwclass, depclasses in dependencies.items():
+                if not depclasses:
+                    del dependencies[kwclass]
+                    for deps in dependencies.values():
+                        try:
+                            deps.remove(kwclass)
+                        except ValueError:
+                            pass
+                    yield kwclass
+                    break
 
     def evaluate(self, instance: JSON) -> SchemaResult:
         result = SchemaResult(
@@ -62,7 +83,8 @@ class Schema:
             instance_location=instance.location,
         )
         for keyword in self.keywords:
-            if isinstance(instance, keyword.__types__):
+            if not keyword.__types__ or \
+                    isinstance(instance, tuple(JSON.typemap[t] for t in tuplify(keyword.__types__))):
                 if not (kwresult := keyword.evaluate(instance)).valid:
                     result.valid = False
                 result.subresults += [SchemaResult(
@@ -93,14 +115,12 @@ class SchemaResult:
                 yield from subresult.errors()
 
 
-JSONClass = _t.Type[JSON]
-
-
 class Keyword:
 
     __keyword__: str = ...
     __schema__: _t.Union[bool, dict] = ...
-    __types__: _t.Union[JSONClass, _t.Tuple[JSONClass]] = ...
+    __types__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
+    __depends__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
 
     def __init__(
             self,
@@ -119,6 +139,9 @@ class Keyword:
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         raise NotImplementedError
+
+    def __repr__(self) -> str:
+        return f'Keyword("{self.__keyword__}")'
 
 
 @dataclasses.dataclass

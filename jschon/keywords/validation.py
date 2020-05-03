@@ -3,6 +3,7 @@ import typing as _t
 
 from jschon.json import *
 from jschon.schema import KeywordResult, Keyword, Schema
+from jschon.utils import arrayify
 
 __all__ = [
     'TypeKeyword',
@@ -41,16 +42,13 @@ class TypeKeyword(Keyword):
             }
         ]
     }
-    __types__ = JSON
 
     def __init__(
             self,
             superschema: Schema,
             value: _t.Union[str, _t.Sequence[str]],
     ) -> None:
-        if isinstance(value, str):
-            value = [value]
-        super().__init__(superschema, value)
+        super().__init__(superschema, arrayify(value))
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
@@ -62,7 +60,6 @@ class TypeKeyword(Keyword):
 class EnumKeyword(Keyword):
     __keyword__ = "enum"
     __schema__ = {"type": "array", "items": True}
-    __types__ = JSON
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
@@ -74,7 +71,6 @@ class EnumKeyword(Keyword):
 class ConstKeyword(Keyword):
     __keyword__ = "const"
     __schema__ = True
-    __types__ = JSON
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
@@ -86,7 +82,7 @@ class ConstKeyword(Keyword):
 class MultipleOfKeyword(Keyword):
     __keyword__ = "multipleOf"
     __schema__ = {"type": "number", "exclusiveMinimum": 0}
-    __types__ = JSONNumber
+    __types__ = "number"
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
@@ -98,7 +94,7 @@ class MultipleOfKeyword(Keyword):
 class MaximumKeyword(Keyword):
     __keyword__ = "maximum"
     __schema__ = {"type": "number"}
-    __types__ = JSONNumber
+    __types__ = "number"
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
@@ -110,7 +106,7 @@ class MaximumKeyword(Keyword):
 class ExclusiveMaximumKeyword(Keyword):
     __keyword__ = "exclusiveMaximum"
     __schema__ = {"type": "number"}
-    __types__ = JSONNumber
+    __types__ = "number"
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
@@ -122,7 +118,7 @@ class ExclusiveMaximumKeyword(Keyword):
 class MinimumKeyword(Keyword):
     __keyword__ = "minimum"
     __schema__ = {"type": "number"}
-    __types__ = JSONNumber
+    __types__ = "number"
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
@@ -134,7 +130,7 @@ class MinimumKeyword(Keyword):
 class ExclusiveMinimumKeyword(Keyword):
     __keyword__ = "exclusiveMinimum"
     __schema__ = {"type": "number"}
-    __types__ = JSONNumber
+    __types__ = "number"
 
     def evaluate(self, instance: JSONNumber) -> KeywordResult:
         return KeywordResult(
@@ -146,7 +142,7 @@ class ExclusiveMinimumKeyword(Keyword):
 class MaxLengthKeyword(Keyword):
     __keyword__ = "maxLength"
     __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = JSONString
+    __types__ = "string"
 
     def evaluate(self, instance: JSONString) -> KeywordResult:
         return KeywordResult(
@@ -158,7 +154,7 @@ class MaxLengthKeyword(Keyword):
 class MinLengthKeyword(Keyword):
     __keyword__ = "minLength"
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
-    __types__ = JSONString
+    __types__ = "string"
 
     def evaluate(self, instance: JSONString) -> KeywordResult:
         return KeywordResult(
@@ -170,7 +166,7 @@ class MinLengthKeyword(Keyword):
 class PatternKeyword(Keyword):
     __keyword__ = "pattern"
     __schema__ = {"type": "string", "format": "regex"}
-    __types__ = JSONString
+    __types__ = "string"
 
     def __init__(
             self,
@@ -190,7 +186,7 @@ class PatternKeyword(Keyword):
 class MaxItemsKeyword(Keyword):
     __keyword__ = "maxItems"
     __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = JSONArray
+    __types__ = "array"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         return KeywordResult(
@@ -202,7 +198,7 @@ class MaxItemsKeyword(Keyword):
 class MinItemsKeyword(Keyword):
     __keyword__ = "minItems"
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
-    __types__ = JSONArray
+    __types__ = "array"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         return KeywordResult(
@@ -214,7 +210,7 @@ class MinItemsKeyword(Keyword):
 class UniqueItemsKeyword(Keyword):
     __keyword__ = "uniqueItems"
     __schema__ = {"type": "boolean", "default": False}
-    __types__ = JSONArray
+    __types__ = "array"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         uniquified = []
@@ -231,7 +227,8 @@ class UniqueItemsKeyword(Keyword):
 class MaxContainsKeyword(Keyword):
     __keyword__ = "maxContains"
     __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = JSONArray
+    __types__ = "array"
+    __depends__ = "contains"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         raise NotImplementedError
@@ -240,7 +237,8 @@ class MaxContainsKeyword(Keyword):
 class MinContainsKeyword(Keyword):
     __keyword__ = "minContains"
     __schema__ = {"type": "integer", "minimum": 0, "default": 1}
-    __types__ = JSONArray
+    __types__ = "array"
+    __depends__ = "contains"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         raise NotImplementedError
@@ -249,7 +247,7 @@ class MinContainsKeyword(Keyword):
 class MaxPropertiesKeyword(Keyword):
     __keyword__ = "maxProperties"
     __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = JSONObject
+    __types__ = "object"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         return KeywordResult(
@@ -261,7 +259,7 @@ class MaxPropertiesKeyword(Keyword):
 class MinPropertiesKeyword(Keyword):
     __keyword__ = "minProperties"
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
-    __types__ = JSONObject
+    __types__ = "object"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         return KeywordResult(
@@ -278,7 +276,7 @@ class RequiredKeyword(Keyword):
         "uniqueItems": True,
         "default": []
     }
-    __types__ = JSONObject
+    __types__ = "object"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         missing = [name for name in self.value if name not in instance]
@@ -299,7 +297,7 @@ class DependentRequiredKeyword(Keyword):
             "default": []
         }
     }
-    __types__ = JSONObject
+    __types__ = "object"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
         missing = {}

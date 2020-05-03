@@ -16,9 +16,18 @@ __all__ = [
     'jsonproperties',
     'jsonpointer_regex',
     'jsonpointer',
+    'interdependent_keywords',
 ]
 
-jsontype = hs.sampled_from(["null", "boolean", "number", "integer", "string", "array", "object"])
+jsontype = hs.sampled_from([
+    "null",
+    "boolean",
+    "number",
+    "integer",
+    "string",
+    "array",
+    "object",
+])
 jsontypes = hs.lists(jsontype, unique=True)
 
 jsonnull = hs.none()
@@ -41,3 +50,16 @@ jsonproperties = hs.dictionaries(propname, json, max_size=10)
 
 jsonpointer_regex = r'^(/([^~/]|(~[01]))*)*$'
 jsonpointer = hs.from_regex(jsonpointer_regex, fullmatch=True)
+
+interdependent_keywords = hs.lists(hs.sampled_from([
+    "properties",
+    "patternProperties",
+    "additionalProperties",
+    "unevaluatedProperties",
+    "items",
+    "additionalItems",
+    "unevaluatedItems",
+    "contains",
+    "maxContains",
+    "minContains",
+]), unique=True)
