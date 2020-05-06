@@ -37,14 +37,20 @@ def test_type(kwvalue, instance):
 def test_enum(kwvalue, instance):
     kw = EnumKeyword(Schema(True), kwvalue)
     result = kw.evaluate(JSON(instance))
-    assert result.valid == (instance in kwvalue)
+    assert result.valid == any(
+        instance == value for value in kwvalue
+        if type(instance) == type(value) or {type(instance), type(value)} <= {int, float}
+    )
 
 
 @given(kwvalue=json, instance=json)
 def test_const(kwvalue, instance):
     kw = ConstKeyword(Schema(True), kwvalue)
     result = kw.evaluate(JSON(instance))
-    assert result.valid == (instance == kwvalue)
+    assert result.valid == (
+            instance == kwvalue and
+            (type(instance) == type(kwvalue) or {type(instance), type(kwvalue)} <= {int, float})
+    )
 
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instance=jsonnumber)
@@ -121,10 +127,14 @@ def test_min_items(kwvalue, instance):
 def test_unique_items(kwvalue, instance):
     kw = UniqueItemsKeyword(Schema(True), kwvalue)
     result = kw.evaluate(JSON(instance))
-    uniquified = []
-    for item in instance:
-        if item not in uniquified:
-            uniquified += [item]
+    if kwvalue:
+        uniquified = []
+        for item in instance:
+            if not any(
+                item == value for value in uniquified
+                if type(item) == type(value) or {type(item), type(value)} <= {int, float}
+            ):
+                uniquified += [item]
     assert result.valid == (not kwvalue or len(instance) == len(uniquified))
 
 
