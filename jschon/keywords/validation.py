@@ -220,7 +220,7 @@ class UniqueItemsKeyword(Keyword):
 
         return KeywordResult(
             valid=(valid := not self.value or len(instance) == len(uniquified)),
-            error="The array's elements must all be unique'" if not valid else None,
+            error="The array's elements must all be unique" if not valid else None,
         )
 
 
@@ -231,17 +231,32 @@ class MaxContainsKeyword(Keyword):
     __depends__ = "contains"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
-        raise NotImplementedError
+        return KeywordResult(
+            valid=(valid := "contains" not in self.superschema.keywords or
+                   self.superschema.keywords["contains"].result.annotation <= self.value),
+            error=f'The array has too many elements matching the "contains" subschema (maximum {self.value})' if not valid else None,
+        )
 
 
 class MinContainsKeyword(Keyword):
     __keyword__ = "minContains"
     __schema__ = {"type": "integer", "minimum": 0, "default": 1}
     __types__ = "array"
-    __depends__ = "contains"
+    __depends__ = "contains", "maxContains"
 
     def evaluate(self, instance: JSONArray) -> KeywordResult:
-        raise NotImplementedError
+        contains = self.superschema.keywords.get("contains")
+        max_contains = self.superschema.keywords.get("maxContains")
+
+        valid = not contains or contains.result.annotation >= self.value
+        if valid and contains and not contains.result.valid:
+            if not max_contains or max_contains.result.valid:
+                contains.result.valid = True
+
+        return KeywordResult(
+            valid=valid,
+            error=f'The array has too few elements matching the "contains" subschema (minimum {self.value})' if not valid else None,
+        )
 
 
 class MaxPropertiesKeyword(Keyword):

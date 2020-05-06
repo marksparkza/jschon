@@ -29,7 +29,7 @@ class Schema:
         self.location: Pointer = location or Pointer('')
         self.is_root: bool = self.location.is_root()
         self.metaschema: _t.Optional[Metaschema] = None
-        self.keywords: _t.List[Keyword] = []
+        self.keywords: _t.Dict[str, Keyword] = {}
 
         if metaschema_uri is not None:
             validate_uri(metaschema_uri)
@@ -50,10 +50,10 @@ class Schema:
                 kw: kwclass for kw in value
                 if (kwclass := self.metaschema.kwclasses.get(kw))
             }
-            self.keywords = [
-                kwclass(self, value[kwclass.__keyword__])
+            self.keywords = {
+                kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
                 for kwclass in self._resolve_keyword_dependencies(kwclasses)
-            ]
+            }
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: _t.Dict[str, KeywordClass]) -> _t.Iterator[KeywordClass]:
@@ -82,16 +82,17 @@ class Schema:
             keyword_location=self.location,
             instance_location=instance.location,
         )
-        for keyword in self.keywords:
+        for keyword in self.keywords.values():
             if not keyword.__types__ or \
                     isinstance(instance, tuple(JSON.typemap[t] for t in tuplify(keyword.__types__))):
-                if not (kwresult := keyword.evaluate(instance)).valid:
+                keyword.result = keyword.evaluate(instance)
+                if not keyword.result.valid:
                     result.valid = False
                 result.subresults += [SchemaResult(
-                    valid=kwresult.valid,
-                    annotation=kwresult.annotation if kwresult.valid else None,
-                    error=kwresult.error if not kwresult.valid else None,
-                    subresults=kwresult.subresults,
+                    valid=keyword.result.valid,
+                    annotation=keyword.result.annotation if keyword.result.valid else None,
+                    error=keyword.result.error if not keyword.result.valid else None,
+                    subresults=keyword.result.subresults,
                     keyword_location=keyword.location,
                     instance_location=instance.location,
                 )]
@@ -133,6 +134,7 @@ class Keyword:
         self.superschema: Schema = superschema
         self.location: Pointer = superschema.location + Pointer(f'/{self.__keyword__}')
         self.value: JSONCompatible = value
+        self.result: _t.Optional[KeywordResult] = None
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         raise NotImplementedError

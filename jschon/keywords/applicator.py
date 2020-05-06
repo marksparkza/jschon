@@ -222,12 +222,14 @@ class ContainsKeyword(ApplicatorKeyword):
     def evaluate(self, instance: JSONArray) -> KeywordResult:
         result = KeywordResult(
             valid=False,
+            annotation=0,
             subresults=[],
         )
         for item in instance:
             result.subresults += [subresult := self.subschema.evaluate(item)]
             if subresult.valid:
                 result.valid = True
+                result.annotation += 1
 
         if not result.valid:
             result.error = "The array does not contain a required element"

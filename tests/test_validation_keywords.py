@@ -8,6 +8,8 @@ from jschon.keywords.validation import *
 from jschon.schema import Schema
 from tests.strategies import *
 
+metaschema_uri = "https://json-schema.org/draft/2019-09/schema"
+
 
 @given(kwvalue=jsontype | jsontypes, instance=json)
 def test_type(kwvalue, instance):
@@ -124,6 +126,26 @@ def test_unique_items(kwvalue, instance):
         if item not in uniquified:
             uniquified += [item]
     assert result.valid == (not kwvalue or len(instance) == len(uniquified))
+
+
+@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instance=jsonarray, containstype=jsontype)
+def test_max_contains(kwvalue, instance, containstype):
+    count = len(list(filter(lambda item: JSON(item).is_type(containstype), instance)))
+    schema = Schema({"contains": {"type": containstype}}, validate=False, metaschema_uri=metaschema_uri)
+    schema.evaluate(JSON(instance))
+    kw = MaxContainsKeyword(schema, kwvalue)
+    result = kw.evaluate(JSON(instance))
+    assert result.valid == (count <= kwvalue)
+
+
+@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instance=jsonarray, containstype=jsontype)
+def test_min_contains(kwvalue, instance, containstype):
+    count = len(list(filter(lambda item: JSON(item).is_type(containstype), instance)))
+    schema = Schema({"contains": {"type": containstype}}, validate=False, metaschema_uri=metaschema_uri)
+    schema.evaluate(JSON(instance))
+    kw = MinContainsKeyword(schema, kwvalue)
+    result = kw.evaluate(JSON(instance))
+    assert result.valid == (count >= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instance=jsonobject)
