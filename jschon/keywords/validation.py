@@ -230,12 +230,12 @@ class MaxContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
-        return KeywordResult(
-            valid=(valid := "contains" not in self.superschema.keywords or
-                   self.superschema.keywords["contains"].result.annotation <= self.value),
-            error=f'The array has too many elements matching the "contains" subschema (maximum {self.value})' if not valid else None,
-        )
+    def evaluate(self, instance: JSONArray) -> _t.Optional[KeywordResult]:
+        if contains := self.superschema.keywords.get("contains"):
+            return KeywordResult(
+                valid=(valid := contains.result.annotation <= self.value),
+                error=f'The array has too many elements matching the "contains" subschema (maximum {self.value})' if not valid else None,
+            )
 
 
 class MinContainsKeyword(Keyword):
@@ -244,19 +244,19 @@ class MinContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains", "maxContains"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
-        contains = self.superschema.keywords.get("contains")
-        max_contains = self.superschema.keywords.get("maxContains")
+    def evaluate(self, instance: JSONArray) -> _t.Optional[KeywordResult]:
+        if contains := self.superschema.keywords.get("contains"):
+            valid = contains.result.annotation >= self.value
 
-        valid = not contains or contains.result.annotation >= self.value
-        if valid and contains and not contains.result.valid:
-            if not max_contains or max_contains.result.valid:
-                contains.result.valid = True
+            if valid and not contains.result.valid:
+                max_contains = self.superschema.keywords.get("maxContains")
+                if not max_contains or max_contains.result.valid:
+                    contains.result.valid = True
 
-        return KeywordResult(
-            valid=valid,
-            error=f'The array has too few elements matching the "contains" subschema (minimum {self.value})' if not valid else None,
-        )
+            return KeywordResult(
+                valid=valid,
+                error=f'The array has too few elements matching the "contains" subschema (minimum {self.value})' if not valid else None,
+            )
 
 
 class MaxPropertiesKeyword(Keyword):

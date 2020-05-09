@@ -1,4 +1,5 @@
 import re
+import typing as _t
 
 from jschon.json import JSON, JSONArray, JSONObject
 from jschon.schema import KeywordResult, ApplicatorKeyword, PropertyApplicatorKeyword
@@ -115,23 +116,37 @@ class IfKeyword(ApplicatorKeyword):
     __schema__ = {"$recursiveRef": "#"}
 
     def evaluate(self, instance: JSON) -> KeywordResult:
-        raise NotImplementedError
+        return KeywordResult(
+            assert_=False,
+            valid=(subresult := self.subschema.evaluate(instance)).valid,
+            subresults=[subresult],
+        )
 
 
 class ThenKeyword(ApplicatorKeyword):
     __keyword__ = "then"
     __schema__ = {"$recursiveRef": "#"}
+    __depends__ = "if"
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
-        raise NotImplementedError
+    def evaluate(self, instance: JSON) -> _t.Optional[KeywordResult]:
+        if (if_ := self.superschema.keywords.get("if")) and if_.result.valid:
+            return KeywordResult(
+                valid=(subresult := self.subschema.evaluate(instance)).valid,
+                subresults=[subresult],
+            )
 
 
 class ElseKeyword(ApplicatorKeyword):
     __keyword__ = "else"
     __schema__ = {"$recursiveRef": "#"}
+    __depends__ = "if"
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
-        raise NotImplementedError
+    def evaluate(self, instance: JSON) -> _t.Optional[KeywordResult]:
+        if (if_ := self.superschema.keywords.get("if")) and not if_.result.valid:
+            return KeywordResult(
+                valid=(subresult := self.subschema.evaluate(instance)).valid,
+                subresults=[subresult],
+            )
 
 
 class DependentSchemasKeyword(PropertyApplicatorKeyword):

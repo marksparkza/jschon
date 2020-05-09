@@ -86,16 +86,17 @@ class Schema:
             if not keyword.__types__ or \
                     isinstance(instance, tuple(JSON.typemap[t] for t in tuplify(keyword.__types__))):
                 keyword.result = keyword.evaluate(instance)
-                if not keyword.result.valid:
-                    result.valid = False
-                result.subresults += [SchemaResult(
-                    valid=keyword.result.valid,
-                    annotation=keyword.result.annotation if keyword.result.valid else None,
-                    error=keyword.result.error if not keyword.result.valid else None,
-                    subresults=keyword.result.subresults,
-                    keyword_location=keyword.location,
-                    instance_location=instance.location,
-                )]
+                if keyword.result is not None:
+                    result.subresults += [SchemaResult(
+                        valid=(valid := not keyword.result.assert_ or keyword.result.valid),
+                        annotation=keyword.result.annotation if valid else None,
+                        error=keyword.result.error if not valid else None,
+                        subresults=keyword.result.subresults,
+                        keyword_location=keyword.location,
+                        instance_location=instance.location,
+                    )]
+                    if not valid:
+                        result.valid = False
         return result
 
 
@@ -136,7 +137,7 @@ class Keyword:
         self.value: JSONCompatible = value
         self.result: _t.Optional[KeywordResult] = None
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSON) -> _t.Optional[KeywordResult]:
         raise NotImplementedError
 
     def __repr__(self) -> str:
@@ -185,6 +186,7 @@ class PropertyApplicatorKeyword(Keyword):
 @dataclasses.dataclass
 class KeywordResult:
     valid: bool
+    assert_: bool = True
     annotation: _t.Optional['JSONCompatible'] = None
     error: _t.Optional[str] = None
     subresults: _t.Optional[_t.List[SchemaResult]] = None
