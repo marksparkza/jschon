@@ -62,4 +62,7 @@ interdependent_keywords = hs.lists(hs.sampled_from([
     "contains",
     "maxContains",
     "minContains",
+    "if",
+    "then",
+    "else",
 ]), unique=True)

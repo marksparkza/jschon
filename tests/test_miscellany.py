@@ -111,3 +111,11 @@ def test_keyword_dependency_resolution(value: list):
         assert keywords.index("maxContains") < keywords.index("minContains")
     except ValueError:
         pass
+    try:
+        assert keywords.index("if") < keywords.index("then")
+    except ValueError:
+        pass
+    try:
+        assert keywords.index("if") < keywords.index("else")
+    except ValueError:
+        pass
