@@ -158,7 +158,23 @@ class DependentSchemasKeyword(PropertyApplicatorKeyword):
     __types__ = "object"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
-        raise NotImplementedError
+        result = KeywordResult(
+            valid=True,
+            annotation=[],
+            subresults=[],
+        )
+        for name, subschema in self.subschemas.items():
+            if name in instance:
+                result.subresults += [subresult := subschema.evaluate(instance)]
+                if subresult.valid:
+                    result.annotation += [name]
+                else:
+                    result.valid = False
+                    result.annotation = None
+                    result.error = f'The instance is invalid against the "{name}" subschema'
+                    break
+
+        return result
 
 
 class ItemsKeyword(ApplicatorKeyword):
@@ -194,14 +210,13 @@ class ItemsKeyword(ApplicatorKeyword):
                         break
 
             elif self.subschemas is not None:
-                for index, item in enumerate(instance):
-                    if index < len(self.subschemas):
-                        result.annotation = index
-                        result.subresults += [subresult := self.subschemas[index].evaluate(item)]
-                        if not subresult.valid:
-                            result.valid = False
-                            result.annotation = None
-                            break
+                for index, item in enumerate(instance[:len(self.subschemas)]):
+                    result.annotation = index
+                    result.subresults += [subresult := self.subschemas[index].evaluate(item)]
+                    if not subresult.valid:
+                        result.valid = False
+                        result.annotation = None
+                        break
 
         if not result.valid:
             result.error = "One or more array elements is invalid"
@@ -215,8 +230,22 @@ class AdditionalItemsKeyword(ApplicatorKeyword):
     __types__ = "array"
     __depends__ = "items"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
-        raise NotImplementedError
+    def evaluate(self, instance: JSONArray) -> _t.Optional[KeywordResult]:
+        if (items := self.superschema.keywords.get("items")) and type(items.result.annotation) is int:
+            result = KeywordResult(
+                valid=True,
+                subresults=[],
+            )
+            for index, item in enumerate(instance[items.result.annotation + 1:]):
+                result.annotation = True
+                result.subresults += [subresult := self.subschema.evaluate(item)]
+                if not subresult.valid:
+                    result.valid = False
+                    result.annotation = None
+                    result.error = "One or more array elements is invalid"
+                    break
+
+            return result
 
 
 class UnevaluatedItemsKeyword(ApplicatorKeyword):
@@ -323,7 +352,29 @@ class AdditionalPropertiesKeyword(ApplicatorKeyword):
     __depends__ = "properties", "patternProperties"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
-        raise NotImplementedError
+        evaluated_names = set()
+        if properties := self.superschema.keywords.get("properties"):
+            evaluated_names |= set(properties.result.annotation or ())
+        if pattern_properties := self.superschema.keywords.get("patternProperties"):
+            evaluated_names |= set(pattern_properties.result.annotation or ())
+
+        result = KeywordResult(
+            valid=True,
+            annotation=[],
+            subresults=[],
+        )
+        for name, item in instance.items():
+            if name not in evaluated_names:
+                result.subresults += [subresult := self.subschema.evaluate(item)]
+                if subresult.valid:
+                    result.annotation += [name]
+                else:
+                    result.valid = False
+                    result.annotation = None
+                    result.error = "One or more object properties is invalid"
+                    break
+
+        return result
 
 
 class UnevaluatedPropertiesKeyword(ApplicatorKeyword):
