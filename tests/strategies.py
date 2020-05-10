@@ -65,4 +65,9 @@ interdependent_keywords = hs.lists(hs.sampled_from([
     "if",
     "then",
     "else",
+    "dependentSchemas",
+    "allOf",
+    "anyOf",
+    "oneOf",
+    "not",
 ]), unique=True)

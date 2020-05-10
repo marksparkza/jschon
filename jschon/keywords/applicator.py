@@ -252,10 +252,32 @@ class UnevaluatedItemsKeyword(ApplicatorKeyword):
     __keyword__ = "unevaluatedItems"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
-    __depends__ = "items", "additionalItems"
+    __depends__ = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
-        raise NotImplementedError
+    def evaluate(self, instance: JSONArray) -> _t.Optional[KeywordResult]:
+        # TODO:
+        #  check annotation results for items, additionalItems and unevaluatedItems
+        #  from adjacent in-place applicator keywords
+
+        items = self.superschema.keywords.get("items")
+        additional_items = self.superschema.keywords.get("additionalItems")
+
+        if items and type(items.result.annotation) is int and \
+                (not additional_items or additional_items.result.annotation is None):
+            result = KeywordResult(
+                valid=True,
+                subresults=[],
+            )
+            for index, item in enumerate(instance[items.result.annotation + 1:]):
+                result.annotation = True
+                result.subresults += [subresult := self.subschema.evaluate(item)]
+                if not subresult.valid:
+                    result.valid = False
+                    result.annotation = None
+                    result.error = "One or more array elements is invalid"
+                    break
+
+            return result
 
 
 class ContainsKeyword(ApplicatorKeyword):
@@ -381,10 +403,38 @@ class UnevaluatedPropertiesKeyword(ApplicatorKeyword):
     __keyword__ = "unevaluatedProperties"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
-    __depends__ = "properties", "patternProperties", "additionalProperties"
+    __depends__ = "properties", "patternProperties", "additionalProperties", "if", "then", "else", "dependentSchemas", "allOf", "anyOf", "oneOf", "not"
 
     def evaluate(self, instance: JSONObject) -> KeywordResult:
-        raise NotImplementedError
+        # TODO:
+        #  check annotation results for properties, patternProperties, additionalProperties
+        #  and unevaluatedProperties from adjacent in-place applicator keywords
+
+        evaluated_names = set()
+        if properties := self.superschema.keywords.get("properties"):
+            evaluated_names |= set(properties.result.annotation or ())
+        if pattern_properties := self.superschema.keywords.get("patternProperties"):
+            evaluated_names |= set(pattern_properties.result.annotation or ())
+        if additional_properties := self.superschema.keywords.get("additionalProperties"):
+            evaluated_names |= set(additional_properties.result.annotation or ())
+
+        result = KeywordResult(
+            valid=True,
+            annotation=[],
+            subresults=[],
+        )
+        for name, item in instance.items():
+            if name not in evaluated_names:
+                result.subresults += [subresult := self.subschema.evaluate(item)]
+                if subresult.valid:
+                    result.annotation += [name]
+                else:
+                    result.valid = False
+                    result.annotation = None
+                    result.error = "One or more object properties is invalid"
+                    break
+
+        return result
 
 
 class PropertyNamesKeyword(ApplicatorKeyword):
