@@ -11,7 +11,7 @@ __all__ = [
 
 
 def validate_uri(uri: str) -> None:
-    validator = rfc3986.validators.Validator()
+    validator = rfc3986.validators.Validator().require_presence_of('scheme')
     try:
         validator.validate(rfc3986.uri_reference(uri))
     except rfc3986.exceptions.ValidationError as e:
