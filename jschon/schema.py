@@ -6,8 +6,7 @@ import pathlib
 import typing as _t
 
 from jschon.exceptions import SchemaError, MetaschemaError
-from jschon.json import JSON
-from jschon.pointer import Pointer
+from jschon.json import JSON, JSONPointer
 from jschon.types import JSONCompatible, SchemaCompatible
 from jschon.utils import validate_uri, tuplify
 
@@ -18,7 +17,7 @@ class Schema:
             self,
             value: SchemaCompatible,
             *,
-            location: Pointer = None,
+            location: JSONPointer = None,
             metaschema_uri: str = None,
             validate: bool = True,
     ) -> None:
@@ -26,7 +25,7 @@ class Schema:
             raise TypeError(f"{value=} is not one of {SchemaCompatible}")
 
         self.value: SchemaCompatible = value
-        self.location: Pointer = location or Pointer('')
+        self.location: JSONPointer = location or JSONPointer('')
         self.is_root: bool = self.location.is_root()
         self.metaschema: _t.Optional[Metaschema] = None
         self.keywords: _t.Dict[str, Keyword] = {}
@@ -106,8 +105,8 @@ class SchemaResult:
     annotation: _t.Optional['JSONCompatible']
     error: _t.Optional[str]
     subresults: _t.Optional[_t.List[SchemaResult]]
-    keyword_location: Pointer
-    instance_location: Pointer
+    keyword_location: JSONPointer
+    instance_location: JSONPointer
 
     def errors(self) -> _t.Iterator[str]:
         if self.error:
@@ -133,7 +132,7 @@ class Keyword:
             raise TypeError(f"value must be one of {JSONCompatible}")
 
         self.superschema: Schema = superschema
-        self.location: Pointer = superschema.location + Pointer(f'/{self.__keyword__}')
+        self.location: JSONPointer = superschema.location + JSONPointer(f'/{self.__keyword__}')
         self.value: JSONCompatible = value
         self.result: _t.Optional[KeywordResult] = None
 
@@ -159,7 +158,7 @@ class ApplicatorKeyword(Keyword):
             self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
         elif isinstance(value, _t.Sequence):
             self.subschemas = [
-                Schema(item, location=self.location + Pointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
+                Schema(item, location=self.location + JSONPointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
                 for index, item in enumerate(value)
             ]
         else:
@@ -178,7 +177,7 @@ class PropertyApplicatorKeyword(Keyword):
             raise TypeError("Expecting a mapping type")
 
         self.subschemas: _t.Mapping[str, Schema] = {
-            name: Schema(item, location=self.location + Pointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
+            name: Schema(item, location=self.location + JSONPointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
             for name, item in value.items()
         }
 

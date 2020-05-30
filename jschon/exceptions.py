@@ -4,3 +4,7 @@ class SchemaError(Exception):
 
 class MetaschemaError(Exception):
     pass
+
+
+class JSONPointerError(Exception):
+    pass

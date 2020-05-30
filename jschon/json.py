@@ -1,9 +1,12 @@
 from __future__ import annotations
 
+import collections
 import json
+import re
 import typing as _t
+import urllib.parse
 
-from jschon.pointer import Pointer
+from jschon.exceptions import JSONPointerError
 from jschon.types import JSONCompatible
 
 __all__ = [
@@ -15,6 +18,7 @@ __all__ = [
     'JSONString',
     'JSONArray',
     'JSONObject',
+    'JSONPointer',
 ]
 
 
@@ -26,7 +30,7 @@ class JSON:
             cls,
             value: JSONCompatible,
             *,
-            location: Pointer = None,
+            location: JSONPointer = None,
     ) -> JSON:
         if cls is not JSON:
             raise TypeError(f"{cls.__name__} cannot be instantiated directly")
@@ -50,10 +54,10 @@ class JSON:
             self,
             value: JSONCompatible,
             *,
-            location: Pointer = None,
+            location: JSONPointer = None,
     ) -> None:
         self._valueref = lambda: value
-        self.location = location or Pointer('')
+        self.location = location or JSONPointer('')
 
     def __eq__(self, other: _t.Union[JSON, 'JSONCompatible']) -> bool:
         if isinstance(other, type(self)):
@@ -176,11 +180,11 @@ class JSONArray(JSON, _t.Sequence[JSON]):
             self,
             array: _t.Sequence['JSONCompatible'],
             *,
-            location: Pointer = None,
+            location: JSONPointer = None,
     ) -> None:
         super().__init__(array, location=location)
         self._items = [
-            JSON(value, location=self.location + Pointer(f'/{index}'))
+            JSON(value, location=self.location + JSONPointer(f'/{index}'))
             for index, value in enumerate(array)
         ]
 
@@ -206,14 +210,14 @@ class JSONObject(JSON, _t.Mapping[str, JSON]):
             self,
             obj: _t.Mapping[str, 'JSONCompatible'],
             *,
-            location: Pointer = None,
+            location: JSONPointer = None,
     ) -> None:
         super().__init__(obj, location=location)
         self._properties = {}
         for key, value in obj.items():
             if not isinstance(key, str):
                 raise TypeError("JSON object keys must be strings")
-            self._properties[key] = JSON(value, location=self.location + Pointer(f'/{key}'))
+            self._properties[key] = JSON(value, location=self.location + JSONPointer(f'/{key}'))
 
     def __getitem__(self, key: str) -> JSON:
         return self._properties[key]
@@ -243,3 +247,64 @@ JSON.typemap = {
     "array": JSONArray,
     "object": JSONObject,
 }
+
+
+class JSONPointer:
+
+    _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
+    _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
+
+    def __init__(self, value: str) -> None:
+        if value and not self._json_pointer_re.fullmatch(value):
+            raise ValueError(f"'{value}' is not a valid JSON pointer")
+        self._tokens: _t.List[str] = [token for token in value.split('/')[1:]]
+
+    def __add__(self, other: JSONPointer) -> JSONPointer:
+        if not isinstance(other, JSONPointer):
+            return NotImplemented
+        result = JSONPointer('')
+        result._tokens = self._tokens + other._tokens
+        return result
+
+    def __eq__(self, other: JSONPointer) -> bool:
+        if not isinstance(other, JSONPointer):
+            return NotImplemented
+        return self._tokens == other._tokens
+
+    def __str__(self) -> str:
+        return ''.join([f'/{token}' for token in self._tokens])
+
+    def __repr__(self) -> str:
+        return f"JSONPointer('{self}')"
+
+    def is_root(self) -> bool:
+        return not self._tokens
+
+    def evaluate(self, document: _t.Union[JSONObject, JSONArray]) -> JSON:
+
+        def resolve(value: JSON, tokens: _t.Deque[str]) -> _t.Optional[JSON]:
+            if not tokens:
+                return value
+            token = tokens.popleft()
+            try:
+                if isinstance(value, JSONObject):
+                    return resolve(value[token.replace('~1', '/').replace('~0', '~')], tokens)
+                if isinstance(value, JSONArray) and self._array_index_re.fullmatch(token):
+                    return resolve(value[int(token)], tokens)
+            except (KeyError, IndexError):
+                pass
+
+        target = resolve(document, collections.deque(self._tokens))
+        if target is None:
+            raise JSONPointerError(f"Failed to resolve '{self}' against the given document")
+
+        return target
+
+    @classmethod
+    def parse_uri_fragment(cls, value: str) -> JSONPointer:
+        if not value.startswith('#'):
+            raise ValueError(f"'{value}' is not a valid URI fragment")
+        return JSONPointer(urllib.parse.unquote(value[1:]))
+
+    def uri_fragment(self) -> str:
+        return f'#{urllib.parse.quote(str(self))}'
