@@ -11,7 +11,9 @@ Metaschema.register(
 
 Vocabulary.register(
     uri="https://json-schema.org/draft/2019-09/vocab/core",
-    kwclasses=()
+    kwclasses=(
+        RefKeyword,
+    )
 )
 
 Vocabulary.register(

@@ -2,9 +2,11 @@ import re
 import typing as _t
 
 from jschon.json import JSON, JSONArray, JSONObject
-from jschon.schema import KeywordResult, ApplicatorKeyword, PropertyApplicatorKeyword
+from jschon.keywords import ApplicatorKeyword, PropertyApplicatorKeyword
+from jschon.schema import Schema, KeywordResult, Keyword
 
 __all__ = [
+    'RefKeyword',
     'AllOfKeyword',
     'AnyOfKeyword',
     'OneOfKeyword',
@@ -23,6 +25,26 @@ __all__ = [
     'UnevaluatedPropertiesKeyword',
     'PropertyNamesKeyword',
 ]
+
+
+class RefKeyword(Keyword):
+    __keyword__ = "$ref"
+    __schema__ = {
+        "type": "string",
+        "format": "uri-reference"
+    }
+
+    def __init__(
+            self,
+            superschema: Schema,
+            value: str,
+    ) -> None:
+        super().__init__(superschema, value)
+
+    def evaluate(self, instance: JSON) -> KeywordResult:
+        return KeywordResult(
+            valid=True,
+        )
 
 
 class AllOfKeyword(ApplicatorKeyword):
