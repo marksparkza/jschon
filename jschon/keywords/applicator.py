@@ -136,10 +136,10 @@ class NotKeyword(ApplicatorKeyword):
 class IfKeyword(ApplicatorKeyword):
     __keyword__ = "if"
     __schema__ = {"$recursiveRef": "#"}
+    __assert__ = False
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
-            assert_=False,
             valid=(subresult := self.subschema.evaluate(instance)).valid,
             subresults=[subresult],
         )

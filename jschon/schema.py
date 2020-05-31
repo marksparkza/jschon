@@ -87,7 +87,7 @@ class Schema:
                 keyword.result = keyword.evaluate(instance)
                 if keyword.result is not None:
                     result.subresults += [SchemaResult(
-                        valid=(valid := not keyword.result.assert_ or keyword.result.valid),
+                        valid=(valid := not keyword.__assert__ or keyword.result.valid),
                         annotation=keyword.result.annotation if valid else None,
                         error=keyword.result.error if not valid else None,
                         subresults=keyword.result.subresults,
@@ -122,6 +122,7 @@ class Keyword:
     __schema__: _t.Union[bool, dict] = ...
     __types__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
     __depends__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
+    __assert__: bool = True
 
     def __init__(
             self,
@@ -146,7 +147,6 @@ class Keyword:
 @dataclasses.dataclass
 class KeywordResult:
     valid: bool
-    assert_: bool = True
     annotation: _t.Optional['JSONCompatible'] = None
     error: _t.Optional[str] = None
     subresults: _t.Optional[_t.List[SchemaResult]] = None
