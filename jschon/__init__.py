@@ -1,8 +1,10 @@
 import pathlib
 
+from jschon.formats import *
 from jschon.keywords.applicator import *
+from jschon.keywords.format import *
 from jschon.keywords.validation import *
-from jschon.schema import Metaschema, Vocabulary
+from jschon.schema import Metaschema, Vocabulary, FormatVocabulary
 
 Metaschema.register(
     uri="https://json-schema.org/draft/2019-09/schema",
@@ -70,9 +72,33 @@ Vocabulary.register(
     kwclasses=()
 )
 
-Vocabulary.register(
+FormatVocabulary.register(
     uri="https://json-schema.org/draft/2019-09/vocab/format",
-    kwclasses=()
+    kwclasses=(
+        FormatKeyword,
+    ),
+    fmtclasses=(
+        DateTimeFormat,
+        DateFormat,
+        TimeFormat,
+        DurationFormat,
+        EmailFormat,
+        IDNEmailFormat,
+        HostnameFormat,
+        IDNHostnameFormat,
+        IPv4Format,
+        IPv6Format,
+        URIFormat,
+        URIReferenceFormat,
+        IRIFormat,
+        IRIReferenceFormat,
+        UUIDFormat,
+        URITemplateFormat,
+        JSONPointerFormat,
+        RelativeJSONPointerFormat,
+        RegexFormat,
+    ),
+    assert_=True,
 )
 
 Vocabulary.register(

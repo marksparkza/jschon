@@ -12,7 +12,14 @@ setup(
         'rfc3986',
     ],
     extras_require={
-        'dev': ['pytest', 'pytest-cov', 'hypothesis'],
+        'formats': [
+            'email-validator',
+        ],
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'hypothesis',
+        ],
     },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',

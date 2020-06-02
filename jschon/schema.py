@@ -5,10 +5,26 @@ import json
 import pathlib
 import typing as _t
 
-from jschon.exceptions import SchemaError, MetaschemaError
+from jschon.exceptions import SchemaError, MetaschemaError, VocabularyError
 from jschon.json import JSON, JSONPointer
 from jschon.types import JSONCompatible, SchemaCompatible
 from jschon.utils import validate_uri, tuplify
+
+
+__all__ = [
+    'Schema',
+    'SchemaResult',
+    'Keyword',
+    'KeywordClass',
+    'KeywordResult',
+    'Metaschema',
+    'Vocabulary',
+    'VocabularyClass',
+    'FormatVocabulary',
+    'Format',
+    'FormatClass',
+    'FormatResult',
+]
 
 
 class Schema:
@@ -123,6 +139,8 @@ class Keyword:
     __types__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
     __depends__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
 
+    vocabulary_uri: str
+
     def __init__(
             self,
             superschema: Schema,
@@ -201,10 +219,14 @@ class Metaschema:
                     validate_uri(vocab_uri)
                     if not isinstance(vocab_required, bool):
                         raise ValueError
-                    if (kwclasses := Vocabulary.registry.get(vocab_uri)) is None and vocab_required:
-                        raise MetaschemaError(f'The metaschema requires an unrecognised vocabulary "{vocab_uri}"')
 
-                    self.kwclasses.update(kwclasses or {})
+                    if vocab_uri in Vocabulary.registry:
+                        vcbclass = Vocabulary.vcbclasses[vocab_uri]
+                        vocabulary = vcbclass(vocab_uri, vocab_required)
+                        self.kwclasses.update(vocabulary.kwclasses or {})
+
+                    if vocab_required and vocab_uri not in Vocabulary.registry:
+                        raise MetaschemaError(f'The metaschema requires an unrecognised vocabulary "{vocab_uri}"')
 
             except (KeyError, AttributeError, TypeError, ValueError) as e:
                 raise MetaschemaError('Missing or invalid "$vocabulary" keyword') from e
@@ -212,9 +234,96 @@ class Metaschema:
 
 class Vocabulary:
 
-    registry: _t.Dict[str, _t.Dict[str, KeywordClass]] = {}
+    registry: _t.Dict[str, _t.List[KeywordClass]] = {}
+    vcbclasses: _t.Dict[str, VocabularyClass] = {}
+
+    _cache: _t.Dict[str, Vocabulary] = {}
 
     @classmethod
-    def register(cls, uri: str, kwclasses: _t.Iterable[KeywordClass]) -> None:
+    def register(
+            cls,
+            uri: str,
+            kwclasses: _t.Iterable[KeywordClass],
+    ) -> None:
         validate_uri(uri)
-        cls.registry[uri] = {c.__keyword__: c for c in kwclasses if issubclass(c, Keyword)}
+        cls.registry[uri] = []
+        cls.vcbclasses[uri] = cls
+        for kwclass in kwclasses:
+            if issubclass(kwclass, Keyword):
+                kwclass.vocabulary_uri = uri
+                cls.registry[uri] += [kwclass]
+
+    @classmethod
+    def load(cls, uri: str) -> Vocabulary:
+        try:
+            return cls._cache[uri]
+        except KeyError as e:
+            raise VocabularyError("Unrecognised vocabulary URI") from e
+
+    def __init__(self, uri: str, required: bool) -> None:
+        self.uri: str = uri
+        self.required: bool = required
+        self.kwclasses: _t.Dict[str, KeywordClass] = {
+            kwclass.__keyword__: kwclass for kwclass in self.registry[uri]
+        }
+        self._cache[uri] = self
+
+
+VocabularyClass = _t.Type[Vocabulary]
+
+
+class FormatVocabulary(Vocabulary):
+
+    format_registry: _t.Dict[str, _t.List[FormatClass]] = {}
+    assert_formats: _t.Dict[str, _t.Optional[bool]] = {}
+
+    @classmethod
+    def register(
+            cls,
+            uri: str,
+            kwclasses: _t.Iterable[KeywordClass],
+            fmtclasses: _t.Iterable[FormatClass] = (),
+            assert_: bool = None,
+    ) -> None:
+        super().register(uri, kwclasses)
+        cls.format_registry[uri] = []
+        cls.assert_formats[uri] = assert_
+        for fmtclass in fmtclasses:
+            if issubclass(fmtclass, Format):
+                cls.format_registry[uri] += [fmtclass]
+
+    @classmethod
+    def load(cls, uri: str) -> FormatVocabulary:
+        vocab = super().load(uri)
+        if isinstance(vocab, FormatVocabulary):
+            return vocab
+        raise VocabularyError(f'The vocabulary identified by "{uri}" does not support formats')
+
+    def __init__(self, uri: str, required: bool) -> None:
+        super().__init__(uri, required)
+        assert_ = force_assert if (force_assert := self.assert_formats[uri]) is not None else required
+        self.formats: _t.Dict[str, Format] = {
+            fmtclass.__attr__: fmtclass(assert_)
+            for fmtclass in self.format_registry[uri]
+        }
+
+
+class Format:
+
+    __attr__: str = ...
+    __types__: _t.Union[str, _t.Tuple[str]] = "string"
+
+    def __init__(self, assert_: bool) -> None:
+        self.assert_: bool = assert_
+
+    def evaluate(self, instance: JSON) -> FormatResult:
+        raise NotImplementedError
+
+
+@dataclasses.dataclass
+class FormatResult:
+    valid: bool
+    error: _t.Optional[str] = None
+
+
+FormatClass = _t.Type[Format]
