@@ -87,7 +87,7 @@ class Schema:
                 keyword.result = keyword.evaluate(instance)
                 if keyword.result is not None:
                     result.subresults += [SchemaResult(
-                        valid=(valid := not keyword.__assert__ or keyword.result.valid),
+                        valid=(valid := not keyword.assert_ or keyword.result.valid),
                         annotation=keyword.result.annotation if valid else None,
                         error=keyword.result.error if not valid else None,
                         subresults=keyword.result.subresults,
@@ -122,7 +122,6 @@ class Keyword:
     __schema__: _t.Union[bool, dict] = ...
     __types__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
     __depends__: _t.Optional[_t.Union[str, _t.Tuple[str]]] = None
-    __assert__: bool = True
 
     def __init__(
             self,
@@ -136,6 +135,10 @@ class Keyword:
         self.location: JSONPointer = superschema.location + JSONPointer(f'/{self.__keyword__}')
         self.value: JSONCompatible = value
         self.result: _t.Optional[KeywordResult] = None
+
+    @property
+    def assert_(self) -> bool:
+        return True
 
     def evaluate(self, instance: JSON) -> _t.Optional[KeywordResult]:
         raise NotImplementedError
