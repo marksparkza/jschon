@@ -2,7 +2,8 @@ import email_validator
 import rfc3986.exceptions
 import rfc3986.validators
 
-from jschon.json import JSONString
+from jschon.exceptions import JSONPointerError
+from jschon.json import JSONString, JSONPointer
 from jschon.schema import Format, FormatResult
 
 __all__ = [
@@ -166,7 +167,12 @@ class JSONPointerFormat(Format):
     __attr__ = "json-pointer"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            JSONPointer(instance.value)
+        except JSONPointerError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class RelativeJSONPointerFormat(Format):

@@ -256,7 +256,7 @@ class JSONPointer:
 
     def __init__(self, value: str) -> None:
         if value and not self._json_pointer_re.fullmatch(value):
-            raise ValueError(f"'{value}' is not a valid JSON pointer")
+            raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
         self._tokens: _t.List[str] = [token for token in value.split('/')[1:]]
 
     def __add__(self, other: JSONPointer) -> JSONPointer:
@@ -303,7 +303,7 @@ class JSONPointer:
     @classmethod
     def parse_uri_fragment(cls, value: str) -> JSONPointer:
         if not value.startswith('#'):
-            raise ValueError(f"'{value}' is not a valid URI fragment")
+            raise JSONPointerError(f"'{value}' is not a valid URI fragment")
         return JSONPointer(urllib.parse.unquote(value[1:]))
 
     def uri_fragment(self) -> str:
