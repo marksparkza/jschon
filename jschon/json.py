@@ -180,7 +180,7 @@ class JSONArray(JSON, _t.Sequence[JSON]):
     ) -> None:
         super().__init__(array, location=location)
         self._items = [
-            JSON(value, location=self.location + JSONPointer(f'/{index}'))
+            JSON(value, location=self.location / str(index))
             for index, value in enumerate(array)
         ]
 
@@ -213,7 +213,7 @@ class JSONObject(JSON, _t.Mapping[str, JSON]):
         for key, value in obj.items():
             if not isinstance(key, str):
                 raise TypeError("JSON object keys must be strings")
-            self._properties[key] = JSON(value, location=self.location + JSONPointer(f'/{key}'))
+            self._properties[key] = JSON(value, location=self.location / key)
 
     def __getitem__(self, key: str) -> JSON:
         return self._properties[key]
@@ -250,17 +250,28 @@ class JSONPointer:
     _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
-    def __init__(self, value: str) -> None:
-        if value and not self._json_pointer_re.fullmatch(value):
-            raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
-        self._tokens: _t.List[str] = [token for token in value.split('/')[1:]]
+    @_t.overload
+    def __init__(self, value: str) -> None: ...
 
-    def __add__(self, other: JSONPointer) -> JSONPointer:
-        if not isinstance(other, JSONPointer):
-            return NotImplemented
-        result = JSONPointer('')
-        result._tokens = self._tokens + other._tokens
-        return result
+    @_t.overload
+    def __init__(self, value: JSONPointer, extend: str) -> None: ...
+
+    def __init__(self, value: _t.Union[str, JSONPointer], extend: str = None) -> None:
+        if isinstance(value, str):
+            if value and not self._json_pointer_re.fullmatch(value):
+                raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
+            self._tokens: _t.List[str] = [token for token in value.split('/')[1:]]
+
+        elif isinstance(value, JSONPointer):
+            if extend and not self._json_pointer_re.fullmatch(extend):
+                raise JSONPointerError(f"'{extend}' is not a valid JSON pointer")
+            self._tokens: _t.List[str] = value._tokens + [token for token in extend.split('/')[1:]]
+
+        else:
+            raise TypeError("Expecting str or JSONPointer")
+
+    def __truediv__(self, key: str):
+        return JSONPointer(self, f'/{self.escape(key)}')
 
     def __eq__(self, other: JSONPointer) -> bool:
         if not isinstance(other, JSONPointer):
@@ -284,7 +295,7 @@ class JSONPointer:
             token = tokens.popleft()
             try:
                 if isinstance(value, JSONObject):
-                    return resolve(value[token.replace('~1', '/').replace('~0', '~')], tokens)
+                    return resolve(value[self.unescape(token)], tokens)
                 if isinstance(value, JSONArray) and self._array_index_re.fullmatch(token):
                     return resolve(value[int(token)], tokens)
             except (KeyError, IndexError):
@@ -304,3 +315,11 @@ class JSONPointer:
 
     def uri_fragment(self) -> str:
         return f'#{urllib.parse.quote(str(self))}'
+
+    @staticmethod
+    def escape(key: str):
+        return key.replace('~', '~0').replace('/', '~1')
+
+    @staticmethod
+    def unescape(token: str):
+        return token.replace('~1', '/').replace('~0', '~')

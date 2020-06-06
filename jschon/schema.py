@@ -147,7 +147,7 @@ class Keyword:
             raise TypeError(f"value must be one of {JSONCompatible}")
 
         self.superschema: Schema = superschema
-        self.location: JSONPointer = superschema.location + JSONPointer(f'/{self.__keyword__}')
+        self.location: JSONPointer = superschema.location / self.__keyword__
         self.value: JSONCompatible = value
         self.result: _t.Optional[KeywordResult] = None
 

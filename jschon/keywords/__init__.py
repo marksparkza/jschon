@@ -1,6 +1,6 @@
 import typing as _t
 
-from jschon.json import JSONPointer, JSON
+from jschon.json import JSON
 from jschon.schema import Keyword, Schema, KeywordResult
 from jschon.types import SchemaCompatible
 
@@ -17,10 +17,18 @@ class ApplicatorKeyword(Keyword):
         self.subschemas: _t.Optional[_t.Sequence[Schema]] = None
 
         if isinstance(value, SchemaCompatible):
-            self.subschema = Schema(value, location=self.location, metaschema_uri=superschema.metaschema.uri)
+            self.subschema = Schema(
+                value,
+                location=self.location,
+                metaschema_uri=superschema.metaschema.uri,
+            )
         elif isinstance(value, _t.Sequence):
             self.subschemas = [
-                Schema(item, location=self.location + JSONPointer(f'/{index}'), metaschema_uri=superschema.metaschema.uri)
+                Schema(
+                    item,
+                    location=self.location / str(index),
+                    metaschema_uri=superschema.metaschema.uri,
+                )
                 for index, item in enumerate(value)
             ]
         else:
@@ -42,7 +50,11 @@ class PropertyApplicatorKeyword(Keyword):
             raise TypeError("Expecting a mapping type")
 
         self.subschemas: _t.Mapping[str, Schema] = {
-            name: Schema(item, location=self.location + JSONPointer(f'/{name}'), metaschema_uri=superschema.metaschema.uri)
+            name: Schema(
+                item,
+                location=self.location / name,
+                metaschema_uri=superschema.metaschema.uri,
+            )
             for name, item in value.items()
         }
 
