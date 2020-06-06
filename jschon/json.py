@@ -56,8 +56,8 @@ class JSON:
             *,
             location: JSONPointer = None,
     ) -> None:
-        self._valueref = lambda: value
-        self.location = location or JSONPointer('')
+        self.value: JSONCompatible = value
+        self.location: JSONPointer = location or JSONPointer('')
 
     def __eq__(self, other: _t.Union[JSON, 'JSONCompatible']) -> bool:
         if isinstance(other, type(self)):
@@ -74,10 +74,6 @@ class JSON:
 
     def is_type(self, jsontype: str):
         return self.jsontype == jsontype
-
-    @property
-    def value(self) -> JSONCompatible:
-        return self._valueref()
 
     @property
     def jsontype(self) -> str:
