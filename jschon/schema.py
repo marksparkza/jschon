@@ -46,9 +46,6 @@ class Schema:
         self.metaschema: _t.Optional[Metaschema] = None
         self.keywords: _t.Dict[str, Keyword] = {}
 
-        if metaschema_uri is not None:
-            validate_uri(metaschema_uri)
-
         if isinstance(value, _t.Mapping):
             if metaschema_uri is None and self.is_root:
                 metaschema_uri = value.get("$schema")
@@ -199,7 +196,6 @@ class Metaschema:
         return cls._cache[uri]
 
     def __init__(self, uri: str, value: SchemaCompatible) -> None:
-        validate_uri(uri)
         if not isinstance(value, SchemaCompatible):
             raise TypeError(f"value must be one of {SchemaCompatible}")
 
@@ -216,7 +212,6 @@ class Metaschema:
 
             try:
                 for vocab_uri, vocab_required in value["$vocabulary"].items():
-                    validate_uri(vocab_uri)
                     if not isinstance(vocab_required, bool):
                         raise ValueError
 
