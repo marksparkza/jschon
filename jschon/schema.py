@@ -213,25 +213,22 @@ class Metaschema:
             try:
                 for vocab_uri, vocab_required in value["$vocabulary"].items():
                     if not isinstance(vocab_required, bool):
-                        raise ValueError
-
-                    if vocab_uri in Vocabulary.registry:
-                        vcbclass = Vocabulary.vcbclasses[vocab_uri]
-                        vocabulary = vcbclass(vocab_uri, vocab_required)
-                        self.kwclasses.update(vocabulary.kwclasses or {})
-
-                    if vocab_required and vocab_uri not in Vocabulary.registry:
-                        raise MetaschemaError(f'The metaschema requires an unrecognised vocabulary "{vocab_uri}"')
-
-            except (KeyError, AttributeError, TypeError, ValueError) as e:
+                        raise TypeError('"$vocabulary" values must be booleans')
+                    try:
+                        vocabulary = Vocabulary(vocab_uri, vocab_required)
+                        self.kwclasses.update(vocabulary.kwclasses)
+                    except VocabularyError as e:
+                        if vocab_required:
+                            raise MetaschemaError(f'The metaschema requires an unrecognised vocabulary "{vocab_uri}"') \
+                                from e
+            except (KeyError, AttributeError, TypeError) as e:
                 raise MetaschemaError('Missing or invalid "$vocabulary" keyword') from e
 
 
 class Vocabulary:
 
-    registry: _t.Dict[str, _t.List[KeywordClass]] = {}
-    vcbclasses: _t.Dict[str, VocabularyClass] = {}
-
+    _kwclasses: _t.Dict[str, _t.List[KeywordClass]] = {}
+    _vcclass: _t.Dict[str, VocabularyClass] = {}
     _cache: _t.Dict[str, Vocabulary] = {}
 
     @classmethod
@@ -241,12 +238,12 @@ class Vocabulary:
             kwclasses: _t.Iterable[KeywordClass],
     ) -> None:
         validate_uri(uri)
-        cls.registry[uri] = []
-        cls.vcbclasses[uri] = cls
+        cls._kwclasses[uri] = []
+        cls._vcclass[uri] = cls
         for kwclass in kwclasses:
             if issubclass(kwclass, Keyword):
                 kwclass.vocabulary_uri = uri
-                cls.registry[uri] += [kwclass]
+                cls._kwclasses[uri] += [kwclass]
 
     @classmethod
     def load(cls, uri: str) -> Vocabulary:
@@ -255,11 +252,17 @@ class Vocabulary:
         except KeyError as e:
             raise VocabularyError("Unrecognised vocabulary URI") from e
 
+    def __new__(cls, uri: str, required: bool) -> Vocabulary:
+        try:
+            return object.__new__(Vocabulary._vcclass[uri])
+        except KeyError as e:
+            raise VocabularyError("Unrecognised vocabulary URI") from e
+
     def __init__(self, uri: str, required: bool) -> None:
         self.uri: str = uri
         self.required: bool = required
         self.kwclasses: _t.Dict[str, KeywordClass] = {
-            kwclass.__keyword__: kwclass for kwclass in self.registry[uri]
+            kwclass.__keyword__: kwclass for kwclass in self._kwclasses[uri]
         }
         self._cache[uri] = self
 
@@ -269,8 +272,8 @@ VocabularyClass = _t.Type[Vocabulary]
 
 class FormatVocabulary(Vocabulary):
 
-    format_registry: _t.Dict[str, _t.List[FormatClass]] = {}
-    assert_formats: _t.Dict[str, _t.Optional[bool]] = {}
+    _fmtclasses: _t.Dict[str, _t.List[FormatClass]] = {}
+    _assertfmt: _t.Dict[str, _t.Optional[bool]] = {}
 
     @classmethod
     def register(
@@ -281,11 +284,11 @@ class FormatVocabulary(Vocabulary):
             assert_: bool = None,
     ) -> None:
         super().register(uri, kwclasses)
-        cls.format_registry[uri] = []
-        cls.assert_formats[uri] = assert_
+        cls._fmtclasses[uri] = []
+        cls._assertfmt[uri] = assert_
         for fmtclass in fmtclasses:
             if issubclass(fmtclass, Format):
-                cls.format_registry[uri] += [fmtclass]
+                cls._fmtclasses[uri] += [fmtclass]
 
     @classmethod
     def load(cls, uri: str) -> FormatVocabulary:
@@ -296,10 +299,10 @@ class FormatVocabulary(Vocabulary):
 
     def __init__(self, uri: str, required: bool) -> None:
         super().__init__(uri, required)
-        assert_ = force_assert if (force_assert := self.assert_formats[uri]) is not None else required
+        assert_ = force_assert if (force_assert := self._assertfmt[uri]) is not None else required
         self.formats: _t.Dict[str, Format] = {
             fmtclass.__attr__: fmtclass(assert_)
-            for fmtclass in self.format_registry[uri]
+            for fmtclass in self._fmtclasses[uri]
         }
 
 
