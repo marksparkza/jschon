@@ -6,7 +6,8 @@ import pathlib
 import typing as _t
 
 from jschon.exceptions import SchemaError, MetaschemaError, VocabularyError
-from jschon.json import JSON, JSONPointer
+from jschon.json import JSON
+from jschon.jsonpointer import JSONPointer
 from jschon.types import JSONCompatible, SchemaCompatible
 from jschon.utils import validate_uri, tuplify
 

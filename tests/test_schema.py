@@ -10,7 +10,7 @@ metaschema_uri = "https://json-schema.org/draft/2019-09/schema"
 def test_create_schema(value):
     schema = Schema(value, metaschema_uri=metaschema_uri)
     assert schema.value == value
-    assert schema.location.is_root()
+    assert schema.location.is_root
     if isinstance(value, dict):
         assert schema.metaschema.uri == metaschema_uri
 

@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-import collections
 import json
-import re
 import typing as _t
-import urllib.parse
 
-from jschon.exceptions import JSONPointerError
+from jschon.jsonpointer import JSONPointer
 from jschon.types import JSONCompatible
 
 __all__ = [
@@ -18,7 +15,6 @@ __all__ = [
     'JSONString',
     'JSONArray',
     'JSONObject',
-    'JSONPointer',
 ]
 
 
@@ -243,83 +239,3 @@ JSON.typemap = {
     "array": JSONArray,
     "object": JSONObject,
 }
-
-
-class JSONPointer:
-
-    _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
-    _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
-
-    @_t.overload
-    def __init__(self, value: str) -> None: ...
-
-    @_t.overload
-    def __init__(self, value: JSONPointer, extend: str) -> None: ...
-
-    def __init__(self, value: _t.Union[str, JSONPointer], extend: str = None) -> None:
-        if isinstance(value, str):
-            if value and not self._json_pointer_re.fullmatch(value):
-                raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
-            self._tokens: _t.List[str] = [token for token in value.split('/')[1:]]
-
-        elif isinstance(value, JSONPointer):
-            if extend and not self._json_pointer_re.fullmatch(extend):
-                raise JSONPointerError(f"'{extend}' is not a valid JSON pointer")
-            self._tokens: _t.List[str] = value._tokens + [token for token in extend.split('/')[1:]]
-
-        else:
-            raise TypeError("Expecting str or JSONPointer")
-
-    def __truediv__(self, key: str):
-        return JSONPointer(self, f'/{self.escape(key)}')
-
-    def __eq__(self, other: JSONPointer) -> bool:
-        if not isinstance(other, JSONPointer):
-            return NotImplemented
-        return self._tokens == other._tokens
-
-    def __str__(self) -> str:
-        return ''.join([f'/{token}' for token in self._tokens])
-
-    def __repr__(self) -> str:
-        return f"JSONPointer('{self}')"
-
-    def is_root(self) -> bool:
-        return not self._tokens
-
-    def evaluate(self, document: _t.Union[JSONObject, JSONArray]) -> JSON:
-
-        def resolve(value: JSON, tokens: _t.Deque[str]) -> _t.Optional[JSON]:
-            if not tokens:
-                return value
-            token = tokens.popleft()
-            try:
-                if isinstance(value, JSONObject):
-                    return resolve(value[self.unescape(token)], tokens)
-                if isinstance(value, JSONArray) and self._array_index_re.fullmatch(token):
-                    return resolve(value[int(token)], tokens)
-            except (KeyError, IndexError):
-                pass
-
-        target = resolve(document, collections.deque(self._tokens))
-        if target is None:
-            raise JSONPointerError(f"Failed to resolve '{self}' against the given document")
-
-        return target
-
-    @classmethod
-    def parse_uri_fragment(cls, value: str) -> JSONPointer:
-        if not value.startswith('#'):
-            raise JSONPointerError(f"'{value}' is not a valid URI fragment")
-        return JSONPointer(urllib.parse.unquote(value[1:]))
-
-    def uri_fragment(self) -> str:
-        return f'#{urllib.parse.quote(str(self))}'
-
-    @staticmethod
-    def escape(key: str):
-        return key.replace('~', '~0').replace('/', '~1')
-
-    @staticmethod
-    def unescape(token: str):
-        return token.replace('~1', '/').replace('~0', '~')

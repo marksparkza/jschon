@@ -3,7 +3,8 @@ import rfc3986.exceptions
 import rfc3986.validators
 
 from jschon.exceptions import JSONPointerError
-from jschon.json import JSONString, JSONPointer
+from jschon.json import JSONString
+from jschon.jsonpointer import JSONPointer
 from jschon.schema import Format, FormatResult
 
 __all__ = [
