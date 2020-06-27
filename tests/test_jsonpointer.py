@@ -2,11 +2,12 @@ from typing import Union, List
 
 from hypothesis import given, strategies as hs
 
+from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from tests.strategies import jsonpointer, jsonpointer_key, jsonarray, jsonobject
 
 
-@given(hs.lists(jsonpointer | hs.lists(hs.text())))
+@given(hs.lists(jsonpointer | hs.lists(jsonpointer_key)))
 def test_create_jsonpointer(values: List[Union[str, List[str]]]):
     keys = []
     for value in values:
@@ -46,6 +47,7 @@ def test_evaluate_jsonpointer(value):
     generate_pointers('', value)
     for pointer, target in resolved_pointers.items():
         assert JSONPointer(pointer).evaluate(value) == target
+        assert JSONPointer(pointer).evaluate(JSON(value)) == target
 
 
 def jsonpointer_escape(key: str):
