@@ -20,6 +20,7 @@ class ApplicatorKeyword(Keyword):
             self.subschema = Schema(
                 value,
                 location=self.location,
+                superkeyword=self,
                 metaschema_uri=superschema.metaschema.uri,
             )
         elif isinstance(value, _t.Sequence):
@@ -27,6 +28,7 @@ class ApplicatorKeyword(Keyword):
                 Schema(
                     item,
                     location=self.location / str(index),
+                    superkeyword=self,
                     metaschema_uri=superschema.metaschema.uri,
                 )
                 for index, item in enumerate(value)
@@ -53,6 +55,7 @@ class PropertyApplicatorKeyword(Keyword):
             name: Schema(
                 item,
                 location=self.location / name,
+                superkeyword=self,
                 metaschema_uri=superschema.metaschema.uri,
             )
             for name, item in value.items()

@@ -37,6 +37,7 @@ class Schema:
             value: SchemaCompatible,
             *,
             location: JSONPointer = None,
+            superkeyword: Keyword = None,
             metaschema_uri: str = None,
             validate: bool = True,
     ) -> None:
@@ -45,18 +46,21 @@ class Schema:
 
         self.value: SchemaCompatible = value
         self.location: JSONPointer = location or JSONPointer()
-        self.is_root: bool = self.location.is_root()
+        self.superkeyword: _t.Optional[Keyword] = superkeyword
         self.metaschema: _t.Optional[Metaschema] = None
         self.keywords: _t.Dict[str, Keyword] = {}
 
+        if not (is_root := not self.location) and not superkeyword:
+            raise SchemaError("superkeyword must be specified for a subschema")
+
         if isinstance(value, _t.Mapping):
-            if metaschema_uri is None and self.is_root:
+            if metaschema_uri is None and is_root:
                 metaschema_uri = value.get("$schema")
             if metaschema_uri is None:
                 raise SchemaError("Metaschema URI not specified")
 
             self.metaschema = Metaschema.load(metaschema_uri)
-            if self.is_root and validate:
+            if is_root and validate:
                 if not (result := Schema(self.metaschema.value, validate=False).evaluate(JSON(value))).valid:
                     errors = "\n".join(result.errors())
                     raise SchemaError(f"The schema is invalid against its metaschema:\n{errors}")
@@ -90,12 +94,12 @@ class Schema:
 
     def evaluate(self, instance: JSON) -> SchemaResult:
         result = SchemaResult(
+            keyword=self.superkeyword,
+            instance=instance,
             valid=self.value if isinstance(self.value, bool) else True,
             annotation=None,
             error=None,
             subresults=[],
-            keyword_location=self.location,
-            instance_location=instance.location,
         )
         for keyword in self.keywords.values():
             if not keyword.__types__ or \
@@ -103,12 +107,12 @@ class Schema:
                 keyword.result = keyword.evaluate(instance)
                 if keyword.result is not None:
                     result.subresults += [SchemaResult(
+                        keyword=keyword,
+                        instance=instance,
                         valid=(valid := not keyword.assert_ or keyword.result.valid),
                         annotation=keyword.result.annotation if valid else None,
                         error=keyword.result.error if not valid else None,
                         subresults=keyword.result.subresults,
-                        keyword_location=keyword.location,
-                        instance_location=instance.location,
                     )]
                     if not valid:
                         result.valid = False
@@ -117,16 +121,18 @@ class Schema:
 
 @dataclasses.dataclass
 class SchemaResult:
+    keyword: _t.Optional[Keyword]
+    instance: JSON
     valid: bool
     annotation: _t.Optional['JSONCompatible']
     error: _t.Optional[str]
     subresults: _t.Optional[_t.List[SchemaResult]]
-    keyword_location: JSONPointer
-    instance_location: JSONPointer
 
     def errors(self) -> _t.Iterator[str]:
-        if self.error:
-            yield f"{self.keyword_location=}, {self.instance_location=}, {self.error=}"
+        if error := self.error:
+            keyword_location = str(self.keyword.location) if self.keyword else ''
+            instance_location = str(self.instance.location)
+            yield f"{keyword_location=}, {instance_location=}, {error=}"
         if self.subresults:
             for subresult in self.subresults:
                 yield from subresult.errors()
