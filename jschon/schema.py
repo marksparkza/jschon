@@ -5,12 +5,14 @@ import json
 import pathlib
 import typing as _t
 
+import rfc3986.exceptions
+import rfc3986.validators
+
 from jschon.exceptions import SchemaError, MetaschemaError, VocabularyError
 from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.types import JSONCompatible, SchemaCompatible
-from jschon.utils import validate_uri, tuplify
-
+from jschon.utils import tuplify
 
 __all__ = [
     'Schema',
@@ -181,7 +183,7 @@ class Metaschema:
 
     @classmethod
     def register(cls, uri: str, filepath: str) -> None:
-        validate_uri(uri)
+        _validate_uri(uri)
         if not pathlib.Path(filepath).is_file():
             raise ValueError(f"File '{filepath}' not found")
         cls._catalogue[uri] = filepath
@@ -238,7 +240,7 @@ class Vocabulary:
             uri: str,
             kwclasses: _t.Iterable[KeywordClass],
     ) -> None:
-        validate_uri(uri)
+        _validate_uri(uri)
         cls._kwclasses[uri] = []
         cls._vcclass[uri] = cls
         for kwclass in kwclasses:
@@ -326,3 +328,15 @@ class FormatResult:
 
 
 FormatClass = _t.Type[Format]
+
+
+def _validate_uri(uri: str) -> None:
+    """ Validate a metaschema or vocabulary URI """
+    validator = rfc3986.validators.Validator().require_presence_of('scheme')
+    try:
+        validator.validate(uri_ref := rfc3986.uri_reference(uri))
+    except rfc3986.exceptions.ValidationError as e:
+        raise ValueError(f"{uri=} is not a valid URI or does not contain a scheme") from e
+
+    if uri_ref != uri_ref.normalize():
+        raise ValueError(f"{uri=} is not normalized")
