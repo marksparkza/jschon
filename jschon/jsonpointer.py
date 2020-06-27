@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import collections
 import re
-import typing as _t
 import urllib.parse
+from typing import *
 
 from jschon.exceptions import JSONPointerError
 
@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 
-class JSONPointer(_t.Sequence[str]):
+class JSONPointer(Sequence[str]):
     """ JSON Pointer :rfc:`6901`
 
     A JSON pointer is a string representing a reference to some value within a
@@ -48,12 +48,12 @@ class JSONPointer(_t.Sequence[str]):
     _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
-    def __init__(self, *values: _t.Union[str, _t.Iterable[str], JSONPointer]) -> None:
+    def __init__(self, *values: Union[str, Iterable[str], JSONPointer]) -> None:
         """ Constructor.
 
         :raise JSONPointerError: if a string argument does not conform to the RFC 6901 syntax
         """
-        self._keys: _t.List[str] = []
+        self._keys: List[str] = []
 
         for value in values:
             if isinstance(value, str):
@@ -64,21 +64,21 @@ class JSONPointer(_t.Sequence[str]):
             elif isinstance(value, JSONPointer):
                 self._keys.extend(value._keys)
 
-            elif isinstance(value, _t.Iterable) and all(isinstance(k, str) for k in value):
+            elif isinstance(value, Iterable) and all(isinstance(k, str) for k in value):
                 self._keys.extend(value)
 
             else:
                 raise TypeError("Expecting str, Iterable[str], or JSONPointer")
 
-    @_t.overload
+    @overload
     def __getitem__(self, index: int) -> str:
         ...
 
-    @_t.overload
+    @overload
     def __getitem__(self, index: slice) -> JSONPointer:
         ...
 
-    def __getitem__(self, index: _t.Union[int, slice]) -> _t.Union[str, JSONPointer]:
+    def __getitem__(self, index):
         """ Return self[index] """
         if isinstance(index, int):
             return self._keys[index]
@@ -110,7 +110,7 @@ class JSONPointer(_t.Sequence[str]):
         """ Return repr(self) """
         return f"JSONPointer('{self}')"
 
-    def evaluate(self, document: _t.Union[_t.Mapping, _t.Sequence]) -> _t.Any:
+    def evaluate(self, document: Union[Mapping[str, Any], Sequence[Any]]) -> Any:
         """ Return the value at the location in the document indicated by self.
 
         :raise JSONPointerError: if the location does not exist
@@ -120,9 +120,9 @@ class JSONPointer(_t.Sequence[str]):
                 return value
             key = keys.popleft()
             try:
-                if isinstance(value, _t.Mapping):
+                if isinstance(value, Mapping):
                     return resolve(value[key], keys)
-                if isinstance(value, _t.Sequence) and not isinstance(value, str) and \
+                if isinstance(value, Sequence) and not isinstance(value, str) and \
                         self._array_index_re.fullmatch(key):
                     return resolve(value[int(key)], keys)
             except (KeyError, IndexError):
@@ -131,7 +131,7 @@ class JSONPointer(_t.Sequence[str]):
 
         return resolve(document, collections.deque(self._keys))
 
-    def apply(self, document: _t.Union[_t.Mapping, _t.Sequence], value: _t.Any) -> None:
+    def apply(self, document: Union[Mapping[str, Any], Sequence[Any]], value: Any) -> None:
         """ Set the value at the location in the document indicated by self.
 
         :raise JSONPointerError: if the location cannot be reached
