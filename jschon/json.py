@@ -53,7 +53,7 @@ class JSON:
             location: JSONPointer = None,
     ) -> None:
         self.value: JSONCompatible = value
-        self.location: JSONPointer = location or JSONPointer('')
+        self.location: JSONPointer = location or JSONPointer()
 
     def __eq__(self, other: _t.Union[JSON, 'JSONCompatible']) -> bool:
         if isinstance(other, type(self)):

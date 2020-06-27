@@ -13,66 +13,62 @@ __all__ = [
 
 
 class JSONPointer(_t.Sequence[str]):
-    """JSON Pointer :rfc:`6901`
+    """ JSON Pointer :rfc:`6901`
 
-    A JSON Pointer represents a reference to some value within a JSON document.
-    A ``JSONPointer`` instance is composed of an immutable sequence of unescaped
-    JSON object keys and/or array indices that comprise the path to the referenced
-    value.
+    A JSON pointer is a string representing a reference to some value within a
+    JSON document. It consists of a series of 'reference tokens' prefixed by '/',
+    each token in turn being the (escaped) JSON object key or the JSON array
+    index at the next node down the path to the referenced value. The empty
+    string '' represents a reference to an entire JSON document.
 
-    A ``JSONPointer`` instance may be constructed either from a string conforming
-    to the :rfc:`6901` syntax (comprising escaped reference tokens), from an existing
-    ``JSONPointer`` instance optionally extended with a :rfc:`6901` JSON Pointer string,
-    or from an iterable of unescaped JSON object keys and array indices.
+    A ``JSONPointer`` instance is an immutable sequence of the unescaped JSON
+    object keys and/or array indices - henceforth referred to simply as 'keys' -
+    that comprise the path to a referenced value.
 
-    The ``/`` operator produces a new ``JSONPointer`` instance by copying the left-hand
-    argument (a ``JSONPointer`` instance) and appending the right-hand argument (an
-    unescaped JSON object key or array index).
+    A ``JSONPointer`` instance is constructed by the concatenation of any number
+    of arguments, each of which can be one of:
 
-    Taking an index into a ``JSONPointer`` returns the unescaped JSON object key or
-    array index at that position. Taking a slice into a ``JSONPointer`` returns a new
-    ``JSONPointer`` composed of the specified slice of the original's tokens.
+    - a string conforming to the :rfc:`6901` syntax
+    - an iterable of unescaped keys
+    - an existing ``JSONPointer`` instance
+
+    Two ``JSONPointer`` instances compare equal if their key sequences are
+    identical.
+
+    The ``/`` operator provides a convenient syntax for extending a JSON pointer.
+    It produces a new ``JSONPointer`` instance by copying the left-hand argument
+    (a ``JSONPointer`` instance) and appending the right-hand argument (an
+    unescaped key).
+
+    Taking an index into a ``JSONPointer`` returns the unescaped key at that
+    position. Taking a slice into a ``JSONPointer`` returns a new ``JSONPointer``
+    composed of the specified slice of the original's keys.
     """
 
     _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
-    @_t.overload
-    def __init__(self, value: str) -> None:
-        ...
+    def __init__(self, *values: _t.Union[str, _t.Iterable[str], JSONPointer]) -> None:
+        """ Constructor.
 
-    @_t.overload
-    def __init__(self, value: JSONPointer, extend: str = None) -> None:
-        ...
+        :raise JSONPointerError: if a string argument does not conform to the RFC 6901 syntax
+        """
+        self._keys: _t.List[str] = []
 
-    @_t.overload
-    def __init__(self, value: _t.Iterable[str]) -> None:
-        ...
+        for value in values:
+            if isinstance(value, str):
+                if not self._json_pointer_re.fullmatch(value):
+                    raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
+                self._keys.extend(self.unescape(token) for token in value.split('/')[1:])
 
-    def __init__(
-            self,
-            value: _t.Union[str, JSONPointer, _t.Iterable[str]],
-            extend: str = None,
-    ) -> None:
-        self._tokens: _t.List[str]  # list of escaped reference tokens
+            elif isinstance(value, JSONPointer):
+                self._keys.extend(value._keys)
 
-        if isinstance(value, str):
-            if value and not self._json_pointer_re.fullmatch(value):
-                raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
-            self._tokens = [token for token in value.split('/')[1:]]
+            elif isinstance(value, _t.Iterable) and all(isinstance(k, str) for k in value):
+                self._keys.extend(value)
 
-        elif isinstance(value, JSONPointer):
-            if extend and not self._json_pointer_re.fullmatch(extend):
-                raise JSONPointerError(f"'{extend}' is not a valid JSON pointer")
-            self._tokens = value._tokens + [token for token in extend.split('/')[1:]]
-
-        elif isinstance(value, _t.Iterable):
-            self._tokens = [self.escape(key) for key in value]
-            if not self._json_pointer_re.fullmatch(str(self)):
-                raise JSONPointerError(f"Cannot construct a valid JSON pointer from {value}")
-
-        else:
-            raise TypeError("Expecting str, JSONPointer, or Iterable[str]")
+            else:
+                raise TypeError("Expecting str, Iterable[str], or JSONPointer")
 
     @_t.overload
     def __getitem__(self, index: int) -> str:
@@ -83,53 +79,64 @@ class JSONPointer(_t.Sequence[str]):
         ...
 
     def __getitem__(self, index: _t.Union[int, slice]) -> _t.Union[str, JSONPointer]:
+        """ Return self[index] """
         if isinstance(index, int):
-            return self.unescape(self._tokens[index])
+            return self._keys[index]
         if isinstance(index, slice):
-            return JSONPointer(self.unescape(token) for token in self._tokens[index])
+            return JSONPointer(self._keys[index])
         raise TypeError("Expecting int or slice")
 
     def __len__(self) -> int:
-        return len(self._tokens)
+        """ Return len(self) """
+        return len(self._keys)
 
-    def __truediv__(self, key: str):
-        return JSONPointer(self, f'/{self.escape(key)}')
+    def __truediv__(self, key: str) -> JSONPointer:
+        """ Return self / key """
+        if isinstance(key, str):
+            return JSONPointer(self, (key,))
+        return NotImplemented
 
     def __eq__(self, other: JSONPointer) -> bool:
-        if not isinstance(other, JSONPointer):
-            return NotImplemented
-        return self._tokens == other._tokens
+        """ Return self == other """
+        if isinstance(other, JSONPointer):
+            return self._keys == other._keys
+        return NotImplemented
 
     def __str__(self) -> str:
-        return ''.join([f'/{token}' for token in self._tokens])
+        """ Return str(self) """
+        return ''.join([f'/{self.escape(key)}' for key in self._keys])
 
     def __repr__(self) -> str:
+        """ Return repr(self) """
         return f"JSONPointer('{self}')"
 
-    @property
-    def is_root(self) -> bool:
-        return not self._tokens
-
     def evaluate(self, document: _t.Union[_t.Mapping, _t.Sequence]) -> _t.Any:
-        """Return the value from within the given document that is referenced by this JSON Pointer.
+        """ Return the value at the location in the document indicated by self.
 
-        :raises JSONPointerError: if the JSON Pointer refers to a nonexistent location within the document
+        :raise JSONPointerError: if the location does not exist
         """
-        def resolve(value, tokens):
-            if not tokens:
+        def resolve(value, keys):
+            if not keys:
                 return value
-            token = tokens.popleft()
+            key = keys.popleft()
             try:
                 if isinstance(value, _t.Mapping):
-                    return resolve(value[self.unescape(token)], tokens)
+                    return resolve(value[key], keys)
                 if isinstance(value, _t.Sequence) and not isinstance(value, str) and \
-                        self._array_index_re.fullmatch(token):
-                    return resolve(value[int(token)], tokens)
+                        self._array_index_re.fullmatch(key):
+                    return resolve(value[int(key)], keys)
             except (KeyError, IndexError):
                 pass
             raise JSONPointerError(f"Failed to resolve '{self}' against the given document")
 
-        return resolve(document, collections.deque(self._tokens))
+        return resolve(document, collections.deque(self._keys))
+
+    def apply(self, document: _t.Union[_t.Mapping, _t.Sequence], value: _t.Any) -> None:
+        """ Set the value at the location in the document indicated by self.
+
+        :raise JSONPointerError: if the location cannot be reached
+        """
+        raise NotImplementedError
 
     @classmethod
     def parse_uri_fragment(cls, value: str) -> JSONPointer:
@@ -141,9 +148,9 @@ class JSONPointer(_t.Sequence[str]):
         return f'#{urllib.parse.quote(str(self))}'
 
     @staticmethod
-    def escape(key: str):
+    def escape(key: str) -> str:
         return key.replace('~', '~0').replace('/', '~1')
 
     @staticmethod
-    def unescape(token: str):
+    def unescape(token: str) -> str:
         return token.replace('~1', '/').replace('~0', '~')

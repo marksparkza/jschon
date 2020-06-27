@@ -42,7 +42,7 @@ class Schema:
             raise TypeError(f"{value=} is not one of {SchemaCompatible}")
 
         self.value: SchemaCompatible = value
-        self.location: JSONPointer = location or JSONPointer('')
+        self.location: JSONPointer = location or JSONPointer()
         self.is_root: bool = self.location.is_root()
         self.metaschema: _t.Optional[Metaschema] = None
         self.keywords: _t.Dict[str, Keyword] = {}

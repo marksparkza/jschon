@@ -1,29 +1,37 @@
+from typing import Union, List
+
 from hypothesis import given, strategies as hs
 
 from jschon.jsonpointer import JSONPointer
-from tests.strategies import jsonpointer, jsonarray, jsonobject
+from tests.strategies import jsonpointer, jsonpointer_key, jsonarray, jsonobject
 
 
-@given(jsonpointer)
-def test_create_jsonpointer(value):
-    tokens = value.split('/')[1:]
-    pointer = JSONPointer(value)
-    assert pointer == JSONPointer(value)
-    assert pointer.is_root == (value == '')
-    assert str(pointer) == value
-    assert tokens == [token for token in pointer._tokens]
+@given(hs.lists(jsonpointer | hs.lists(hs.text())))
+def test_create_jsonpointer(values: List[Union[str, List[str]]]):
+    keys = []
+    for value in values:
+        keys += [jsonpointer_unescape(token) for token in value.split('/')[1:]] if isinstance(value, str) else value
+    pointer = JSONPointer(*values)
+    assert pointer == JSONPointer(*values)
+    assert pointer == JSONPointer(keys)
+    assert pointer == JSONPointer(pointer)
+    assert str(pointer) == ''.join(f'/{jsonpointer_escape(key)}' for key in keys)
+    assert list(pointer) == keys
+    assert bool(pointer) == bool(keys)
+    assert pointer != JSONPointer() if keys else JSONPointer('/')
+    assert pointer != JSONPointer('/', keys)
 
 
-@given(jsonpointer, hs.text() | hs.sampled_from(['~']))
+@given(jsonpointer, jsonpointer_key)
 def test_extend_jsonpointer(value, newkey):
     pointer = JSONPointer(value) / newkey
     newtoken = jsonpointer_escape(newkey)
+    assert pointer[-1] == newkey
     assert str(pointer) == f'{value}/{newtoken}'
 
 
 @given(jsonarray | jsonobject)
 def test_evaluate_jsonpointer(value):
-
     resolved_pointers = {}
 
     def generate_pointers(ptr, val):
@@ -37,8 +45,12 @@ def test_evaluate_jsonpointer(value):
 
     generate_pointers('', value)
     for pointer, target in resolved_pointers.items():
-        assert target == JSONPointer(pointer).evaluate(value)
+        assert JSONPointer(pointer).evaluate(value) == target
 
 
 def jsonpointer_escape(key: str):
     return key.replace('~', '~0').replace('/', '~1')
+
+
+def jsonpointer_unescape(token: str):
+    return token.replace('~1', '/').replace('~0', '~')

@@ -16,6 +16,7 @@ __all__ = [
     'jsonproperties',
     'jsonpointer_regex',
     'jsonpointer',
+    'jsonpointer_key',
     'interdependent_keywords',
 ]
 
@@ -50,6 +51,7 @@ jsonproperties = hs.dictionaries(propname, json, max_size=10)
 
 jsonpointer_regex = r'^(/([^~/]|(~[01]))*)*$'
 jsonpointer = hs.from_regex(jsonpointer_regex, fullmatch=True)
+jsonpointer_key = hs.text() | hs.sampled_from(['~', '/', '-'])
 
 interdependent_keywords = hs.lists(hs.sampled_from([
     "properties",
