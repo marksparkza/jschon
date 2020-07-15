@@ -5,7 +5,7 @@ import rfc3986.validators
 from jschon.exceptions import JSONPointerError
 from jschon.json import JSONString
 from jschon.jsonpointer import JSONPointer
-from jschon.schema import Format, FormatResult
+from jschon.jsonschema import Format, FormatResult
 
 __all__ = [
     'DateTimeFormat',

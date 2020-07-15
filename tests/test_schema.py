@@ -1,18 +1,17 @@
 from hypothesis import given
 
-from jschon.schema import Schema, Metaschema
+from jschon.jsonschema import JSONSchema, JSONObjectSchema, Metaschema
+from tests import metaschema_uri
 from tests.strategies import *
-
-metaschema_uri = "https://json-schema.org/draft/2019-09/schema"
 
 
 @given(jsonboolean | jsonobject)
 def test_create_schema(value):
-    schema = Schema(value, metaschema_uri=metaschema_uri)
+    schema = JSONSchema(value, metaschema_uri=metaschema_uri)
     assert schema.value == value
     assert not schema.location
-    if isinstance(value, dict):
-        assert schema.metaschema.uri == metaschema_uri
+    assert schema.superkeyword is None
+    assert schema.metaschema_uri == metaschema_uri
 
 
 @given(interdependent_keywords)
@@ -24,12 +23,12 @@ def test_keyword_dependency_resolution(value: list):
         except ValueError:
             pass
 
-    metaschema = Metaschema.load(metaschema_uri)
+    metaschema = Metaschema.get(metaschema_uri)
     kwclasses = {
         kw: metaschema.kwclasses[kw] for kw in value
     }
     keywords = [
-        kwclass.__keyword__ for kwclass in Schema._resolve_keyword_dependencies(kwclasses)
+        kwclass.__keyword__ for kwclass in JSONObjectSchema._resolve_keyword_dependencies(kwclasses)
     ]
 
     assert_keyword_order("properties", "additionalProperties")

@@ -4,7 +4,8 @@ import pathlib
 import pytest
 
 from jschon.json import JSON
-from jschon.schema import Schema
+from jschon.jsonschema import JSONSchema
+from tests import metaschema_uri
 
 
 def pytest_generate_tests(metafunc):
@@ -19,12 +20,12 @@ def pytest_generate_tests(metafunc):
             for testcase in testcases:
                 for test in testcase['tests']:
                     argvalues.append(pytest.param(testcase['schema'], test['data'], test['valid']))
-                    testids.append(f"{testsuite_dir.name} --> {testfile_path.name} --> {testcase['description']} --> {test['description']}")
+                    testids.append(f"{testfile_path.name} -> {testcase['description']} -> {test['description']}")
     metafunc.parametrize(argnames, argvalues, ids=testids)
 
 
 def test_validate(schema, data, valid):
-    s = Schema(schema, metaschema_uri='https://json-schema.org/draft/2019-09/schema')
-    assert (len(s.keywords) > 0) == (type(schema) is dict and len(schema) > 0)
+    s = JSONSchema(schema, metaschema_uri=metaschema_uri)
+    assert s.keywords.keys() == schema.keys() if isinstance(schema, dict) else not s.keywords
     result = s.evaluate(JSON(data))
     assert result.valid == valid
