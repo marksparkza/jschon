@@ -5,6 +5,7 @@ import rfc3986
 import rfc3986.exceptions
 import rfc3986.validators
 
+from jschon.jsonpointer import JSONPointer
 from jschon.exceptions import *
 from jschon.json import *
 from jschon.jsonschema import *
@@ -16,6 +17,8 @@ __all__ = [
     'VocabularyKeyword',
     'IdKeyword',
     'RefKeyword',
+    'RecursiveRefKeyword',
+    'DefsKeyword',
 
     # applicator vocabulary
     'AllOfKeyword',
@@ -111,12 +114,10 @@ class VocabularyKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: Metaschema,
+            superschema: JSONSchema,
             value: JSONObject[JSONBoolean],
     ) -> None:
         super().__init__(superschema, value)
-        if not isinstance(self.superschema, Metaschema):
-            return
 
         if self.superschema.superkeyword is not None:
             raise SchemaError('The "$vocabulary" keyword must not appear in a subschema')
@@ -181,14 +182,64 @@ class RefKeyword(Keyword):
             value: str,
     ) -> None:
         super().__init__(superschema, value)
+        self.refschema: JSONSchema
 
-        if not (uri_ref := rfc3986.uri_reference(self.json.value)).is_absolute():
-            if (base_uri := self.superschema.base_uri) is not None:
-                uri_ref = uri_ref.resolve_with(base_uri)
-            else:
-                raise SchemaError(f'No base URI against which to resolve the "$ref" value "{value}"')
+        uri, _, fragment = value.partition('#')
+        uri_ref = rfc3986.uri_reference(uri)
+        if (base_uri := self.superschema.base_uri) is not None:
+            uri_ref = uri_ref.resolve_with(base_uri)
+        if uri_ref.is_absolute():
+            schema = JSONSchema.get(uri_ref)
+        elif not uri:
+            schema = self.superschema.rootschema
+        else:
+            raise SchemaError(f'Unable to determine schema resource referenced by "{value}"')
 
-        self.refschema: JSONSchema = JSONSchema.get(uri_ref)
+        pointer = JSONPointer.parse_uri_fragment(f'#{fragment}')
+        self.refschema = JSONSchema(pointer.evaluate(schema.value))
+
+    def evaluate(self, instance: JSON) -> KeywordResult:
+        return KeywordResult(
+            valid=(valid := (subresult := self.refschema.evaluate(instance)).valid),
+            error="The instance is invalid against the referenced schema" if not valid else None,
+            subresults=[subresult],
+        )
+
+
+class RecursiveRefKeyword(Keyword):
+    __keyword__ = "$recursiveRef"
+    __schema__ = {
+        "type": "string",
+        "format": "uri-reference"
+    }
+
+    def __init__(
+            self,
+            superschema: JSONSchema,
+            value: str,
+    ) -> None:
+        super().__init__(superschema, value)
+        if value != '#':
+            raise SchemaError('The "$recursiveRef" keyword may only take the value "#"')
+
+        self.refschema: JSONSchema = superschema.rootschema
+
+    def evaluate(self, instance: JSON) -> KeywordResult:
+        return KeywordResult(
+            valid=(valid := (subresult := self.refschema.evaluate(instance)).valid),
+            error="The instance is invalid against the referenced schema" if not valid else None,
+            subresults=[subresult],
+        )
+
+
+class DefsKeyword(Keyword):
+    __keyword__ = "$defs"
+    __schema__ = {
+        "type": "object",
+        "additionalProperties": {"$recursiveRef": "#"},
+        "default": {}
+    }
+    applicators = PropertyApplicator,
 
 
 class AllOfKeyword(Keyword):

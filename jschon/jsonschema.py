@@ -25,7 +25,6 @@ __all__ = [
     'ArrayApplicator',
     'PropertyApplicator',
     'ApplicatorClass',
-    'Metaschema',
     'Vocabulary',
     'VocabularyClass',
     'FormatVocabulary',
@@ -58,18 +57,12 @@ class JSONSchema(JSON):
                     except JSONPointerError:
                         continue
 
-        # try the catalogue - the uri might identify a metaschema
-        base, _, frag = uristr.partition('#')
-        try:
-            doc = Catalogue.load(rfc3986.uri_reference(base))
-            ref = JSONPointer(frag)
+        base, _, fragment = uristr.partition('#')
+        doc = Catalogue.load(rfc3986.uri_reference(base))
+        if fragment:
+            ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
             doc = ref.evaluate(doc)
-            return Metaschema(doc)
-
-        except (CatalogueError, JSONPointerError):
-            pass
-
-        raise SchemaError(f"Schema not found for '{uristr}'")
+        return JSONSchema(doc)
 
     def __new__(
             cls,
@@ -97,17 +90,22 @@ class JSONSchema(JSON):
         self._metaschema_uri: Optional[URIReference] = metaschema_uri
         self.superkeyword: Optional[Keyword] = superkeyword
         self.keywords: Dict[str, Keyword] = {}
+        self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
         if base_uri is not None:
             JSONSchema._cache[base_uri] = self
+
+        # ensure the metaschema is loaded, if specified
+        if metaschema_uri is not None:
+            JSONSchema.get(metaschema_uri)
 
         if self.location and not superkeyword:
             raise SchemaError("superkeyword must be specified for a subschema")
 
     @property
-    def metaschema(self) -> Optional[Metaschema]:
+    def metaschema(self) -> Optional[JSONSchema]:
         if (uri := self.metaschema_uri) is not None:
-            return Metaschema.get(uri)
+            return JSONSchema.get(uri)
 
     @property
     def metaschema_uri(self) -> Optional[URIReference]:
@@ -132,6 +130,10 @@ class JSONSchema(JSON):
         self._base_uri = value
         if value is not None:
             JSONSchema._cache[value] = self
+
+    @property
+    def rootschema(self):
+        return self if not self.superkeyword else self.superkeyword.superschema.rootschema
 
     def evaluate(self, instance: JSON) -> JSONSchemaResult:
         raise NotImplementedError
@@ -189,15 +191,13 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             if (kw := kwclass.__keyword__) in value
         }
 
-        if not self.location and not isinstance(self, Metaschema):
-            if not (result := self.metaschema.evaluate(JSON(value))).valid:
-                errors = "\n".join(result.errors())
-                raise SchemaError(f"The schema is invalid against its metaschema:\n{errors}")
+        if (metaschema := self.metaschema) is not None:
+            if not self.location and not (result := metaschema.evaluate(JSON(value))).valid:
+                raise SchemaError(f"The schema is invalid against its metaschema: {list(result.errors())}")
 
-        if self.metaschema is not None:
             kwclasses = {
                 kw: kwclass for kw in value
-                if (kwclass := self.metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
+                if (kwclass := metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
             }
             self.keywords.update({
                 kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
@@ -384,28 +384,6 @@ class PropertyApplicator(Applicator):
                 },
                 location=self.keyword.location,
             )
-
-
-class Metaschema(JSONObjectSchema):
-
-    @classmethod
-    def get(cls, uri: URIReference) -> Metaschema:
-        try:
-            if isinstance(schema := cls._cache[uri], Metaschema):
-                return schema
-            raise SchemaError(f"The schema identified by {uri=} is not a metaschema")
-        except KeyError:
-            pass
-
-        return Metaschema(Catalogue.load(uri))
-
-    def __init__(
-            self,
-            value: Mapping[str, AnyJSONCompatible],
-            **kwargs: Any,
-    ) -> None:
-        self.kwclasses: Dict[str, KeywordClass] = {}
-        super().__init__(value, **kwargs)
 
 
 class Vocabulary:

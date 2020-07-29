@@ -11,6 +11,7 @@ from jschon.keywords import *
 def initialize():
     JSONObjectSchema._bootstrap_kwclasses = (
         IdKeyword,
+        DefsKeyword,
         SchemaKeyword,
         VocabularyKeyword,
     )
@@ -27,6 +28,8 @@ def initialize():
             VocabularyKeyword,
             IdKeyword,
             RefKeyword,
+            RecursiveRefKeyword,
+            DefsKeyword,
         )
     )
 

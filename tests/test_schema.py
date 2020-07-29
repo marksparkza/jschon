@@ -1,6 +1,6 @@
 from hypothesis import given
 
-from jschon.jsonschema import JSONSchema, JSONObjectSchema, Metaschema
+from jschon.jsonschema import JSONSchema, JSONObjectSchema
 from tests import metaschema_uri
 from tests.strategies import *
 
@@ -23,7 +23,7 @@ def test_keyword_dependency_resolution(value: list):
         except ValueError:
             pass
 
-    metaschema = Metaschema.get(metaschema_uri)
+    metaschema = JSONSchema.get(metaschema_uri)
     kwclasses = {
         kw: metaschema.kwclasses[kw] for kw in value
     }
