@@ -63,7 +63,11 @@ class EmailFormat(Format):
 
     def evaluate(self, instance: JSONString) -> FormatResult:
         try:
-            email_validator.validate_email(instance.value, allow_smtputf8=False, check_deliverability=False)
+            email_validator.validate_email(
+                instance.value,
+                allow_smtputf8=False,
+                check_deliverability=False,
+            )
         except email_validator.EmailNotValidError as e:
             return FormatResult(valid=False, error=str(e))
 
@@ -75,7 +79,11 @@ class IDNEmailFormat(Format):
 
     def evaluate(self, instance: JSONString) -> FormatResult:
         try:
-            email_validator.validate_email(instance.value, check_deliverability=False)
+            email_validator.validate_email(
+                instance.value,
+                allow_smtputf8=True,
+                check_deliverability=False,
+            )
         except email_validator.EmailNotValidError as e:
             return FormatResult(valid=False, error=str(e))
 
