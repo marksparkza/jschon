@@ -1,3 +1,5 @@
+import re
+
 import email_validator
 import rfc3986.exceptions
 import rfc3986.validators
@@ -195,4 +197,9 @@ class RegexFormat(Format):
     __attr__ = "regex"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            re.compile(instance.value)
+        except re.error as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)

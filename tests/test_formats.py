@@ -1,3 +1,5 @@
+import re
+
 import email_validator
 import rfc3986.exceptions
 import rfc3986.validators
@@ -84,4 +86,14 @@ def test_jsonpointer_invalid(instance):
         JSONPointer(instance)
         assert result.valid is True
     except JSONPointerError:
+        assert result.valid is False
+
+
+@given(hs.text(hs.from_regex(r'[0-9\[\]\-^+*?{},$()|]')))
+def test_regex(instance):
+    result = evaluate_format("regex", instance)
+    try:
+        re.compile(instance)
+        assert result.valid is True
+    except re.error:
         assert result.valid is False
