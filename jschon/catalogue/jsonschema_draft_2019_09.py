@@ -9,7 +9,7 @@ from jschon.keywords import *
 
 
 def initialize():
-    JSONObjectSchema._bootstrap_kwclasses = (
+    JSONObjectSchema.bootstrap(
         IdKeyword,
         DefsKeyword,
         SchemaKeyword,

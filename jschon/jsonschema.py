@@ -170,6 +170,10 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
 
     _bootstrap_kwclasses: Tuple[KeywordClass, ...] = ...
 
+    @classmethod
+    def bootstrap(cls, *kwclasses: KeywordClass) -> None:
+        cls._bootstrap_kwclasses = kwclasses
+
     def __new__(
             cls,
             value: Mapping[str, AnyJSONCompatible],
