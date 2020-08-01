@@ -83,9 +83,10 @@ class SchemaKeyword(Keyword):
             superschema: JSONSchema,
             value: str,
     ) -> None:
-        super().__init__(superschema, value)
-        if self.superschema.superkeyword is not None:
+        if superschema.superkeyword is not None:
             raise SchemaError('The "$schema" keyword must not appear in a subschema')
+
+        super().__init__(superschema, value)
 
         validator = rfc3986.validators.Validator().require_presence_of('scheme')
         try:
@@ -117,10 +118,10 @@ class VocabularyKeyword(Keyword):
             superschema: JSONSchema,
             value: JSONObject[JSONBoolean],
     ) -> None:
-        super().__init__(superschema, value)
-
-        if self.superschema.superkeyword is not None:
+        if superschema.superkeyword is not None:
             raise SchemaError('The "$vocabulary" keyword must not appear in a subschema')
+
+        super().__init__(superschema, value)
 
         for vocab_uri, vocab_required in value.items():
             validator = rfc3986.validators.Validator().require_presence_of('scheme')
