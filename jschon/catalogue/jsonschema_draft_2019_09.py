@@ -11,9 +11,9 @@ from jschon.keywords import *
 def initialize():
     JSONObjectSchema.bootstrap(
         IdKeyword,
-        DefsKeyword,
         SchemaKeyword,
         VocabularyKeyword,
+        DefsKeyword,
     )
 
     Catalogue.add_local(
