@@ -196,13 +196,11 @@ class RefKeyword(Keyword):
         else:
             raise SchemaError(f'Unable to determine schema resource referenced by "{value}"')
 
-        if fragment:
-            # TODO:
-            #  resolve to the extant subschema; don't create a whole new schema
-            ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
-            self.refschema = JSONSchema(ref.evaluate(schema.value))
-        else:
-            self.refschema = schema
+        ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
+        self.refschema = ref.evaluate(schema)
+
+        if not isinstance(self.refschema, JSONSchema):
+            raise SchemaError(f'The value referenced by "{value}" is not a JSON Schema')
 
     def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
