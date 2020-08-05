@@ -177,34 +177,27 @@ class RefKeyword(Keyword):
         "format": "uri-reference"
     }
 
-    def __init__(
-            self,
-            superschema: JSONSchema,
-            value: str,
-    ) -> None:
-        super().__init__(superschema, value)
-        self.refschema: JSONSchema
-
-        uri, _, fragment = value.partition('#')
-        uri_ref = rfc3986.uri_reference(uri)
+    def evaluate(self, instance: JSON) -> KeywordResult:
+        base, _, fragment = (value := self.json.value).partition('#')
+        uri_ref = rfc3986.uri_reference(base)
         if (base_uri := self.superschema.base_uri) is not None:
             uri_ref = uri_ref.resolve_with(base_uri)
         if uri_ref.is_absolute():
-            schema = JSONSchema.get(uri_ref)
-        elif not uri:
-            schema = self.superschema.rootschema
+            refschema = JSONSchema.get(uri_ref)
+        elif not base:
+            refschema = self.superschema.rootschema
         else:
             raise SchemaError(f'Unable to determine schema resource referenced by "{value}"')
 
-        ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
-        self.refschema = ref.evaluate(schema)
+        if fragment:
+            ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
+            refschema = ref.evaluate(refschema)
 
-        if not isinstance(self.refschema, JSONSchema):
+        if not isinstance(refschema, JSONSchema):
             raise SchemaError(f'The value referenced by "{value}" is not a JSON Schema')
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
         return KeywordResult(
-            valid=(valid := (subresult := self.refschema.evaluate(instance)).valid),
+            valid=(valid := (subresult := refschema.evaluate(instance)).valid),
             error="The instance is invalid against the referenced schema" if not valid else None,
             subresults=[subresult],
         )

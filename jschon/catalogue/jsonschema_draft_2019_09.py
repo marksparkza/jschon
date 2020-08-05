@@ -13,7 +13,6 @@ def initialize():
         IdKeyword,
         SchemaKeyword,
         VocabularyKeyword,
-        DefsKeyword,
     )
 
     Catalogue.add_local(
