@@ -44,20 +44,7 @@ class JSONSchema(JSON):
         except KeyError:
             pass
 
-        uristr = uri.unsplit()
-        for cached_uri in cls._cache:
-            if uristr.startswith((cached_uristr := cached_uri.unsplit())):
-                if isinstance(schema := cls._cache[cached_uri], JSONObjectSchema):
-                    try:
-                        ref = JSONPointer(uristr[len(cached_uristr):])
-                        target = ref.evaluate(schema)
-                        if isinstance(target, JSONSchema):
-                            cls._cache[uri] = target
-                            return target
-                    except JSONPointerError:
-                        continue
-
-        base, _, fragment = uristr.partition('#')
+        base, _, fragment = uri.unsplit().partition('#')
         doc = Catalogue.load(rfc3986.uri_reference(base))
         if fragment:
             ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
