@@ -183,9 +183,6 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
         }
 
         if (metaschema := self.metaschema) is not None:
-            if not self.location and not (result := metaschema.evaluate(JSON(value))).valid:
-                raise SchemaError(f"The schema is invalid against its metaschema: {list(result.errors())}")
-
             kwclasses = {
                 kw: kwclass for kw in value
                 if (kwclass := metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
@@ -194,6 +191,8 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                 kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
                 for kwclass in self._resolve_keyword_dependencies(kwclasses)
             })
+            if not self.location and not (result := metaschema.evaluate(JSON(value))).valid:
+                raise SchemaError(f"The schema is invalid against its metaschema: {list(result.errors())}")
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
