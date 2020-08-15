@@ -131,13 +131,6 @@ class JSONPointer(Sequence[str]):
 
         return resolve(document, collections.deque(self._keys))
 
-    def apply(self, document: Union[Mapping[str, Any], Sequence[Any]], value: Any) -> None:
-        """ Set the value at the location in the document indicated by self.
-
-        :raise JSONPointerError: if the location cannot be reached
-        """
-        raise NotImplementedError
-
     @classmethod
     def parse_uri_fragment(cls, value: str) -> JSONPointer:
         if not value.startswith('#'):
