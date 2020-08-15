@@ -110,7 +110,7 @@ class JSONPointer(Sequence[str]):
         """ Return repr(self) """
         return f"JSONPointer('{self}')"
 
-    def evaluate(self, document: Union[Mapping[str, Any], Sequence[Any]]) -> Any:
+    def evaluate(self, document: Any) -> Any:
         """ Return the value at the location in the document indicated by self.
 
         :raise JSONPointerError: if the location does not exist
