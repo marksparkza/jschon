@@ -17,7 +17,7 @@ setup(
         ],
         'test': [
             'pytest',
-            'pytest-cov',
+            'coverage',
             'hypothesis',
         ],
     },
