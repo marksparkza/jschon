@@ -1,10 +1,12 @@
 from typing import Union, List
 
+import pytest
 from hypothesis import given, strategies as hs
 
+from jschon.exceptions import JSONPointerError
 from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
-from tests.strategies import jsonpointer, jsonpointer_key, jsonarray, jsonobject
+from tests.strategies import jsonpointer, jsonpointer_key, json
 
 
 @given(hs.lists(jsonpointer | hs.lists(jsonpointer_key)))
@@ -31,8 +33,8 @@ def test_extend_jsonpointer(value, newkey):
     assert str(pointer) == f'{value}/{newtoken}'
 
 
-@given(jsonarray | jsonobject)
-def test_evaluate_jsonpointer(value):
+@given(json, jsonpointer_key)
+def test_evaluate_jsonpointer(value, testkey):
     resolved_pointers = {}
 
     def generate_pointers(ptr, val):
@@ -44,10 +46,28 @@ def test_evaluate_jsonpointer(value):
             for k, item in val.items():
                 generate_pointers(f"{ptr}/{jsonpointer_escape(k)}", item)
 
+    assert JSONPointer().evaluate(value) == value
+    assert JSONPointer().evaluate(JSON(value)) == value
+
     generate_pointers('', value)
     for pointer, target in resolved_pointers.items():
         assert JSONPointer(pointer).evaluate(value) == target
         assert JSONPointer(pointer).evaluate(JSON(value)) == target
+
+    if isinstance(value, list):
+        with pytest.raises(JSONPointerError):
+            JSONPointer(f'/{len(value)}').evaluate(value)
+        with pytest.raises(JSONPointerError):
+            JSONPointer('/-').evaluate(value)
+        with pytest.raises(JSONPointerError):
+            JSONPointer('/').evaluate(value)
+    elif isinstance(value, dict):
+        if testkey not in value:
+            with pytest.raises(JSONPointerError):
+                JSONPointer(f'/{testkey}').evaluate(value)
+    else:
+        with pytest.raises(JSONPointerError):
+            JSONPointer(f'/{value}').evaluate(value)
 
 
 def jsonpointer_escape(key: str):
