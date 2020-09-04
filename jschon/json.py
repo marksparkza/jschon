@@ -84,6 +84,8 @@ class JSON:
         return self.__type__ == jsontype
 
 
+# use as a type parameter for generics representing containers
+# of JSON instances, e.g. Mapping[str, AnyJSON]
 AnyJSON = TypeVar('AnyJSON', bound=JSON)
 
 
@@ -231,7 +233,7 @@ class JSONArray(JSON, Sequence[AnyJSON]):
             for i, v in enumerate(value)
         ]
 
-    def __getitem__(self, index: int) -> AnyJSON:
+    def __getitem__(self, index: int) -> JSON:
         return self._items[index]
 
     def __len__(self) -> int:
@@ -267,7 +269,7 @@ class JSONObject(JSON, Mapping[str, AnyJSON]):
             for k, v in value.items()
         }
 
-    def __getitem__(self, key: str) -> AnyJSON:
+    def __getitem__(self, key: str) -> JSON:
         return self._properties[key]
 
     def __iter__(self) -> Iterator[str]:
