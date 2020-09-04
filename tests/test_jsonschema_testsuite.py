@@ -2,10 +2,17 @@ import json
 import pathlib
 
 import pytest
+import rfc3986
 
+from jschon.catalogue import Catalogue
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema
 from tests import metaschema_uri
+
+Catalogue.add_local(
+    base_uri=rfc3986.uri_reference('http://localhost:1234/'),
+    base_dir=pathlib.Path(__file__).parent / 'jsonschema_testsuite' / 'remotes',
+)
 
 
 def pytest_generate_tests(metafunc):
@@ -13,7 +20,7 @@ def pytest_generate_tests(metafunc):
     argvalues = []
     testids = []
     testsuite_dir = pathlib.Path('jsonschema_testsuite/tests/draft2019-09')
-    testfile_paths = sorted(testsuite_dir.glob('**/*.json'))
+    testfile_paths = sorted(testsuite_dir.rglob('*.json'))
     for testfile_path in testfile_paths:
         with testfile_path.open() as testfile:
             testcases = json.load(testfile)
