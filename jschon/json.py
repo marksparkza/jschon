@@ -22,6 +22,12 @@ __all__ = [
 class JSON:
     __type__: str = ...
 
+    class _Encoder(json.JSONEncoder):
+        def default(self, o: Any) -> AnyJSONCompatible:
+            if isinstance(o, JSON):
+                return o.value
+            return super().default(o)
+
     @classmethod
     def classfor(cls, jsontype: str):
         try:
@@ -75,10 +81,10 @@ class JSON:
         return NotImplemented
 
     def __str__(self) -> str:
-        return json.dumps(self.value)
+        return json.dumps(self.value, cls=self._Encoder)
 
     def __repr__(self) -> str:
-        return f"JSON({self})"
+        return f'{self.__class__.__name__}({self})'
 
     def istype(self, jsontype: str) -> bool:
         return self.__type__ == jsontype

@@ -10,17 +10,17 @@ from rfc3986 import URIReference
 from jschon.catalogue import Catalogue
 from jschon.exceptions import *
 from jschon.json import JSON, JSONObject, JSONArray, AnyJSON
+from jschon.jsoninstance import JSONInstance
 from jschon.jsonpointer import JSONPointer
 from jschon.types import AnyJSONCompatible, tuplify, is_schema_compatible
 
 __all__ = [
+    'evaluate',
     'JSONSchema',
     'JSONBooleanSchema',
     'JSONObjectSchema',
-    'JSONSchemaResult',
     'Keyword',
     'KeywordClass',
-    'KeywordResult',
     'Applicator',
     'ArrayApplicator',
     'PropertyApplicator',
@@ -32,6 +32,16 @@ __all__ = [
     'FormatClass',
     'FormatResult',
 ]
+
+
+def evaluate(schema: JSONSchema, document: JSON) -> JSONInstance:
+    instance = JSONInstance(
+        json=document,
+        path=schema.location,
+        parent=None,
+    )
+    schema.evaluate(instance)
+    return instance
 
 
 class JSONSchema(JSON):
@@ -87,7 +97,7 @@ class JSONSchema(JSON):
             JSONSchema.get(metaschema_uri)
 
         if self.location and not superkeyword:
-            raise SchemaError("superkeyword must be specified for a subschema")
+            raise JSONSchemaError("superkeyword must be specified for a subschema")
 
     @property
     def metaschema(self) -> Optional[JSONSchema]:
@@ -122,11 +132,8 @@ class JSONSchema(JSON):
     def rootschema(self):
         return self if not self.superkeyword else self.superkeyword.superschema.rootschema
 
-    def evaluate(self, instance: JSON) -> JSONSchemaResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         raise NotImplementedError
-
-    def __repr__(self) -> str:
-        return f"JSONSchema({self})"
 
 
 class JSONBooleanSchema(JSONSchema):
@@ -141,15 +148,11 @@ class JSONBooleanSchema(JSONSchema):
             return object.__new__(cls)
         raise TypeError("Expecting bool")
 
-    def evaluate(self, instance: JSON) -> JSONSchemaResult:
-        return JSONSchemaResult(
-            keyword=self.superkeyword,
-            instance=instance,
-            valid=self.value,
-            annotation=None,
-            error=None,
-            subresults=None,
-        )
+    def evaluate(self, instance: JSONInstance) -> None:
+        if self.value:
+            instance.pass_()
+        else:
+            instance.fail()
 
 
 class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
@@ -176,7 +179,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             **kwargs: Any,
     ) -> None:
         super().__init__(value, **kwargs)
-        self.keywords = {
+        self.keywords: Dict[str, Keyword] = {
             kw: kwclass(self, value[kw])
             for kwclass in self._bootstrap_kwclasses
             if (kw := kwclass.__keyword__) in value
@@ -191,8 +194,10 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                 kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
                 for kwclass in self._resolve_keyword_dependencies(kwclasses)
             })
-            if not self.location and not (result := metaschema.evaluate(JSON(value))).valid:
-                raise SchemaError(f"The schema is invalid against its metaschema: {list(result.errors())}")
+            if not self.location:
+                metaschema.evaluate(instance := JSONInstance(JSON(value), JSONPointer(), None))
+                if not instance.valid:
+                    raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
@@ -212,31 +217,18 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                     yield kwclass
                     break
 
-    def evaluate(self, instance: JSON) -> JSONSchemaResult:
-        result = JSONSchemaResult(
-            keyword=self.superkeyword,
-            instance=instance,
-            valid=True,
-            annotation=None,
-            error=None,
-            subresults=[],
-        )
+    def evaluate(self, instance: JSONInstance) -> None:
         for keyword in self.keywords.values():
-            if keyword.__types__ is None or \
-                    isinstance(instance, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))):
-                keyword.result = keyword.evaluate(instance)
-                if keyword.result is not None:
-                    result.subresults += [JSONSchemaResult(
-                        keyword=keyword,
-                        instance=instance,
-                        valid=(valid := not keyword.assert_ or keyword.result.valid),
-                        annotation=keyword.result.annotation if valid else None,
-                        error=keyword.result.error if not valid else None,
-                        subresults=keyword.result.subresults,
-                    )]
-                    if not valid:
-                        result.valid = False
-        return result
+            if keyword.__types__ is None or isinstance(
+                    instance.json, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
+            ):
+                instance.descend(keyword.__keyword__, instance.json, keyword.evaluate)
+
+        if all(child.valid or not child.assert_
+               for child in instance.children.values()):
+            instance.pass_()
+        else:
+            instance.fail()
 
     def __getitem__(self, key: str) -> JSON:
         return self.keywords[key].json
@@ -246,25 +238,6 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
 
     def __len__(self) -> int:
         return len(self.keywords)
-
-
-@dataclasses.dataclass
-class JSONSchemaResult:
-    keyword: Optional[Keyword]
-    instance: JSON
-    valid: bool
-    annotation: Optional[AnyJSONCompatible]
-    error: Optional[str]
-    subresults: Optional[List[JSONSchemaResult]]
-
-    def errors(self) -> Iterator[str]:
-        if error := self.error:
-            keyword_location = str(self.keyword.location) if self.keyword else ''
-            instance_location = str(self.instance.location)
-            yield f"{keyword_location=}, {instance_location=}, {error=}"
-        if self.subresults:
-            for subresult in self.subresults:
-                yield from subresult.errors()
 
 
 class Keyword:
@@ -284,7 +257,6 @@ class Keyword:
         self.superschema: JSONSchema = superschema
         self.location: JSONPointer = superschema.location / self.__keyword__
         self.json: JSON
-        self.result: Optional[KeywordResult] = None
 
         # there may be several possible ways in which to set up subschemas for
         # an applicator keyword; we try a series of applicator classes in turn
@@ -297,26 +269,17 @@ class Keyword:
         else:
             self.json = JSON(value, location=self.location)
 
-    @property
-    def assert_(self) -> bool:
-        return True
-
-    def evaluate(self, instance: JSON) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance) -> None:
         pass
 
+    def __str__(self) -> str:
+        return f'"{self.__keyword__}": {self.json}'
+
     def __repr__(self) -> str:
-        return f'Keyword("{self.__keyword__}")'
+        return f'{self.__class__.__name__}({self})'
 
 
 KeywordClass = Type[Keyword]
-
-
-@dataclasses.dataclass
-class KeywordResult:
-    valid: bool
-    annotation: Optional[AnyJSONCompatible] = None
-    error: Optional[str] = None
-    subresults: Optional[List[JSONSchemaResult]] = None
 
 
 class Applicator:

@@ -5,9 +5,10 @@ import rfc3986
 import rfc3986.exceptions
 import rfc3986.validators
 
-from jschon.jsonpointer import JSONPointer
-from jschon.exceptions import *
+from jschon.exceptions import JSONSchemaError, VocabularyError
 from jschon.json import *
+from jschon.jsoninstance import JSONInstance
+from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import *
 from jschon.types import tuplify, arrayify
 
@@ -84,7 +85,7 @@ class SchemaKeyword(Keyword):
             value: str,
     ) -> None:
         if superschema.superkeyword is not None:
-            raise SchemaError('The "$schema" keyword must not appear in a subschema')
+            raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
 
         super().__init__(superschema, value)
 
@@ -92,10 +93,10 @@ class SchemaKeyword(Keyword):
         try:
             validator.validate(uri_ref := rfc3986.uri_reference(value))
         except rfc3986.exceptions.ValidationError as e:
-            raise SchemaError(f"'{value}' is not a valid URI or does not contain a scheme") from e
+            raise JSONSchemaError(f"'{value}' is not a valid URI or does not contain a scheme") from e
 
         if uri_ref != uri_ref.normalize():
-            raise SchemaError(f"'{value}' is not normalized")
+            raise JSONSchemaError(f"'{value}' is not normalized")
 
         superschema.metaschema_uri = uri_ref
 
@@ -119,7 +120,7 @@ class VocabularyKeyword(Keyword):
             value: JSONObject[JSONBoolean],
     ) -> None:
         if superschema.superkeyword is not None:
-            raise SchemaError('The "$vocabulary" keyword must not appear in a subschema')
+            raise JSONSchemaError('The "$vocabulary" keyword must not appear in a subschema')
 
         super().__init__(superschema, value)
 
@@ -128,20 +129,20 @@ class VocabularyKeyword(Keyword):
             try:
                 validator.validate(uri_ref := rfc3986.uri_reference(vocab_uri))
             except rfc3986.exceptions.ValidationError as e:
-                raise SchemaError(f"'{vocab_uri}' is not a valid URI or does not contain a scheme") from e
+                raise JSONSchemaError(f"'{vocab_uri}' is not a valid URI or does not contain a scheme") from e
 
             if uri_ref != uri_ref.normalize():
-                raise SchemaError(f"'{vocab_uri}' is not normalized")
+                raise JSONSchemaError(f"'{vocab_uri}' is not normalized")
 
             if not isinstance(vocab_required, bool):
-                raise SchemaError('"$vocabulary" values must be booleans')
+                raise JSONSchemaError('"$vocabulary" values must be booleans')
 
             try:
                 vocabulary = Vocabulary(vocab_uri, vocab_required)
                 self.superschema.kwclasses.update(vocabulary.kwclasses)
             except VocabularyError as e:
                 if vocab_required:
-                    raise SchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'") from e
+                    raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'") from e
 
 
 class IdKeyword(Keyword):
@@ -161,11 +162,11 @@ class IdKeyword(Keyword):
         super().__init__(superschema, value)
         if not (uri_ref := rfc3986.uri_reference(value)).is_absolute():
             if not superschema.location:
-                raise SchemaError('The "$id" of the root schema, if present, must be an absolute URI')
+                raise JSONSchemaError('The "$id" of the root schema, if present, must be an absolute URI')
             if (base_uri := superschema.base_uri) is not None:
                 uri_ref = uri_ref.resolve_with(base_uri)
             else:
-                raise SchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
+                raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
         superschema.base_uri = uri_ref
 
@@ -177,7 +178,8 @@ class RefKeyword(Keyword):
         "format": "uri-reference"
     }
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
+        # TODO: check that we're not recalculating refschema unnecessarily
         base, _, fragment = (value := self.json.value).partition('#')
         uri_ref = rfc3986.uri_reference(base)
         if (base_uri := self.superschema.base_uri) is not None:
@@ -187,20 +189,16 @@ class RefKeyword(Keyword):
         elif not base:
             refschema = self.superschema.rootschema
         else:
-            raise SchemaError(f'Unable to determine schema resource referenced by "{value}"')
+            raise JSONSchemaError(f'Unable to determine schema resource referenced by "{value}"')
 
         if fragment:
             ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
             refschema = ref.evaluate(refschema)
 
         if not isinstance(refschema, JSONSchema):
-            raise SchemaError(f'The value referenced by "{value}" is not a JSON Schema')
+            raise JSONSchemaError(f'The value referenced by "{value}" is not a JSON Schema')
 
-        return KeywordResult(
-            valid=(valid := (subresult := refschema.evaluate(instance)).valid),
-            error="The instance is invalid against the referenced schema" if not valid else None,
-            subresults=[subresult],
-        )
+        refschema.evaluate(instance)
 
 
 class RecursiveRefKeyword(Keyword):
@@ -217,16 +215,12 @@ class RecursiveRefKeyword(Keyword):
     ) -> None:
         super().__init__(superschema, value)
         if value != '#':
-            raise SchemaError('The "$recursiveRef" keyword may only take the value "#"')
+            raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
 
         self.refschema: JSONSchema = superschema.rootschema
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
-        return KeywordResult(
-            valid=(valid := (subresult := self.refschema.evaluate(instance)).valid),
-            error="The instance is invalid against the referenced schema" if not valid else None,
-            subresults=[subresult],
-        )
+    def evaluate(self, instance: JSONInstance) -> None:
+        self.refschema.evaluate(instance)
 
 
 class DefsKeyword(Keyword):
@@ -249,20 +243,16 @@ class AllOfKeyword(Keyword):
 
     applicators = ArrayApplicator,
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONArray[JSONSchema]
-        result = KeywordResult(
-            valid=True,
-            subresults=[],
-        )
-        for subschema in self.json:
-            result.subresults += [subresult := subschema.evaluate(instance)]
-            if not subresult.valid:
-                result.valid = False
-                result.error = "The instance must be valid against all subschemas"
-                break
 
-        return result
+        for i, subschema in enumerate(self.json):
+            if child := instance.descend(str(i), instance.json, subschema.evaluate):
+                if not child.valid:
+                    instance.fail("The instance must be valid against all subschemas")
+                    return
+
+        instance.pass_()
 
 
 class AnyOfKeyword(Keyword):
@@ -275,21 +265,14 @@ class AnyOfKeyword(Keyword):
 
     applicators = ArrayApplicator,
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONArray[JSONSchema]
-        result = KeywordResult(
-            valid=False,
-            subresults=[],
-        )
-        for subschema in self.json:
-            result.subresults += [subresult := subschema.evaluate(instance)]
-            if subresult.valid:
-                result.valid = True
 
-        if not result.valid:
-            result.error = "The instance must be valid against at least one subschema"
-
-        return result
+        instance.fail("The instance must be valid against at least one subschema")
+        for i, subschema in enumerate(self.json):
+            if child := instance.descend(str(i), instance.json, subschema.evaluate):
+                if child.valid:
+                    instance.pass_()
 
 
 class OneOfKeyword(Keyword):
@@ -302,24 +285,16 @@ class OneOfKeyword(Keyword):
 
     applicators = ArrayApplicator,
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONArray[JSONSchema]
-        result = KeywordResult(
-            valid=False,
-            subresults=[],
-        )
-        valid = 0
-        for subschema in self.json:
-            result.subresults += [subresult := subschema.evaluate(instance)]
-            if subresult.valid:
-                valid += 1
 
-        if valid == 1:
-            result.valid = True
+        for i, subschema in enumerate(self.json):
+            instance.descend(str(i), instance.json, subschema.evaluate)
+
+        if len([child for child in instance.children.values() if child.valid]) == 1:
+            instance.pass_()
         else:
-            result.error = "The instance must be valid against exactly one subschema"
-
-        return result
+            instance.fail("The instance must be valid against exactly one subschema")
 
 
 class NotKeyword(Keyword):
@@ -328,13 +303,14 @@ class NotKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONSchema
-        return KeywordResult(
-            valid=(valid := not (subresult := self.json.evaluate(instance)).valid),
-            error="The instance must not be valid against the given subschema" if not valid else None,
-            subresults=[subresult],
-        )
+        self.json.evaluate(instance)
+
+        if not instance.valid:
+            instance.pass_()
+        else:
+            instance.fail("The instance must not be valid against the given subschema")
 
 
 class IfKeyword(Keyword):
@@ -343,16 +319,10 @@ class IfKeyword(Keyword):
 
     applicators = Applicator,
 
-    @property
-    def assert_(self):
-        return False
-
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONSchema
-        return KeywordResult(
-            valid=(subresult := self.json.evaluate(instance)).valid,
-            subresults=[subresult],
-        )
+        self.json.evaluate(instance)
+        instance.assert_ = False
 
 
 class ThenKeyword(Keyword):
@@ -362,13 +332,10 @@ class ThenKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSON) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONSchema
-        if (if_ := self.superschema.keywords.get("if")) and if_.result.valid:
-            return KeywordResult(
-                valid=(subresult := self.json.evaluate(instance)).valid,
-                subresults=[subresult],
-            )
+        if (if_ := instance.sibling("if")) and if_.valid:
+            self.json.evaluate(instance)
 
 
 class ElseKeyword(Keyword):
@@ -378,13 +345,10 @@ class ElseKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSON) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONSchema
-        if (if_ := self.superschema.keywords.get("if")) and not if_.result.valid:
-            return KeywordResult(
-                valid=(subresult := self.json.evaluate(instance)).valid,
-                subresults=[subresult],
-            )
+        if (if_ := instance.sibling("if")) and not if_.valid:
+            self.json.evaluate(instance)
 
 
 class DependentSchemasKeyword(Keyword):
@@ -397,25 +361,20 @@ class DependentSchemasKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONObject[JSONSchema]
-        result = KeywordResult(
-            valid=True,
-            annotation=[],
-            subresults=[],
-        )
-        for name, subschema in self.json.items():
-            if name in instance:
-                result.subresults += [subresult := subschema.evaluate(instance)]
-                if subresult.valid:
-                    result.annotation += [name]
-                else:
-                    result.valid = False
-                    result.annotation = None
-                    result.error = f'The instance is invalid against the "{name}" subschema'
-                    break
 
-        return result
+        annotation = []
+        for name, subschema in self.json.items():
+            if name in instance.json:
+                if child := instance.descend(name, instance.json, subschema.evaluate):
+                    if child.valid:
+                        annotation += [name]
+                    else:
+                        instance.fail(f'The instance is invalid against the "{name}" subschema')
+                        return
+
+        instance.pass_(annotation)
 
 
 class ItemsKeyword(Keyword):
@@ -434,38 +393,33 @@ class ItemsKeyword(Keyword):
 
     applicators = Applicator, ArrayApplicator
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
-        result = KeywordResult(
-            valid=True,
-            subresults=[],
-        )
-        if len(instance) > 0:
-            if isinstance(self.json, JSONBooleanSchema) and self.json.value is False:
-                result.valid = False
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
+        if len(instance.json) == 0:
+            instance.pass_()
 
-            elif isinstance(self.json, JSONSchema):
-                result.annotation = True
-                for item in instance:
-                    result.subresults += [subresult := self.json.evaluate(item)]
-                    if not subresult.valid:
-                        result.valid = False
-                        result.annotation = None
-                        break
+        elif isinstance(self.json, JSONBooleanSchema):
+            self.json.evaluate(instance)
 
-            elif isinstance(self.json, JSONArray):
-                self.json: JSONArray[JSONSchema]
-                for index, item in enumerate(instance[:len(self.json)]):
-                    result.annotation = index
-                    result.subresults += [subresult := self.json[index].evaluate(item)]
-                    if not subresult.valid:
-                        result.valid = False
-                        result.annotation = None
-                        break
+        elif isinstance(self.json, JSONSchema):
+            for index, item in enumerate(instance.json):
+                if child := instance.descend(str(index), item, self.json.evaluate, extendpath=False):
+                    if not child.valid:
+                        instance.fail(f"Array element {index} is invalid")
+                        return
 
-        if not result.valid:
-            result.error = "One or more array elements is invalid"
+            instance.pass_(True)
 
-        return result
+        elif isinstance(self.json, JSONArray):
+            self.json: JSONArray[JSONSchema]
+            annotation = None
+            for index, item in enumerate(instance.json[:len(self.json)]):
+                annotation = index
+                if child := instance.descend(str(index), item, self.json[index].evaluate):
+                    if not child.valid:
+                        instance.fail(f"Array element {index} is invalid")
+                        return
+
+            instance.pass_(annotation)
 
 
 class AdditionalItemsKeyword(Keyword):
@@ -476,23 +430,19 @@ class AdditionalItemsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONArray) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONSchema
-        if (items := self.superschema.keywords.get("items")) and type(items.result.annotation) is int:
-            result = KeywordResult(
-                valid=True,
-                subresults=[],
-            )
-            for index, item in enumerate(instance[items.result.annotation + 1:]):
-                result.annotation = True
-                result.subresults += [subresult := self.json.evaluate(item)]
-                if not subresult.valid:
-                    result.valid = False
-                    result.annotation = None
-                    result.error = "One or more array elements is invalid"
-                    break
 
-            return result
+        if (items := instance.sibling("items")) and isinstance(items.annotation, int):
+            annotation = None
+            for index, item in enumerate(instance.json[items.annotation + 1:]):
+                annotation = True
+                if child := instance.descend(str(index), item, self.json.evaluate, extendpath=False):
+                    if not child.valid:
+                        instance.fail(f"Array element {index} is invalid")
+                        return
+
+            instance.pass_(annotation)
 
 
 class UnevaluatedItemsKeyword(Keyword):
@@ -503,30 +453,26 @@ class UnevaluatedItemsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONArray) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         # TODO:
         #  check annotation results for items, additionalItems and unevaluatedItems
         #  from adjacent in-place applicator keywords
         self.json: JSONSchema
-        items = self.superschema.keywords.get("items")
-        additional_items = self.superschema.keywords.get("additionalItems")
 
-        if items and type(items.result.annotation) is int and \
-                (not additional_items or additional_items.result.annotation is None):
-            result = KeywordResult(
-                valid=True,
-                subresults=[],
-            )
-            for index, item in enumerate(instance[items.result.annotation + 1:]):
-                result.annotation = True
-                result.subresults += [subresult := self.json.evaluate(item)]
-                if not subresult.valid:
-                    result.valid = False
-                    result.annotation = None
-                    result.error = "One or more array elements is invalid"
-                    break
+        items = instance.sibling("items")
+        additional_items = instance.sibling("additionalItems")
 
-            return result
+        if items and isinstance(items.annotation, int) and \
+                (not additional_items or additional_items.annotation is None):
+            annotation = None
+            for index, item in enumerate(instance.json[items.annotation + 1:]):
+                annotation = True
+                if child := instance.descend(str(index), item, self.json.evaluate, extendpath=False):
+                    if not child.valid:
+                        instance.fail(f"Array element {index} is invalid")
+                        return
+
+            instance.pass_(annotation)
 
 
 class ContainsKeyword(Keyword):
@@ -536,23 +482,19 @@ class ContainsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONSchema
-        result = KeywordResult(
-            valid=False,
-            annotation=0,
-            subresults=[],
-        )
-        for item in instance:
-            result.subresults += [subresult := self.json.evaluate(item)]
-            if subresult.valid:
-                result.valid = True
-                result.annotation += 1
 
-        if not result.valid:
-            result.error = "The array does not contain a required element"
+        annotation = 0
+        for index, item in enumerate(instance.json):
+            if child := instance.descend(str(index), item, self.json.evaluate):
+                if child.valid:
+                    annotation += 1
 
-        return result
+        if annotation > 0:
+            instance.pass_(annotation)
+        else:
+            instance.fail("The array does not contain a required element")
 
 
 class PropertiesKeyword(Keyword):
@@ -566,25 +508,20 @@ class PropertiesKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONObject[JSONSchema]
-        result = KeywordResult(
-            valid=True,
-            annotation=[],
-            subresults=[],
-        )
-        for name, item in instance.items():
-            if name in self.json:
-                result.subresults += [subresult := self.json[name].evaluate(item)]
-                if subresult.valid:
-                    result.annotation += [name]
-                else:
-                    result.valid = False
-                    result.annotation = None
-                    result.error = "One or more object properties is invalid"
-                    break
 
-        return result
+        annotation = []
+        for name, item in instance.json.items():
+            if name in self.json:
+                if child := instance.descend(name, item, self.json[name].evaluate):
+                    if child.valid:
+                        annotation += [name]
+                    else:
+                        instance.fail(f'Object property "{name}" is invalid')
+                        return
+
+        instance.pass_(annotation)
 
 
 class PatternPropertiesKeyword(Keyword):
@@ -599,30 +536,21 @@ class PatternPropertiesKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONObject[JSONSchema]
-        result = KeywordResult(
-            valid=True,
-            subresults=[],
-        )
+
         matched_names = set()
-        for name, item in instance.items():
+        for name, item in instance.json.items():
             for regex, subschema in self.json.items():
                 if re.search(regex, name) is not None:
-                    result.subresults += [subresult := subschema.evaluate(item)]
-                    if subresult.valid:
-                        matched_names |= {name}
-                    else:
-                        result.valid = False
-                        result.error = "One or more object properties is invalid"
-                        break
-            if not result.valid:
-                break
+                    if child := instance.descend(regex, item, subschema.evaluate):
+                        if child.valid:
+                            matched_names |= {name}
+                        else:
+                            instance.fail(f'Object property "{name}" is invalid')
+                            return
 
-        if result.valid:
-            result.annotation = list(matched_names)
-
-        return result
+        instance.pass_(list(matched_names))
 
 
 class AdditionalPropertiesKeyword(Keyword):
@@ -633,74 +561,63 @@ class AdditionalPropertiesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONSchema
 
         evaluated_names = set()
-        if properties := self.superschema.keywords.get("properties"):
-            evaluated_names |= set(properties.result.annotation or ())
-        if pattern_properties := self.superschema.keywords.get("patternProperties"):
-            evaluated_names |= set(pattern_properties.result.annotation or ())
+        if properties := instance.sibling("properties"):
+            evaluated_names |= set(properties.annotation or ())
+        if pattern_properties := instance.sibling("patternProperties"):
+            evaluated_names |= set(pattern_properties.annotation or ())
 
-        result = KeywordResult(
-            valid=True,
-            annotation=[],
-            subresults=[],
-        )
-        for name, item in instance.items():
+        annotation = []
+        for name, item in instance.json.items():
             if name not in evaluated_names:
-                result.subresults += [subresult := self.json.evaluate(item)]
-                if subresult.valid:
-                    result.annotation += [name]
-                else:
-                    result.valid = False
-                    result.annotation = None
-                    result.error = "One or more object properties is invalid"
-                    break
+                if child := instance.descend(name, item, self.json.evaluate, extendpath=False):
+                    if child.valid:
+                        annotation += [name]
+                    else:
+                        instance.fail(f'Object property "{name}" is invalid')
+                        return
 
-        return result
+        instance.pass_(annotation)
 
 
 class UnevaluatedPropertiesKeyword(Keyword):
     __keyword__ = "unevaluatedProperties"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
-    __depends__ = "properties", "patternProperties", "additionalProperties", "if", "then", "else", \
-                  "dependentSchemas", "allOf", "anyOf", "oneOf", "not"
+    __depends__ = "properties", "patternProperties", "additionalProperties", \
+                  "if", "then", "else", "dependentSchemas", \
+                  "allOf", "anyOf", "oneOf", "not"
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         # TODO:
         #  check annotation results for properties, patternProperties, additionalProperties
         #  and unevaluatedProperties from adjacent in-place applicator keywords
         self.json: JSONSchema
 
         evaluated_names = set()
-        if properties := self.superschema.keywords.get("properties"):
-            evaluated_names |= set(properties.result.annotation or ())
-        if pattern_properties := self.superschema.keywords.get("patternProperties"):
-            evaluated_names |= set(pattern_properties.result.annotation or ())
-        if additional_properties := self.superschema.keywords.get("additionalProperties"):
-            evaluated_names |= set(additional_properties.result.annotation or ())
+        if properties := instance.sibling("properties"):
+            evaluated_names |= set(properties.annotation or ())
+        if pattern_properties := instance.sibling("patternProperties"):
+            evaluated_names |= set(pattern_properties.annotation or ())
+        if additional_properties := instance.sibling("additionalProperties"):
+            evaluated_names |= set(additional_properties.annotation or ())
 
-        result = KeywordResult(
-            valid=True,
-            annotation=[],
-            subresults=[],
-        )
-        for name, item in instance.items():
+        annotation = []
+        for name, item in instance.json.items():
             if name not in evaluated_names:
-                result.subresults += [subresult := self.json.evaluate(item)]
-                if subresult.valid:
-                    result.annotation += [name]
-                else:
-                    result.valid = False
-                    result.annotation = None
-                    result.error = "One or more object properties is invalid"
-                    break
+                if child := instance.descend(name, item, self.json.evaluate, extendpath=False):
+                    if child.valid:
+                        annotation += [name]
+                    else:
+                        instance.fail(f'Object property "{name}" is invalid')
+                        return
 
-        return result
+        instance.pass_(annotation)
 
 
 class PropertyNamesKeyword(Keyword):
@@ -710,12 +627,16 @@ class PropertyNamesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONSchema
-        return KeywordResult(
-            valid=(valid := all(self.json.evaluate(JSON(name)).valid for name in instance)),
-            error="One or more property names is invalid" if not valid else None,
-        )
+
+        for name in instance.json:
+            if child := instance.descend(name, JSON(name), self.json.evaluate, extendpath=False):
+                if not child.valid:
+                    instance.fail(f'Object property name "{name}" is invalid')
+                    return
+
+        instance.pass_()
 
 
 class TypeKeyword(Keyword):
@@ -739,35 +660,35 @@ class TypeKeyword(Keyword):
     ) -> None:
         super().__init__(superschema, arrayify(value))
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONArray[JSONString]
-        return KeywordResult(
-            valid=(valid := any(instance.istype(item.value) for item in self.json)),
-            error=f"The value must be of type {self.json}" if not valid else None,
-        )
+        if any(instance.json.istype(item.value) for item in self.json):
+            instance.pass_()
+        else:
+            instance.fail(f"The value must be of type {self.json}")
 
 
 class EnumKeyword(Keyword):
     __keyword__ = "enum"
     __schema__ = {"type": "array", "items": True}
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance) -> None:
         self.json: JSONArray
-        return KeywordResult(
-            valid=(valid := instance in self.json),
-            error=f"The value must be one of {self.json}" if not valid else None,
-        )
+        if instance.json in self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The value must be one of {self.json}")
 
 
 class ConstKeyword(Keyword):
     __keyword__ = "const"
     __schema__ = True
 
-    def evaluate(self, instance: JSON) -> KeywordResult:
-        return KeywordResult(
-            valid=(valid := instance == self.json),
-            error=f"The value must be equal to {self.json}" if not valid else None,
-        )
+    def evaluate(self, instance: JSONInstance) -> None:
+        if instance.json == self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The value must be equal to {self.json}")
 
 
 class MultipleOfKeyword(Keyword):
@@ -775,12 +696,12 @@ class MultipleOfKeyword(Keyword):
     __schema__ = {"type": "number", "exclusiveMinimum": 0}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONNumber]) -> None:
         self.json: JSONNumber
-        return KeywordResult(
-            valid=(valid := instance % self.json == 0),
-            error=f"The value must be a multiple of {self.json}" if not valid else None,
-        )
+        if instance.json % self.json == 0:
+            instance.pass_()
+        else:
+            instance.fail(f"The value must be a multiple of {self.json}")
 
 
 class MaximumKeyword(Keyword):
@@ -788,12 +709,12 @@ class MaximumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONNumber]) -> None:
         self.json: JSONNumber
-        return KeywordResult(
-            valid=(valid := instance <= self.json),
-            error=f"The value may not be greater than {self.json}" if not valid else None,
-        )
+        if instance.json <= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The value may not be greater than {self.json}")
 
 
 class ExclusiveMaximumKeyword(Keyword):
@@ -801,12 +722,12 @@ class ExclusiveMaximumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONNumber]) -> None:
         self.json: JSONNumber
-        return KeywordResult(
-            valid=(valid := instance < self.json),
-            error=f"The value must be less than {self.json}" if not valid else None,
-        )
+        if instance.json < self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The value must be less than {self.json}")
 
 
 class MinimumKeyword(Keyword):
@@ -814,12 +735,12 @@ class MinimumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONNumber]) -> None:
         self.json: JSONNumber
-        return KeywordResult(
-            valid=(valid := instance >= self.json),
-            error=f"The value may not be less than {self.json}" if not valid else None,
-        )
+        if instance.json >= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The value may not be less than {self.json}")
 
 
 class ExclusiveMinimumKeyword(Keyword):
@@ -827,12 +748,12 @@ class ExclusiveMinimumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONNumber]) -> None:
         self.json: JSONNumber
-        return KeywordResult(
-            valid=(valid := instance > self.json),
-            error=f"The value must be greater than {self.json}" if not valid else None,
-        )
+        if instance.json > self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The value must be greater than {self.json}")
 
 
 class MaxLengthKeyword(Keyword):
@@ -840,12 +761,12 @@ class MaxLengthKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "string"
 
-    def evaluate(self, instance: JSONString) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONString]) -> None:
         self.json: JSONInteger
-        return KeywordResult(
-            valid=(valid := len(instance) <= self.json),
-            error=f"The text is too long (maximum {self.json} characters)" if not valid else None,
-        )
+        if len(instance.json) <= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The text is too long (maximum {self.json} characters)")
 
 
 class MinLengthKeyword(Keyword):
@@ -853,12 +774,12 @@ class MinLengthKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "string"
 
-    def evaluate(self, instance: JSONString) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONString]) -> None:
         self.json: JSONInteger
-        return KeywordResult(
-            valid=(valid := len(instance) >= self.json),
-            error=f"The text is too short (minimum {self.json} characters)" if not valid else None,
-        )
+        if len(instance.json) >= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The text is too short (minimum {self.json} characters)")
 
 
 class PatternKeyword(Keyword):
@@ -874,11 +795,11 @@ class PatternKeyword(Keyword):
         super().__init__(superschema, value)
         self.regex = re.compile(value)
 
-    def evaluate(self, instance: JSONString) -> KeywordResult:
-        return KeywordResult(
-            valid=(valid := self.regex.search(instance.value) is not None),
-            error=f"The text must match the regular expression {self.json}" if not valid else None,
-        )
+    def evaluate(self, instance: JSONInstance[JSONString]) -> None:
+        if self.regex.search(instance.json.value) is not None:
+            instance.pass_()
+        else:
+            instance.fail(f"The text must match the regular expression {self.json}")
 
 
 class MaxItemsKeyword(Keyword):
@@ -886,12 +807,12 @@ class MaxItemsKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "array"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONInteger
-        return KeywordResult(
-            valid=(valid := len(instance) <= self.json),
-            error=f"The array has too many elements (maximum {self.json})" if not valid else None,
-        )
+        if len(instance.json) <= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The array has too many elements (maximum {self.json})")
 
 
 class MinItemsKeyword(Keyword):
@@ -899,12 +820,12 @@ class MinItemsKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "array"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONInteger
-        return KeywordResult(
-            valid=(valid := len(instance) >= self.json),
-            error=f"The array has too few elements (minimum {self.json})" if not valid else None,
-        )
+        if len(instance.json) >= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The array has too few elements (minimum {self.json})")
 
 
 class UniqueItemsKeyword(Keyword):
@@ -912,20 +833,21 @@ class UniqueItemsKeyword(Keyword):
     __schema__ = {"type": "boolean", "default": False}
     __types__ = "array"
 
-    def evaluate(self, instance: JSONArray) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONBoolean
         if not self.json.value:
-            return KeywordResult(valid=True)
+            instance.pass_()
+            return
 
         uniquified = []
-        for item in instance:
+        for item in instance.json:
             if item not in uniquified:
                 uniquified += [item]
 
-        return KeywordResult(
-            valid=(valid := len(instance) == len(uniquified)),
-            error="The array's elements must all be unique" if not valid else None,
-        )
+        if len(instance.json) == len(uniquified):
+            instance.pass_()
+        else:
+            instance.fail("The array's elements must all be unique")
 
 
 class MaxContainsKeyword(Keyword):
@@ -934,14 +856,14 @@ class MaxContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains"
 
-    def evaluate(self, instance: JSONArray) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONInteger
-        if contains := self.superschema.keywords.get("contains"):
-            return KeywordResult(
-                valid=(valid := contains.result.annotation <= self.json),
-                error=f'The array has too many elements matching the "contains" subschema '
-                      f'(maximum {self.json})' if not valid else None,
-            )
+        if contains := instance.sibling("contains"):
+            if contains.annotation <= self.json:
+                instance.pass_()
+            else:
+                instance.fail('The array has too many elements matching the '
+                              f'"contains" subschema (maximum {self.json})')
 
 
 class MinContainsKeyword(Keyword):
@@ -950,21 +872,21 @@ class MinContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains", "maxContains"
 
-    def evaluate(self, instance: JSONArray) -> Optional[KeywordResult]:
+    def evaluate(self, instance: JSONInstance[JSONArray]) -> None:
         self.json: JSONInteger
-        if contains := self.superschema.keywords.get("contains"):
-            valid = contains.result.annotation >= self.json
+        if contains := instance.sibling("contains"):
+            valid = contains.annotation >= self.json
 
-            if valid and not contains.result.valid:
-                max_contains = self.superschema.keywords.get("maxContains")
-                if not max_contains or max_contains.result.valid:
-                    contains.result.valid = True
+            if valid and not contains.valid:
+                max_contains = instance.sibling("maxContains")
+                if not max_contains or max_contains.valid:
+                    contains.valid = True
 
-            return KeywordResult(
-                valid=valid,
-                error=f'The array has too few elements matching the "contains" subschema '
-                      f'(minimum {self.json})' if not valid else None,
-            )
+            if valid:
+                instance.pass_()
+            else:
+                instance.fail('The array has too few elements matching the '
+                              f'"contains" subschema (minimum {self.json})')
 
 
 class MaxPropertiesKeyword(Keyword):
@@ -972,12 +894,12 @@ class MaxPropertiesKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONInteger
-        return KeywordResult(
-            valid=(valid := len(instance) <= self.json),
-            error=f"The object has too many properties (maximum {self.json})" if not valid else None,
-        )
+        if len(instance.json) <= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The object has too many properties (maximum {self.json})")
 
 
 class MinPropertiesKeyword(Keyword):
@@ -985,12 +907,12 @@ class MinPropertiesKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONInteger
-        return KeywordResult(
-            valid=(valid := len(instance) >= self.json),
-            error=f"The object has too few properties (minimum {self.json})" if not valid else None,
-        )
+        if len(instance.json) >= self.json:
+            instance.pass_()
+        else:
+            instance.fail(f"The object has too few properties (minimum {self.json})")
 
 
 class RequiredKeyword(Keyword):
@@ -1003,14 +925,14 @@ class RequiredKeyword(Keyword):
     }
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONArray[JSONString]
 
-        missing = [name for name in self.json if name.value not in instance]
-        return KeywordResult(
-            valid=(valid := len(missing) == 0),
-            error=f"The object is missing required properties {missing}" if not valid else None,
-        )
+        missing = [name for name in self.json if name.value not in instance.json]
+        if not missing:
+            instance.pass_()
+        else:
+            instance.fail(f"The object is missing required properties {missing}")
 
 
 class DependentRequiredKeyword(Keyword):
@@ -1026,20 +948,20 @@ class DependentRequiredKeyword(Keyword):
     }
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject) -> KeywordResult:
+    def evaluate(self, instance: JSONInstance[JSONObject]) -> None:
         self.json: JSONObject[JSONArray[JSONString]]
 
         missing = {}
         for name, dependents in self.json.items():
-            if name in instance:
-                missing_deps = [dep for dep in dependents if dep.value not in instance]
+            if name in instance.json:
+                missing_deps = [dep for dep in dependents if dep.value not in instance.json]
                 if missing_deps:
                     missing[name] = missing_deps
 
-        return KeywordResult(
-            valid=(valid := len(missing) == 0),
-            error=f"The object is missing dependent properties {missing}" if not valid else None,
-        )
+        if not missing:
+            instance.pass_()
+        else:
+            instance.fail(f"The object is missing dependent properties {missing}")
 
 
 class FormatKeyword(Keyword):
@@ -1055,19 +977,10 @@ class FormatKeyword(Keyword):
         vocabulary = FormatVocabulary.get(self.vocabulary_uri)
         self.format_: Optional[Format] = vocabulary.formats.get(self.json.value)
 
-    @property
-    def assert_(self) -> bool:
-        return self.format_.assert_ if self.format_ else False
-
-    def evaluate(self, instance: JSON) -> KeywordResult:
-        result = KeywordResult(
-            valid=True,
-            annotation=self.json,
-        )
-        if self.format_ and isinstance(instance, tuple(JSON.classfor(t) for t in tuplify(self.format_.__types__))):
-            fmtresult = self.format_.evaluate(instance)
+    def evaluate(self, instance: JSONInstance) -> None:
+        instance.assert_ = self.format_.assert_ if self.format_ else False
+        instance.pass_(self.json)
+        if self.format_ and isinstance(instance.json, tuple(JSON.classfor(t) for t in tuplify(self.format_.__types__))):
+            fmtresult = self.format_.evaluate(instance.json)
             if not fmtresult.valid:
-                result.valid = False
-                result.error = f'The text does not conform to the {self.json} format: {fmtresult.error}'
-
-        return result
+                instance.fail(f'The text does not conform to the {self.json} format: {fmtresult.error}')

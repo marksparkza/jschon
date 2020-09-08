@@ -6,7 +6,7 @@ class VocabularyError(Exception):
     pass
 
 
-class SchemaError(Exception):
+class JSONSchemaError(Exception):
     pass
 
 
