@@ -12,3 +12,7 @@ class JSONSchemaError(Exception):
 
 class JSONPointerError(Exception):
     pass
+
+
+class URIError(Exception):
+    pass

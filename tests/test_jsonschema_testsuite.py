@@ -2,15 +2,15 @@ import json
 import pathlib
 
 import pytest
-import rfc3986
 
 from jschon.catalogue import Catalogue
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, evaluate
+from jschon.uri import URI
 from tests import metaschema_uri
 
 Catalogue.add_local(
-    base_uri=rfc3986.uri_reference('http://localhost:1234/'),
+    base_uri=URI('http://localhost:1234/'),
     base_dir=pathlib.Path(__file__).parent / 'jsonschema_testsuite' / 'remotes',
 )
 

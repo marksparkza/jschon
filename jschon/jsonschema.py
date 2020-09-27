@@ -3,16 +3,13 @@ from __future__ import annotations
 import dataclasses
 from typing import *
 
-import rfc3986.exceptions
-import rfc3986.validators
-from rfc3986 import URIReference
-
 from jschon.catalogue import Catalogue
 from jschon.exceptions import *
 from jschon.json import JSON, JSONObject, JSONArray, AnyJSON
 from jschon.jsoninstance import JSONInstance
 from jschon.jsonpointer import JSONPointer
 from jschon.types import AnyJSONCompatible, tuplify, is_schema_compatible
+from jschon.uri import URI
 
 __all__ = [
     'evaluate',
@@ -45,19 +42,18 @@ def evaluate(schema: JSONSchema, document: JSON) -> JSONInstance:
 
 
 class JSONSchema(JSON):
-    _cache: Dict[URIReference, JSONSchema] = {}
+    _cache: Dict[URI, JSONSchema] = {}
 
     @classmethod
-    def get(cls, uri: URIReference) -> JSONSchema:
+    def get(cls, uri: URI) -> JSONSchema:
         try:
             return cls._cache[uri]
         except KeyError:
             pass
 
-        base, _, fragment = uri.unsplit().partition('#')
-        doc = Catalogue.load(rfc3986.uri_reference(base))
-        if fragment:
-            ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
+        doc = Catalogue.load(uri.copy(fragment=False))
+        if uri.fragment:
+            ref = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
             doc = ref.evaluate(doc)
         return JSONSchema(doc)
 
@@ -76,15 +72,15 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *,
-            base_uri: URIReference = None,
-            metaschema_uri: URIReference = None,
+            base_uri: URI = None,
+            metaschema_uri: URI = None,
             location: JSONPointer = None,
             superkeyword: Keyword = None,
     ) -> None:
         super().__init__(value, location=location)
 
-        self._base_uri: Optional[URIReference] = base_uri
-        self._metaschema_uri: Optional[URIReference] = metaschema_uri
+        self._base_uri: Optional[URI] = base_uri
+        self._metaschema_uri: Optional[URI] = metaschema_uri
         self.superkeyword: Optional[Keyword] = superkeyword
         self.keywords: Dict[str, Keyword] = {}
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
@@ -105,25 +101,25 @@ class JSONSchema(JSON):
             return JSONSchema.get(uri)
 
     @property
-    def metaschema_uri(self) -> Optional[URIReference]:
+    def metaschema_uri(self) -> Optional[URI]:
         if self._metaschema_uri is not None:
             return self._metaschema_uri
         if self.superkeyword is not None:
             return self.superkeyword.superschema.metaschema_uri
 
     @metaschema_uri.setter
-    def metaschema_uri(self, value: Optional[URIReference]) -> None:
+    def metaschema_uri(self, value: Optional[URI]) -> None:
         self._metaschema_uri = value
 
     @property
-    def base_uri(self) -> Optional[URIReference]:
+    def base_uri(self) -> Optional[URI]:
         if self._base_uri is not None:
             return self._base_uri
         if self.superkeyword is not None:
             return self.superkeyword.superschema.base_uri
 
     @base_uri.setter
-    def base_uri(self, value: Optional[URIReference]) -> None:
+    def base_uri(self, value: Optional[URI]) -> None:
         self._base_uri = value
         if value is not None:
             JSONSchema._cache[value] = self
@@ -247,7 +243,7 @@ class Keyword:
     __depends__: Optional[Union[str, Tuple[str, ...]]] = None
 
     applicators: Tuple[ApplicatorClass, ...] = ()
-    vocabulary_uri: str
+    vocabulary_uri: URI
 
     def __init__(
             self,
@@ -340,24 +336,17 @@ class PropertyApplicator(Applicator):
 
 
 class Vocabulary:
-    _kwclasses: Dict[str, List[KeywordClass]] = {}
-    _vcclass: Dict[str, VocabularyClass] = {}
-    _cache: Dict[str, Vocabulary] = {}
+    _kwclasses: Dict[URI, List[KeywordClass]] = {}
+    _vcclass: Dict[URI, VocabularyClass] = {}
+    _cache: Dict[URI, Vocabulary] = {}
 
     @classmethod
     def register(
             cls,
-            uri: str,
+            uri: URI,
             kwclasses: Iterable[KeywordClass],
     ) -> None:
-        validator = rfc3986.validators.Validator().require_presence_of('scheme')
-        try:
-            validator.validate(uri_ref := rfc3986.uri_reference(uri))
-        except rfc3986.exceptions.ValidationError as e:
-            raise ValueError(f"{uri=} is not a valid URI or does not contain a scheme") from e
-
-        if uri_ref != uri_ref.normalize():
-            raise ValueError(f"{uri=} is not normalized")
+        uri.validate(require_scheme=True, require_normalized=True)
 
         cls._kwclasses[uri] = []
         cls._vcclass[uri] = cls
@@ -367,20 +356,20 @@ class Vocabulary:
                 cls._kwclasses[uri] += [kwclass]
 
     @classmethod
-    def get(cls, uri: str) -> Vocabulary:
+    def get(cls, uri: URI) -> Vocabulary:
         try:
             return cls._cache[uri]
         except KeyError as e:
-            raise VocabularyError(f"{uri=} is not a recognized vocabulary URI") from e
+            raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
 
-    def __new__(cls, uri: str, required: bool) -> Vocabulary:
+    def __new__(cls, uri: URI, required: bool) -> Vocabulary:
         try:
             return object.__new__(Vocabulary._vcclass[uri])
         except KeyError as e:
-            raise VocabularyError(f"{uri=} is not a recognized vocabulary URI") from e
+            raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
 
-    def __init__(self, uri: str, required: bool) -> None:
-        self.uri: str = uri
+    def __init__(self, uri: URI, required: bool) -> None:
+        self.uri: URI = uri
         self.required: bool = required
         self.kwclasses: Dict[str, KeywordClass] = {
             kwclass.__keyword__: kwclass for kwclass in self._kwclasses[uri]
@@ -392,13 +381,13 @@ VocabularyClass = Type[Vocabulary]
 
 
 class FormatVocabulary(Vocabulary):
-    _fmtclasses: Dict[str, List[FormatClass]] = {}
-    _assertfmt: Dict[str, Optional[bool]] = {}
+    _fmtclasses: Dict[URI, List[FormatClass]] = {}
+    _assertfmt: Dict[URI, Optional[bool]] = {}
 
     @classmethod
     def register(
             cls,
-            uri: str,
+            uri: URI,
             kwclasses: Iterable[KeywordClass],
             fmtclasses: Iterable[FormatClass] = (),
             assert_: bool = None,
@@ -411,13 +400,13 @@ class FormatVocabulary(Vocabulary):
                 cls._fmtclasses[uri] += [fmtclass]
 
     @classmethod
-    def get(cls, uri: str) -> FormatVocabulary:
+    def get(cls, uri: URI) -> FormatVocabulary:
         vocab = super().get(uri)
         if isinstance(vocab, FormatVocabulary):
             return vocab
         raise VocabularyError(f"The vocabulary identified by '{uri}' does not support formats")
 
-    def __init__(self, uri: str, required: bool) -> None:
+    def __init__(self, uri: URI, required: bool) -> None:
         super().__init__(uri, required)
         assert_ = force_assert if (force_assert := self._assertfmt[uri]) is not None else required
         self.formats: Dict[str, Format] = {

@@ -1,13 +1,12 @@
 import re
 
 import email_validator
-import rfc3986.exceptions
-import rfc3986.validators
 
-from jschon.exceptions import JSONPointerError
+from jschon.exceptions import JSONPointerError, URIError
 from jschon.json import JSONString
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import Format, FormatResult
+from jschon.uri import URI
 
 __all__ = [
     'DateTimeFormat',
@@ -124,10 +123,10 @@ class URIFormat(Format):
     __attr__ = "uri"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        validator = rfc3986.validators.Validator().require_presence_of('scheme')
+        uri = URI(instance.value)
         try:
-            validator.validate(rfc3986.uri_reference(instance.value))
-        except rfc3986.exceptions.ValidationError as e:
+            uri.validate(require_scheme=True)
+        except URIError as e:
             return FormatResult(valid=False, error=str(e))
 
         return FormatResult(valid=True)
@@ -137,10 +136,10 @@ class URIReferenceFormat(Format):
     __attr__ = "uri-reference"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        validator = rfc3986.validators.Validator()
+        uri = URI(instance.value)
         try:
-            validator.validate(rfc3986.uri_reference(instance.value))
-        except rfc3986.exceptions.ValidationError as e:
+            uri.validate()
+        except URIError as e:
             return FormatResult(valid=False, error=str(e))
 
         return FormatResult(valid=True)

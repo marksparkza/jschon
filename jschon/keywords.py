@@ -1,16 +1,13 @@
 import re
 from typing import *
 
-import rfc3986
-import rfc3986.exceptions
-import rfc3986.validators
-
-from jschon.exceptions import JSONSchemaError, VocabularyError
+from jschon.exceptions import JSONSchemaError, VocabularyError, URIError
 from jschon.json import *
 from jschon.jsoninstance import JSONInstance
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import *
 from jschon.types import tuplify, arrayify
+from jschon.uri import URI
 
 __all__ = [
     # core vocabulary
@@ -88,17 +85,12 @@ class SchemaKeyword(Keyword):
             raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
 
         super().__init__(superschema, value)
-
-        validator = rfc3986.validators.Validator().require_presence_of('scheme')
         try:
-            validator.validate(uri_ref := rfc3986.uri_reference(value))
-        except rfc3986.exceptions.ValidationError as e:
-            raise JSONSchemaError(f"'{value}' is not a valid URI or does not contain a scheme") from e
+            (uri := URI(value)).validate(require_scheme=True, require_normalized=True)
+        except URIError as e:
+            raise JSONSchemaError from e
 
-        if uri_ref != uri_ref.normalize():
-            raise JSONSchemaError(f"'{value}' is not normalized")
-
-        superschema.metaschema_uri = uri_ref
+        superschema.metaschema_uri = uri
 
 
 class VocabularyKeyword(Keyword):
@@ -125,14 +117,10 @@ class VocabularyKeyword(Keyword):
         super().__init__(superschema, value)
 
         for vocab_uri, vocab_required in value.items():
-            validator = rfc3986.validators.Validator().require_presence_of('scheme')
             try:
-                validator.validate(uri_ref := rfc3986.uri_reference(vocab_uri))
-            except rfc3986.exceptions.ValidationError as e:
-                raise JSONSchemaError(f"'{vocab_uri}' is not a valid URI or does not contain a scheme") from e
-
-            if uri_ref != uri_ref.normalize():
-                raise JSONSchemaError(f"'{vocab_uri}' is not normalized")
+                (vocab_uri := URI(vocab_uri)).validate(require_scheme=True, require_normalized=True)
+            except URIError as e:
+                raise JSONSchemaError from e
 
             if not isinstance(vocab_required, bool):
                 raise JSONSchemaError('"$vocabulary" values must be booleans')
@@ -160,15 +148,15 @@ class IdKeyword(Keyword):
             value: str,
     ) -> None:
         super().__init__(superschema, value)
-        if not (uri_ref := rfc3986.uri_reference(value)).is_absolute():
+        if not (uri := URI(value)).is_absolute():
             if not superschema.location:
                 raise JSONSchemaError('The "$id" of the root schema, if present, must be an absolute URI')
             if (base_uri := superschema.base_uri) is not None:
-                uri_ref = uri_ref.resolve_with(base_uri)
+                uri = uri.resolve(base_uri)
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
-        superschema.base_uri = uri_ref
+        superschema.base_uri = uri
 
 
 class RefKeyword(Keyword):
@@ -181,11 +169,11 @@ class RefKeyword(Keyword):
     def evaluate(self, instance: JSONInstance) -> None:
         # TODO: check that we're not recalculating refschema unnecessarily
         base, _, fragment = (value := self.json.value).partition('#')
-        uri_ref = rfc3986.uri_reference(base)
+        uri = URI(base)
         if (base_uri := self.superschema.base_uri) is not None:
-            uri_ref = uri_ref.resolve_with(base_uri)
-        if uri_ref.is_absolute():
-            refschema = JSONSchema.get(uri_ref)
+            uri = uri.resolve(base_uri)
+        if uri.is_absolute():
+            refschema = JSONSchema.get(uri)
         elif not base:
             refschema = self.superschema.rootschema
         else:
