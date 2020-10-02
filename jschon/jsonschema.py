@@ -346,8 +346,6 @@ class Vocabulary:
             uri: URI,
             kwclasses: Iterable[KeywordClass],
     ) -> None:
-        uri.validate(require_scheme=True, require_normalized=True)
-
         cls._kwclasses[uri] = []
         cls._vcclass[uri] = cls
         for kwclass in kwclasses:

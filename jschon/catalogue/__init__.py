@@ -17,7 +17,6 @@ class Catalogue:
 
     @classmethod
     def add_local(cls, base_uri: URI, base_dir: PathLike) -> None:
-        base_uri.validate(require_scheme=True, require_normalized=True)
         if not pathlib.Path(base_dir).is_dir():
             raise CatalogueError(f"'{base_dir}' is not a directory")
 
