@@ -102,6 +102,10 @@ class JSONPointer(Sequence[str]):
             return self._keys == other._keys
         return NotImplemented
 
+    def __hash__(self) -> int:
+        """ Return hash(self) """
+        return hash(tuple(self._keys))
+
     def __str__(self) -> str:
         """ Return str(self) """
         return ''.join([f'/{self.escape(key)}' for key in self._keys])
