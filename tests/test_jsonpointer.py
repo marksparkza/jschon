@@ -64,7 +64,7 @@ def test_evaluate_jsonpointer(value, testkey):
     elif isinstance(value, dict):
         if testkey not in value:
             with pytest.raises(JSONPointerError):
-                JSONPointer(f'/{testkey}').evaluate(value)
+                JSONPointer(f'/{jsonpointer_escape(testkey)}').evaluate(value)
     else:
         with pytest.raises(JSONPointerError):
             JSONPointer(f'/{value}').evaluate(value)
