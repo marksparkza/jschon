@@ -26,7 +26,9 @@ def initialize():
             VocabularyKeyword,
             IdKeyword,
             RefKeyword,
+            AnchorKeyword,
             RecursiveRefKeyword,
+            RecursiveAnchorKeyword,
             DefsKeyword,
         )
     )

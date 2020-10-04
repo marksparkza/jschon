@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from typing import *
+from uuid import uuid4
 
 from jschon.catalogue import Catalogue
 from jschon.exceptions import *
@@ -32,12 +33,11 @@ __all__ = [
 
 
 def evaluate(schema: JSONSchema, document: JSON) -> JSONInstance:
-    instance = JSONInstance(
+    schema.evaluate(instance := JSONInstance(
         json=document,
         path=schema.location,
         parent=None,
-    )
-    schema.evaluate(instance)
+    ))
     return instance
 
 
@@ -45,17 +45,46 @@ class JSONSchema(JSON):
     _cache: Dict[URI, JSONSchema] = {}
 
     @classmethod
-    def get(cls, uri: URI) -> JSONSchema:
+    def get(cls, uri: URI, metaschema_uri: URI = None) -> JSONSchema:
         try:
             return cls._cache[uri]
         except KeyError:
             pass
 
-        doc = Catalogue.load(uri.copy(fragment=False))
+        schema = None
+        base_uri = uri.copy(fragment=False)
+
+        if uri.fragment is not None:
+            try:
+                schema = cls._cache[base_uri]
+            except KeyError:
+                pass
+
+        if schema is None:
+            doc = Catalogue.load(base_uri)
+            schema = JSONSchema(doc, uri=base_uri, metaschema_uri=metaschema_uri)
+
         if uri.fragment:
-            ref = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
-            doc = ref.evaluate(doc)
-        return JSONSchema(doc)
+            ptr = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
+            schema = ptr.evaluate(schema)
+
+        if not isinstance(schema, JSONSchema):
+            raise JSONSchemaError(f"The object referenced by {uri} is not a JSON Schema")
+
+        return schema
+
+    @classmethod
+    def set(cls, uri: URI, schema: JSONSchema) -> None:
+        cls._encache(uri, schema)
+
+    @classmethod
+    def _encache(cls, uri: Optional[URI], schema: JSONSchema) -> None:
+        if uri is not None:
+            cls._cache[uri] = schema
+
+    @classmethod
+    def _decache(cls, uri: Optional[URI]) -> None:
+        cls._cache.pop(uri, None)
 
     def __new__(
             cls,
@@ -72,33 +101,29 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *,
-            base_uri: URI = None,
+            uri: URI = None,
             metaschema_uri: URI = None,
             location: JSONPointer = None,
             superkeyword: Keyword = None,
     ) -> None:
         super().__init__(value, location=location)
 
-        self._base_uri: Optional[URI] = base_uri
+        self._encache(uri, self)
+        self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
         self.superkeyword: Optional[Keyword] = superkeyword
         self.keywords: Dict[str, Keyword] = {}
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
-        if base_uri is not None:
-            JSONSchema._cache[base_uri] = self
-
-        # ensure the metaschema is loaded, if specified
         if metaschema_uri is not None:
-            JSONSchema.get(metaschema_uri)
-
-        if self.location and not superkeyword:
-            raise JSONSchemaError("superkeyword must be specified for a subschema")
+            JSONSchema.get(metaschema_uri, metaschema_uri)
 
     @property
-    def metaschema(self) -> Optional[JSONSchema]:
-        if (uri := self.metaschema_uri) is not None:
-            return JSONSchema.get(uri)
+    def metaschema(self) -> JSONSchema:
+        if (uri := self.metaschema_uri) is None:
+            raise JSONSchemaError("The schema's metaschema URI has not been set")
+
+        return JSONSchema.get(uri, uri)
 
     @property
     def metaschema_uri(self) -> Optional[URI]:
@@ -113,16 +138,21 @@ class JSONSchema(JSON):
 
     @property
     def base_uri(self) -> Optional[URI]:
-        if self._base_uri is not None:
-            return self._base_uri
+        if self._uri is not None:
+            return self._uri.copy(fragment=False)
         if self.superkeyword is not None:
             return self.superkeyword.superschema.base_uri
 
-    @base_uri.setter
-    def base_uri(self, value: Optional[URI]) -> None:
-        self._base_uri = value
-        if value is not None:
-            JSONSchema._cache[value] = self
+    @property
+    def uri(self) -> Optional[URI]:
+        return self._uri
+
+    @uri.setter
+    def uri(self, value: Optional[URI]) -> None:
+        if self._uri != value:
+            self._decache(self._uri)
+            self._encache(value, self)
+            self._uri = value
 
     @property
     def rootschema(self):
@@ -175,25 +205,25 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             **kwargs: Any,
     ) -> None:
         super().__init__(value, **kwargs)
+
+        if self.superkeyword is None and self.uri is None:
+            self.uri = URI(f'mem:{uuid4()}')
+
         self.keywords: Dict[str, Keyword] = {
             kw: kwclass(self, value[kw])
             for kwclass in self._bootstrap_kwclasses
             if (kw := kwclass.__keyword__) in value
         }
-
-        if (metaschema := self.metaschema) is not None:
-            kwclasses = {
-                kw: kwclass for kw in value
-                if (kwclass := metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
-            }
-            self.keywords.update({
-                kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
-                for kwclass in self._resolve_keyword_dependencies(kwclasses)
-            })
-            if not self.location:
-                metaschema.evaluate(instance := JSONInstance(JSON(value), JSONPointer(), None))
-                if not instance.valid:
-                    raise JSONSchemaError("The schema is invalid against its metaschema")
+        kwclasses = {
+            kw: kwclass for kw in value
+            if (kwclass := self.metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
+        }
+        self.keywords.update({
+            kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
+            for kwclass in self._resolve_keyword_dependencies(kwclasses)
+        })
+        if self.superkeyword is None and not evaluate(self.metaschema, JSON(value)).valid:
+            raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:

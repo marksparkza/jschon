@@ -31,6 +31,8 @@ class URI:
     def __eq__(self, other) -> bool:
         if isinstance(other, URI):
             return self._uriref == other._uriref
+        if other is None:
+            return False
         return self._uriref.__eq__(other)
 
     @property
@@ -55,6 +57,9 @@ class URI:
 
     def is_absolute(self) -> bool:
         return self._uriref.is_absolute()
+
+    def can_absolute(self) -> bool:
+        return self.copy(fragment=False).is_absolute()
 
     def resolve(self, base_uri: URI) -> URI:
         """ Produce a new URI by resolving self against the given base URI. """
@@ -85,6 +90,7 @@ class URI:
             self,
             require_scheme: bool = False,
             require_normalized: bool = False,
+            allow_fragment: bool = True,
             allow_non_empty_fragment: bool = True,
     ) -> None:
         """ Validate self.
@@ -104,6 +110,9 @@ class URI:
 
         if require_normalized and self._uriref != self._uriref.normalize():
             raise URIError(f"'{self}' is not normalized")
+
+        if not allow_fragment and self._uriref.fragment is not None:
+            raise URIError(f"'{self}' has a fragment")
 
         if not allow_non_empty_fragment and self._uriref.fragment:
             raise URIError(f"'{self}' has a non-empty fragment")

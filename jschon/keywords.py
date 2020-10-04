@@ -4,7 +4,6 @@ from typing import *
 from jschon.exceptions import JSONSchemaError, VocabularyError, URIError
 from jschon.json import *
 from jschon.jsoninstance import JSONInstance
-from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import *
 from jschon.types import tuplify, arrayify
 from jschon.uri import URI
@@ -15,7 +14,9 @@ __all__ = [
     'VocabularyKeyword',
     'IdKeyword',
     'RefKeyword',
+    'AnchorKeyword',
     'RecursiveRefKeyword',
+    'RecursiveAnchorKeyword',
     'DefsKeyword',
 
     # applicator vocabulary
@@ -81,10 +82,10 @@ class SchemaKeyword(Keyword):
             superschema: JSONSchema,
             value: str,
     ) -> None:
+        super().__init__(superschema, value)
         if superschema.superkeyword is not None:
             raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
 
-        super().__init__(superschema, value)
         try:
             (uri := URI(value)).validate(require_scheme=True, require_normalized=True)
         except URIError as e:
@@ -111,10 +112,9 @@ class VocabularyKeyword(Keyword):
             superschema: JSONSchema,
             value: JSONObject[JSONBoolean],
     ) -> None:
+        super().__init__(superschema, value)
         if superschema.superkeyword is not None:
             raise JSONSchemaError('The "$vocabulary" keyword must not appear in a subschema')
-
-        super().__init__(superschema, value)
 
         for vocab_uri, vocab_required in value.items():
             try:
@@ -148,7 +148,8 @@ class IdKeyword(Keyword):
             value: str,
     ) -> None:
         super().__init__(superschema, value)
-        if not (uri := URI(value)).is_absolute():
+        (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
+        if not uri.is_absolute():
             if not superschema.location:
                 raise JSONSchemaError('The "$id" of the root schema, if present, must be an absolute URI')
             if (base_uri := superschema.base_uri) is not None:
@@ -156,7 +157,7 @@ class IdKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
-        superschema.base_uri = uri
+        superschema.uri = uri
 
 
 class RefKeyword(Keyword):
@@ -167,26 +168,36 @@ class RefKeyword(Keyword):
     }
 
     def evaluate(self, instance: JSONInstance) -> None:
-        # TODO: check that we're not recalculating refschema unnecessarily
-        base, _, fragment = (value := self.json.value).partition('#')
-        uri = URI(base)
-        if (base_uri := self.superschema.base_uri) is not None:
-            uri = uri.resolve(base_uri)
-        if uri.is_absolute():
-            refschema = JSONSchema.get(uri)
-        elif not base:
-            refschema = self.superschema.rootschema
-        else:
-            raise JSONSchemaError(f'Unable to determine schema resource referenced by "{value}"')
+        uri = URI(self.json.value)
+        if not uri.can_absolute():
+            if (base_uri := self.superschema.base_uri) is not None:
+                uri = uri.resolve(base_uri)
+            else:
+                raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
-        if fragment:
-            ref = JSONPointer.parse_uri_fragment(f'#{fragment}')
-            refschema = ref.evaluate(refschema)
-
-        if not isinstance(refschema, JSONSchema):
-            raise JSONSchemaError(f'The value referenced by "{value}" is not a JSON Schema')
-
+        refschema = JSONSchema.get(uri, self.superschema.metaschema_uri)
         refschema.evaluate(instance)
+
+
+class AnchorKeyword(Keyword):
+    __keyword__ = "$anchor"
+    __schema__ = {
+        "type": "string",
+        "pattern": "^[A-Za-z][-A-Za-z0-9.:_]*$"
+    }
+
+    def __init__(
+            self,
+            superschema: JSONSchema,
+            value: str,
+    ) -> None:
+        super().__init__(superschema, value)
+        if (base_uri := superschema.base_uri) is not None:
+            uri = URI(f'{base_uri}#{value}')
+        else:
+            raise JSONSchemaError(f'No base URI for anchor "{value}"')
+
+        JSONSchema.set(uri, superschema)
 
 
 class RecursiveRefKeyword(Keyword):
@@ -205,10 +216,22 @@ class RecursiveRefKeyword(Keyword):
         if value != '#':
             raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
 
-        self.refschema: JSONSchema = superschema.rootschema
-
     def evaluate(self, instance: JSONInstance) -> None:
-        self.refschema.evaluate(instance)
+        if (base_uri := self.superschema.base_uri) is not None:
+            refschema = JSONSchema.get(base_uri, self.superschema.metaschema_uri)
+        else:
+            raise JSONSchemaError(f'No base URI against which to resolve "$recursiveRef"')
+
+        refschema.evaluate(instance)
+
+
+class RecursiveAnchorKeyword(Keyword):
+    __keyword__ = "$recursiveAnchor"
+    __schema__ = {
+        "type": "boolean",
+        "const": True,
+        "default": False
+    }
 
 
 class DefsKeyword(Keyword):

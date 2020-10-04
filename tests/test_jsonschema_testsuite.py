@@ -19,7 +19,7 @@ def pytest_generate_tests(metafunc):
     argnames = ('schema', 'data', 'valid')
     argvalues = []
     testids = []
-    testsuite_dir = pathlib.Path('jsonschema_testsuite/tests/draft2019-09')
+    testsuite_dir = pathlib.Path(__file__).parent / 'jsonschema_testsuite' / 'tests' / 'draft2019-09'
     testfile_paths = sorted(testsuite_dir.rglob('*.json'))
     for testfile_path in testfile_paths:
         with testfile_path.open() as testfile:
