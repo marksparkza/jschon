@@ -9,9 +9,9 @@ from tests.test_jsonpointer import jsonpointer_escape
 @given(json)
 def test_create_json(value):
 
-    def assert_node(inst, val, loc):
+    def assert_node(inst, val, ptr):
         assert inst.value == val
-        assert inst.location == JSONPointer(loc)
+        assert inst.path == JSONPointer(ptr)
         if val is None:
             assert type(inst) is JSONNull
         elif isinstance(val, bool):
@@ -25,11 +25,11 @@ def test_create_json(value):
         elif isinstance(val, list):
             assert type(inst) is JSONArray
             for i, el in enumerate(val):
-                assert_node(inst[i], el, f'{inst.location}/{i}')
+                assert_node(inst[i], el, f'{inst.path}/{i}')
         elif isinstance(val, dict):
             assert type(inst) is JSONObject
             for k, v in val.items():
-                assert_node(inst[k], v, f'{inst.location}/{jsonpointer_escape(k)}')
+                assert_node(inst[k], v, f'{inst.path}/{jsonpointer_escape(k)}')
         else:
             assert False
 

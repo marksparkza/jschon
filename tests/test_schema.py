@@ -12,7 +12,7 @@ from tests.strategies import *
 def test_create_schema(value):
     schema = JSONSchema(value, metaschema_uri=metaschema_uri)
     assert schema.value == value
-    assert not schema.location
+    assert not schema.path
     assert schema.superkeyword is None
     assert schema.metaschema_uri == metaschema_uri
 

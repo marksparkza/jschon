@@ -68,10 +68,10 @@ class JSON:
             self,
             value: AnyJSONCompatible,
             *,
-            location: JSONPointer = None,
+            path: JSONPointer = None,
     ) -> None:
         self.value: AnyJSONCompatible = value
-        self.location: JSONPointer = location or JSONPointer()
+        self.path: JSONPointer = path or JSONPointer()
 
     def __eq__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
         if isinstance(other, type(self)):
@@ -229,11 +229,11 @@ class JSONArray(JSON, Sequence[AnyJSON]):
             self,
             value: Sequence[Union[JSON, AnyJSONCompatible]],
             *,
-            location: JSONPointer = None,
+            path: JSONPointer = None,
     ) -> None:
-        super().__init__(value, location=location)
+        super().__init__(value, path=path)
         self._items = [
-            v if isinstance(v, JSON) else JSON(v, location=self.location / str(i))
+            v if isinstance(v, JSON) else JSON(v, path=self.path / str(i))
             for i, v in enumerate(value)
         ]
 
@@ -265,11 +265,11 @@ class JSONObject(JSON, Mapping[str, AnyJSON]):
             self,
             value: Mapping[str, Union[JSON, AnyJSONCompatible]],
             *,
-            location: JSONPointer = None,
+            path: JSONPointer = None,
     ) -> None:
-        super().__init__(value, location=location)
+        super().__init__(value, path=path)
         self._properties = {
-            k: v if isinstance(v, JSON) else JSON(v, location=self.location / k)
+            k: v if isinstance(v, JSON) else JSON(v, path=self.path / k)
             for k, v in value.items()
         }
 

@@ -93,10 +93,10 @@ class JSONSchema(JSON):
             *,
             uri: URI = None,
             metaschema_uri: URI = None,
-            location: JSONPointer = None,
+            path: JSONPointer = None,
             superkeyword: Keyword = None,
     ) -> None:
-        super().__init__(value, location=location)
+        super().__init__(value, path=path)
 
         self._encache(uri, self)
         self._uri: Optional[URI] = uri
@@ -268,7 +268,7 @@ class Keyword:
             value: AnyJSONCompatible,
     ) -> None:
         self.superschema: JSONSchema = superschema
-        self.location: JSONPointer = superschema.location / self.__keyword__
+        self.path: JSONPointer = superschema.path / self.__keyword__
         self.json: JSON
 
         # there may be several possible ways in which to set up subschemas for
@@ -280,7 +280,7 @@ class Keyword:
                 self.json = jsonified
                 break
         else:
-            self.json = JSON(value, location=self.location)
+            self.json = JSON(value, path=self.path)
 
     def __call__(self, instance: JSONInstance) -> None:
         """ Apply self to instance """
@@ -305,7 +305,7 @@ class Applicator:
         if is_schema_compatible(value):
             return JSONSchema(
                 value,
-                location=self.keyword.location,
+                path=self.keyword.path,
                 superkeyword=self.keyword,
             )
 
@@ -322,12 +322,12 @@ class ArrayApplicator(Applicator):
                 [
                     JSONSchema(
                         item,
-                        location=self.keyword.location / str(index),
+                        path=self.keyword.path / str(index),
                         superkeyword=self.keyword,
                     )
                     for index, item in enumerate(value)
                 ],
-                location=self.keyword.location,
+                path=self.keyword.path,
             )
 
 
@@ -343,12 +343,12 @@ class PropertyApplicator(Applicator):
                 {
                     name: JSONSchema(
                         item,
-                        location=self.keyword.location / name,
+                        path=self.keyword.path / name,
                         superkeyword=self.keyword,
                     )
                     for name, item in value.items()
                 },
-                location=self.keyword.location,
+                path=self.keyword.path,
             )
 
 
