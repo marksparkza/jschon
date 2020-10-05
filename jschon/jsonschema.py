@@ -13,7 +13,6 @@ from jschon.types import AnyJSONCompatible, tuplify, is_schema_compatible
 from jschon.uri import URI
 
 __all__ = [
-    'evaluate',
     'JSONSchema',
     'JSONBooleanSchema',
     'JSONObjectSchema',
@@ -30,15 +29,6 @@ __all__ = [
     'FormatClass',
     'FormatResult',
 ]
-
-
-def evaluate(schema: JSONSchema, document: JSON) -> JSONInstance:
-    schema.evaluate(instance := JSONInstance(
-        json=document,
-        path=schema.location,
-        parent=None,
-    ))
-    return instance
 
 
 class JSONSchema(JSON):
@@ -118,6 +108,13 @@ class JSONSchema(JSON):
         if metaschema_uri is not None:
             JSONSchema.get(metaschema_uri, metaschema_uri)
 
+    def __call__(self, instance: JSONInstance) -> None:
+        """ Apply self to instance """
+        raise NotImplementedError
+
+    def evaluate(self, document: JSON) -> JSONInstance:
+        return JSONInstance(document, self)
+
     @property
     def metaschema(self) -> JSONSchema:
         if (uri := self.metaschema_uri) is None:
@@ -158,9 +155,6 @@ class JSONSchema(JSON):
     def rootschema(self):
         return self if not self.superkeyword else self.superkeyword.superschema.rootschema
 
-    def evaluate(self, instance: JSONInstance) -> None:
-        raise NotImplementedError
-
 
 class JSONBooleanSchema(JSONSchema):
     __type__ = "boolean"
@@ -174,7 +168,7 @@ class JSONBooleanSchema(JSONSchema):
             return object.__new__(cls)
         raise TypeError("Expecting bool")
 
-    def evaluate(self, instance: JSONInstance) -> None:
+    def __call__(self, instance: JSONInstance) -> None:
         if self.value:
             instance.pass_()
         else:
@@ -222,7 +216,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
-        if self.superkeyword is None and not evaluate(self.metaschema, JSON(value)).valid:
+        if self.superkeyword is None and not self.metaschema.evaluate(JSON(value)).valid:
             raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
@@ -243,12 +237,12 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                     yield kwclass
                     break
 
-    def evaluate(self, instance: JSONInstance) -> None:
+    def __call__(self, instance: JSONInstance) -> None:
         for keyword in self.keywords.values():
             if keyword.__types__ is None or isinstance(
                     instance.json, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
             ):
-                instance.descend(keyword.__keyword__, instance.json, keyword.evaluate)
+                instance.descend(instance.json, keyword, key=keyword.__keyword__)
 
         if all(child.valid or not child.assert_
                for child in instance.children.values()):
@@ -295,8 +289,8 @@ class Keyword:
         else:
             self.json = JSON(value, location=self.location)
 
-    def evaluate(self, instance: JSONInstance) -> None:
-        pass
+    def __call__(self, instance: JSONInstance) -> None:
+        """ Apply self to instance """
 
     def __str__(self) -> str:
         return f'"{self.__keyword__}": {self.json}'

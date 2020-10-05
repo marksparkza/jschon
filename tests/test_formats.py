@@ -16,9 +16,10 @@ from tests.strategies import jsonpointer
 
 
 def evaluate_format(format_attr, instval):
-    kw = FormatKeyword(JSONSchema(True, metaschema_uri=metaschema_uri), format_attr)
-    kw.evaluate(instance := JSONInstance(JSONString(instval), JSONPointer(), None))
-    return instance
+    return JSONInstance(
+        evaluator=FormatKeyword(JSONSchema(True, metaschema_uri=metaschema_uri), format_attr),
+        json=JSONString(instval),
+    )
 
 
 @given(hs.emails() | hs.text())

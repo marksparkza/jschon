@@ -5,7 +5,7 @@ import pytest
 
 from jschon.catalogue import Catalogue
 from jschon.json import JSON
-from jschon.jsonschema import JSONSchema, evaluate
+from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
 from tests import metaschema_uri
 
@@ -34,5 +34,5 @@ def pytest_generate_tests(metafunc):
 def test_validate(schema, data, valid):
     s = JSONSchema(schema, metaschema_uri=metaschema_uri)
     assert s.keywords.keys() == schema.keys() if isinstance(schema, dict) else not s.keywords
-    instance = evaluate(s, JSON(data))
+    instance = s.evaluate(JSON(data))
     assert instance.valid == valid

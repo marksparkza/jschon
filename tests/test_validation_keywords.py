@@ -6,16 +6,16 @@ from hypothesis import given
 
 from jschon.json import JSON
 from jschon.jsoninstance import JSONInstance
-from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
 from jschon.keywords import *
 from tests.strategies import *
 
 
 def evaluate_instance(kwclass, kwvalue, instval):
-    kw = kwclass(JSONSchema(True), kwvalue)
-    kw.evaluate(instance := JSONInstance(JSON(instval), JSONPointer(), None))
-    return instance
+    return JSONInstance(
+        evaluator=kwclass(JSONSchema(True), kwvalue),
+        json=JSON(instval),
+    )
 
 
 @given(kwvalue=jsontype | jsontypes, instval=json)
@@ -143,11 +143,11 @@ def test_unique_items(kwvalue, instval):
 def test_max_contains(kwvalue, instval, containstype):
     count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
     kw = MaxContainsKeyword(JSONSchema(True), kwvalue)
-    instance = JSONInstance(JSON(instval), JSONPointer(), None)
+    instance = JSONInstance(JSON(instval), kw)
     instance.sibling = (mock_sibling_fn := Mock())
     instance.sibling.return_value = (mock_contains_instance := Mock())
     mock_contains_instance.annotation = count
-    kw.evaluate(instance)
+    kw(instance)
     mock_sibling_fn.assert_called_once_with("contains")
     assert instance.valid == (count <= kwvalue)
 
@@ -156,11 +156,11 @@ def test_max_contains(kwvalue, instval, containstype):
 def test_min_contains(kwvalue, instval, containstype):
     count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
     kw = MinContainsKeyword(JSONSchema(True), kwvalue)
-    instance = JSONInstance(JSON(instval), JSONPointer(), None)
+    instance = JSONInstance(JSON(instval), kw)
     instance.sibling = (mock_sibling_fn := Mock())
     instance.sibling.return_value = (mock_contains_instance := Mock())
     mock_contains_instance.annotation = count
-    kw.evaluate(instance)
+    kw(instance)
     mock_sibling_fn.assert_called_once_with("contains")
     assert instance.valid == (count >= kwvalue)
 

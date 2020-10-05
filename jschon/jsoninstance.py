@@ -7,7 +7,6 @@ from jschon.json import AnyJSON, JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.types import AnyJSONCompatible
 
-
 __all__ = [
     'JSONInstance',
 ]
@@ -18,40 +17,45 @@ class JSONInstance(Generic[AnyJSON]):
     def __init__(
             self,
             json: JSON,
-            path: JSONPointer,
-            parent: Optional[JSONInstance],
+            evaluator: Callable[[JSONInstance], None],
+            *,
+            dynamicpath: JSONPointer = None,
+            parent: JSONInstance = None,
     ):
         self.json: AnyJSON = json
-        self.path: JSONPointer = path
+        self.evaluator: Callable[[JSONInstance], None] = evaluator
+        self.dynamicpath: JSONPointer = dynamicpath or JSONPointer()
         self.parent: Optional[JSONInstance] = parent
         self.children: Dict[str, JSONInstance] = {}
         self._valid: Optional[bool] = None
         self.annotation: Optional[AnyJSONCompatible] = None
         self.error: Optional[str] = None
         self.assert_: bool = True
+        self._childkey: int = 0
+        self.evaluator(self)
 
     def sibling(self, key: str) -> Optional[JSONInstance]:
         return self.parent.children.get(key) if self.parent else None
 
     def descend(
             self,
-            key: str,
             json: JSON,
-            evaluatefn: Callable[[JSONInstance], None],
+            evaluator: Callable[[JSONInstance], None],
             *,
-            extendpath: bool = True,
+            key: str = None,
     ) -> Optional[JSONInstance]:
-        self.children[key] = (child := JSONInstance(
+        child = JSONInstance(
             json=json,
-            path=self.path / key if extendpath else self.path,
+            evaluator=evaluator,
+            dynamicpath=self.dynamicpath / key if key is not None else self.dynamicpath,
             parent=self,
-        ))
-
-        evaluatefn(child)
+        )
         if child._valid is not None:
+            if key is None:
+                key = str(self._childkey)
+                self._childkey += 1
+            self.children[key] = child
             return child
-
-        del self.children[key]
 
     def pass_(self, annotation: AnyJSONCompatible = None) -> None:
         self._valid = True
@@ -74,7 +78,7 @@ class JSONInstance(Generic[AnyJSON]):
         self._valid = value
 
     def __str__(self) -> str:
-        return f'{self.path}: {self.json}'
+        return f'{self.dynamicpath}: {self.json}'
 
     def __repr__(self) -> str:
         return f'JSONInstance({self})'
