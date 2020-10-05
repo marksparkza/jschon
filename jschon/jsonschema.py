@@ -112,9 +112,6 @@ class JSONSchema(JSON):
         """ Apply self to instance """
         raise NotImplementedError
 
-    def evaluate(self, document: JSON) -> JSONInstance:
-        return JSONInstance(document, self)
-
     @property
     def metaschema(self) -> JSONSchema:
         if (uri := self.metaschema_uri) is None:
@@ -150,10 +147,6 @@ class JSONSchema(JSON):
             self._decache(self._uri)
             self._encache(value, self)
             self._uri = value
-
-    @property
-    def rootschema(self):
-        return self if not self.superkeyword else self.superkeyword.superschema.rootschema
 
 
 class JSONBooleanSchema(JSONSchema):
@@ -216,7 +209,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
-        if self.superkeyword is None and not self.metaschema.evaluate(JSON(value)).valid:
+        if self.superkeyword is None and not JSONInstance(JSON(value), self.metaschema).valid:
             raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
