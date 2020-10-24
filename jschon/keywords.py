@@ -79,11 +79,11 @@ class SchemaKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: str,
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
-        if superschema.superkeyword is not None:
+        super().__init__(value, **kwargs)
+        if self.superschema.superkeyword is not None:
             raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
 
         try:
@@ -91,7 +91,7 @@ class SchemaKeyword(Keyword):
         except URIError as e:
             raise JSONSchemaError from e
 
-        superschema.metaschema_uri = uri
+        self.superschema.metaschema_uri = uri
 
 
 class VocabularyKeyword(Keyword):
@@ -109,11 +109,11 @@ class VocabularyKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: JSONObject[JSONBoolean],
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
-        if superschema.superkeyword is not None:
+        super().__init__(value, **kwargs)
+        if self.superschema.superkeyword is not None:
             raise JSONSchemaError('The "$vocabulary" keyword must not appear in a subschema')
 
         for vocab_uri, vocab_required in value.items():
@@ -144,20 +144,20 @@ class IdKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: str,
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
+        super().__init__(value, **kwargs)
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
-            if not superschema.path:
+            if not self.superschema.path:
                 raise JSONSchemaError('The "$id" of the root schema, if present, must be an absolute URI')
-            if (base_uri := superschema.base_uri) is not None:
+            if (base_uri := self.superschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
-        superschema.uri = uri
+        self.superschema.uri = uri
 
 
 class RefKeyword(Keyword):
@@ -188,16 +188,16 @@ class AnchorKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: str,
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
-        if (base_uri := superschema.base_uri) is not None:
+        super().__init__(value, **kwargs)
+        if (base_uri := self.superschema.base_uri) is not None:
             uri = URI(f'{base_uri}#{value}')
         else:
             raise JSONSchemaError(f'No base URI for anchor "{value}"')
 
-        JSONSchema.set(uri, superschema)
+        JSONSchema.set(uri, self.superschema)
 
 
 class RecursiveRefKeyword(Keyword):
@@ -209,10 +209,10 @@ class RecursiveRefKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: str,
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
+        super().__init__(value, **kwargs)
         if value != '#':
             raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
 
@@ -670,10 +670,10 @@ class TypeKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: Union[str, Sequence[str]],
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, arrayify(value))
+        super().__init__(arrayify(value), **kwargs)
 
     def __call__(self, instance: JSONInstance) -> None:
         self.json: JSONArray[JSONString]
@@ -804,10 +804,10 @@ class PatternKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: str,
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
+        super().__init__(value, **kwargs)
         self.regex = re.compile(value)
 
     def __call__(self, instance: JSONInstance[JSONString]) -> None:
@@ -985,10 +985,10 @@ class FormatKeyword(Keyword):
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: str,
+            **kwargs: Any,
     ) -> None:
-        super().__init__(superschema, value)
+        super().__init__(value, **kwargs)
         vocabulary = FormatVocabulary.get(self.vocabulary_uri)
         self.format_: Optional[Format] = vocabulary.formats.get(self.json.value)
 

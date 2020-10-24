@@ -12,6 +12,8 @@ def test_create_json(value):
     def assert_node(inst, val, ptr):
         assert inst.value == val
         assert inst.path == JSONPointer(ptr)
+        assert eval(repr(inst)) == inst
+
         if val is None:
             assert type(inst) is JSONNull
         elif isinstance(val, bool):

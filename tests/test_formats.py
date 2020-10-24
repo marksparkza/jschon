@@ -15,16 +15,16 @@ from tests import metaschema_uri
 from tests.strategies import jsonpointer
 
 
-def evaluate_format(format_attr, instval):
+def evaluate(format_attr, instval):
     return JSONInstance(
-        evaluator=FormatKeyword(JSONSchema(True, metaschema_uri=metaschema_uri), format_attr),
+        evaluator=FormatKeyword(format_attr, superschema=JSONSchema(True, metaschema_uri=metaschema_uri)),
         json=JSONString(instval),
     )
 
 
 @given(hs.emails() | hs.text())
 def test_email(instval):
-    result = evaluate_format("email", instval)
+    result = evaluate("email", instval)
     try:
         email_validator.validate_email(instval, allow_smtputf8=False, check_deliverability=False)
         assert result.valid is True
@@ -34,7 +34,7 @@ def test_email(instval):
 
 @given(hs.emails() | hs.text())
 def test_idnemail(instval):
-    result = evaluate_format("idn-email", instval)
+    result = evaluate("idn-email", instval)
     try:
         email_validator.validate_email(instval, allow_smtputf8=True, check_deliverability=False)
         assert result.valid is True
@@ -44,13 +44,13 @@ def test_idnemail(instval):
 
 @given(hp.urls())
 def test_uri_valid(instval):
-    result = evaluate_format("uri", instval)
+    result = evaluate("uri", instval)
     assert result.valid is True
 
 
 @given(hs.text())
 def test_uri_invalid(instval):
-    result = evaluate_format("uri", instval)
+    result = evaluate("uri", instval)
     validator = rfc3986.validators.Validator().require_presence_of('scheme')
     try:
         validator.validate(rfc3986.uri_reference(instval))
@@ -61,13 +61,13 @@ def test_uri_invalid(instval):
 
 @given(hp.urls() | jsonpointer)
 def test_urireference_valid(instval):
-    result = evaluate_format("uri-reference", instval)
+    result = evaluate("uri-reference", instval)
     assert result.valid is True
 
 
 @given(hs.text())
 def test_urireference_invalid(instval):
-    result = evaluate_format("uri-reference", instval)
+    result = evaluate("uri-reference", instval)
     validator = rfc3986.validators.Validator()
     try:
         validator.validate(rfc3986.uri_reference(instval))
@@ -78,13 +78,13 @@ def test_urireference_invalid(instval):
 
 @given(jsonpointer)
 def test_jsonpointer_valid(instval):
-    result = evaluate_format("json-pointer", instval)
+    result = evaluate("json-pointer", instval)
     assert result.valid is True
 
 
 @given(hs.text())
 def test_jsonpointer_invalid(instval):
-    result = evaluate_format("json-pointer", instval)
+    result = evaluate("json-pointer", instval)
     try:
         JSONPointer(instval)
         assert result.valid is True
@@ -94,7 +94,7 @@ def test_jsonpointer_invalid(instval):
 
 @given(hs.text(hs.from_regex(r'[0-9\[\]\-^+*?{},$()|]')))
 def test_regex(instval):
-    result = evaluate_format("regex", instval)
+    result = evaluate("regex", instval)
     try:
         re.compile(instval)
         assert result.valid is True

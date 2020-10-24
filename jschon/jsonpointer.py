@@ -112,7 +112,7 @@ class JSONPointer(Sequence[str]):
 
     def __repr__(self) -> str:
         """ Return repr(self) """
-        return f"JSONPointer('{self}')"
+        return f"JSONPointer({str(self)!r})"
 
     def evaluate(self, document: Any) -> Any:
         """ Return the value at the location in the document indicated by self.

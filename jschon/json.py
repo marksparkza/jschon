@@ -84,7 +84,7 @@ class JSON:
         return json.dumps(self.value, cls=self._Encoder)
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self})'
+        return f'{self.__class__.__name__}({self.value!r})'
 
     def istype(self, jsontype: str) -> bool:
         return self.__type__ == jsontype
@@ -101,7 +101,7 @@ class JSONNull(JSON):
             value: None,
             **kwargs: Any,
     ) -> JSONNull:
-        if isinstance(value, bool):
+        if value is None:
             return object.__new__(JSONNull)
         raise TypeError("Expecting None")
 

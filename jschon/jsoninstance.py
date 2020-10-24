@@ -78,7 +78,10 @@ class JSONInstance(Generic[AnyJSON]):
         self._valid = value
 
     def __str__(self) -> str:
-        return f'{self.dynamicpath}: {self.json}'
+        """Indicates which JSON value is input to which evaluator."""
+        jsonpath = self.json.path or 'root'
+        dynamicpath = self.dynamicpath or 'root'
+        return f'{jsonpath} > {dynamicpath}'
 
     def __repr__(self) -> str:
-        return f'JSONInstance({self})'
+        return f"JSONInstance({self.json!r}, {self.evaluator!r})"

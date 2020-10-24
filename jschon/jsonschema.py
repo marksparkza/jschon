@@ -197,7 +197,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             self.uri = URI(f'mem:{uuid4()}')
 
         self.keywords: Dict[str, Keyword] = {
-            kw: kwclass(self, value[kw])
+            kw: kwclass(value[kw], superschema=self)
             for kwclass in self._bootstrap_kwclasses
             if (kw := kwclass.__keyword__) in value
         }
@@ -206,7 +206,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             if (kwclass := self.metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
         }
         self.keywords.update({
-            kwclass.__keyword__: kwclass(self, value[kwclass.__keyword__])
+            kwclass.__keyword__: kwclass(value[kwclass.__keyword__], superschema=self)
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
         if self.superkeyword is None and not JSONInstance(JSON(value), self.metaschema).valid:
@@ -264,12 +264,13 @@ class Keyword:
 
     def __init__(
             self,
-            superschema: JSONSchema,
             value: AnyJSONCompatible,
+            *,
+            superschema: JSONSchema = JSONSchema(True),
     ) -> None:
-        self.superschema: JSONSchema = superschema
-        self.path: JSONPointer = superschema.path / self.__keyword__
         self.json: JSON
+        self.path: JSONPointer = superschema.path / self.__keyword__
+        self.superschema: JSONSchema = superschema
 
         # there may be several possible ways in which to set up subschemas for
         # an applicator keyword; we try a series of applicator classes in turn
@@ -289,7 +290,7 @@ class Keyword:
         return f'"{self.__keyword__}": {self.json}'
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self})'
+        return f'{self.__class__.__name__}({self.json.value!r})'
 
 
 KeywordClass = Type[Keyword]

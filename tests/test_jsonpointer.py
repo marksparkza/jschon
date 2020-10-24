@@ -19,16 +19,19 @@ def test_create_jsonpointer(values: List[Union[str, List[str]]]):
     assert ptr0 == (ptr1 := JSONPointer(*values))
     assert ptr0 == (ptr2 := JSONPointer(keys))
     assert ptr0 == (ptr3 := JSONPointer(ptr0))
-    assert str(ptr0) == ''.join(f'/{jsonpointer_escape(key)}' for key in keys)
-    assert list(ptr0) == keys
-    assert bool(ptr0) == bool(keys)
     assert ptr0 != (ptr4 := JSONPointer() if keys else JSONPointer('/'))
     assert ptr0 != (ptr5 := JSONPointer('/', keys))
+    assert JSONPointer(ptr0, keys, *values) == JSONPointer(*values, keys, ptr0)
 
     ptrs = {ptr0, ptr1, ptr2, ptr3}
     assert ptrs == {ptr0}
     ptrs |= {ptr4, ptr5}
     assert ptrs > {ptr0}
+
+    assert str(ptr0) == ''.join(f'/{jsonpointer_escape(key)}' for key in keys)
+    assert list(ptr0) == keys
+    assert bool(ptr0) == bool(keys)
+    assert eval(repr(ptr0)) == ptr0
 
 
 @given(jsonpointer, jsonpointer_key)

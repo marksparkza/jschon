@@ -20,7 +20,7 @@ class URI:
         return self._uriref.unsplit()
 
     def __repr__(self) -> str:
-        return f"URI('{self}')"
+        return f"URI({str(self)!r})"
 
     def __len__(self) -> int:
         return len(str(self))
