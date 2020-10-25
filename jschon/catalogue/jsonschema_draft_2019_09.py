@@ -30,6 +30,7 @@ def initialize():
             RecursiveRefKeyword,
             RecursiveAnchorKeyword,
             DefsKeyword,
+            CommentKeyword,
         )
     )
 

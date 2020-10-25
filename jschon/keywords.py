@@ -18,6 +18,7 @@ __all__ = [
     'RecursiveRefKeyword',
     'RecursiveAnchorKeyword',
     'DefsKeyword',
+    'CommentKeyword',
 
     # applicator vocabulary
     'AllOfKeyword',
@@ -255,6 +256,11 @@ class DefsKeyword(Keyword):
         "default": {}
     }
     applicators = PropertyApplicator,
+
+
+class CommentKeyword(Keyword):
+    __keyword__ = "$comment"
+    __schema__ = {"type": "string"}
 
 
 class AllOfKeyword(Keyword):
