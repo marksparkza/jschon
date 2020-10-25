@@ -82,11 +82,6 @@ def initialize():
         )
     )
 
-    Vocabulary.register(
-        uri=URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
-        kwclasses=()
-    )
-
     FormatVocabulary.register(
         uri=URI("https://json-schema.org/draft/2019-09/vocab/format"),
         kwclasses=(
@@ -117,6 +112,23 @@ def initialize():
     )
 
     Vocabulary.register(
+        uri=URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
+        kwclasses=(
+            TitleKeyword,
+            DescriptionKeyword,
+            DefaultKeyword,
+            DeprecatedKeyword,
+            ReadOnlyKeyword,
+            WriteOnlyKeyword,
+            ExamplesKeyword,
+        )
+    )
+
+    Vocabulary.register(
         uri=URI("https://json-schema.org/draft/2019-09/vocab/content"),
-        kwclasses=()
+        kwclasses=(
+            ContentMediaTypeKeyword,
+            ContentEncodingKeyword,
+            ContentSchemaKeyword,
+        )
     )

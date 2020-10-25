@@ -62,6 +62,7 @@ def test_keyword_dependency_resolution(value: list):
     assert_keyword_order("anyOf", "unevaluatedProperties")
     assert_keyword_order("oneOf", "unevaluatedProperties")
     assert_keyword_order("not", "unevaluatedProperties")
+    assert_keyword_order("contentMediaType", "contentSchema")
 
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#idExamples

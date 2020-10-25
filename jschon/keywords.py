@@ -60,13 +60,22 @@ __all__ = [
     'RequiredKeyword',
     'DependentRequiredKeyword',
 
-    # meta-data vocabulary
-
     # format vocabulary
     'FormatKeyword',
 
-    # content vocabulary
+    # meta-data vocabulary
+    'TitleKeyword',
+    'DescriptionKeyword',
+    'DefaultKeyword',
+    'DeprecatedKeyword',
+    'ReadOnlyKeyword',
+    'WriteOnlyKeyword',
+    'ExamplesKeyword',
 
+    # content vocabulary
+    'ContentMediaTypeKeyword',
+    'ContentEncodingKeyword',
+    'ContentSchemaKeyword',
 ]
 
 
@@ -999,3 +1008,97 @@ class FormatKeyword(Keyword):
             fmtresult = self.format_.evaluate(instance.json)
             if not fmtresult.valid:
                 instance.fail(f'The text does not conform to the {self.json} format: {fmtresult.error}')
+
+
+class TitleKeyword(Keyword):
+    __keyword__ = "title"
+    __schema__ = {"type": "string"}
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class DescriptionKeyword(Keyword):
+    __keyword__ = "description"
+    __schema__ = {"type": "string"}
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class DefaultKeyword(Keyword):
+    __keyword__ = "default"
+    __schema__ = True
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class DeprecatedKeyword(Keyword):
+    __keyword__ = "deprecated"
+    __schema__ = {
+        "type": "boolean",
+        "default": False
+    }
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class ReadOnlyKeyword(Keyword):
+    __keyword__ = "readOnly"
+    __schema__ = {
+        "type": "boolean",
+        "default": False
+    }
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class WriteOnlyKeyword(Keyword):
+    __keyword__ = "writeOnly"
+    __schema__ = {
+        "type": "boolean",
+        "default": False
+    }
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class ExamplesKeyword(Keyword):
+    __keyword__ = "examples"
+    __schema__ = {
+        "type": "array",
+        "items": True
+    }
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class ContentMediaTypeKeyword(Keyword):
+    __keyword__ = "contentMediaType"
+    __schema__ = {"type": "string"}
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class ContentEncodingKeyword(Keyword):
+    __keyword__ = "contentEncoding"
+    __schema__ = {"type": "string"}
+
+    def __call__(self, instance: JSONInstance) -> None:
+        instance.pass_(self.json.value)
+
+
+class ContentSchemaKeyword(Keyword):
+    __keyword__ = "contentSchema"
+    __schema__ = {"$recursiveRef": "#"}
+    __depends__ = "contentMediaType"
+
+    def __call__(self, instance: JSONInstance) -> None:
+        if instance.sibling("contentMediaType"):
+            instance.pass_(self.json.value)

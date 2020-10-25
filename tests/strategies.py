@@ -72,4 +72,6 @@ interdependent_keywords = hs.lists(hs.sampled_from([
     "anyOf",
     "oneOf",
     "not",
+    "contentMediaType",
+    "contentSchema",
 ]), unique=True)
