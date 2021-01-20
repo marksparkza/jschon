@@ -24,12 +24,12 @@ class EvaluationNode(Generic[AnyJSON]):
             json: JSON,
             evaluator: Callable[[EvaluationNode], None],
             *,
-            dynamicpath: JSONPointer = None,
+            path: JSONPointer = None,
             parent: EvaluationNode = None,
     ):
         self.json: AnyJSON = json
         self.evaluator: Callable[[EvaluationNode], None] = evaluator
-        self.dynamicpath: JSONPointer = dynamicpath or JSONPointer()
+        self.path: JSONPointer = path or JSONPointer()
         self.parent: Optional[EvaluationNode] = parent
         self.children: Dict[str, EvaluationNode] = {}
         self._valid: Optional[bool] = None
@@ -52,7 +52,7 @@ class EvaluationNode(Generic[AnyJSON]):
         child = EvaluationNode(
             json=json,
             evaluator=evaluator,
-            dynamicpath=self.dynamicpath / key if key is not None else self.dynamicpath,
+            path=self.path / key if key is not None else self.path,
             parent=self,
         )
         if child._valid is not None:
@@ -97,9 +97,9 @@ class EvaluationNode(Generic[AnyJSON]):
     def __str__(self) -> str:
         """By analogy with Bash input redirection, show which JSON value
         is being input to which evaluator."""
-        dynamicpath = self.dynamicpath or 'root'
+        evalpath = self.path or 'root'
         jsonpath = self.json.path or 'root'
-        return f'{dynamicpath} < {jsonpath}'
+        return f'{evalpath} < {jsonpath}'
 
     def __repr__(self) -> str:
         return f"EvaluationNode({self.json!r}, {self.evaluator!r})"
