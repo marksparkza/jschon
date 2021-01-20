@@ -1,6 +1,8 @@
 import pytest
 from hypothesis import given
 
+from jschon.json import JSON
+from jschon.evaluation import EvaluationNode
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema, JSONObjectSchema
 from jschon.uri import URI
@@ -19,7 +21,6 @@ def test_create_schema(value):
 
 @given(interdependent_keywords)
 def test_keyword_dependency_resolution(value: list):
-
     def assert_keyword_order(dependency, dependent):
         try:
             assert keywords.index(dependency) < keywords.index(dependent)
@@ -122,3 +123,44 @@ def test_uri(ptr: str, uri: str, canonical: bool):
     rootschema = JSONSchema(example, metaschema_uri=metaschema_uri)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr).evaluate(rootschema)
     assert schema == JSONSchema.get(URI(uri))
+
+
+# https://json-schema.org/draft/2019-09/json-schema-core.html#recursive-example
+# tree schema, extensible
+tree = {
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "https://example.com/tree",
+    "$recursiveAnchor": True,
+    "type": "object",
+    "properties": {
+        "data": True,
+        "children": {
+            "type": "array",
+            "items": {
+                "$recursiveRef": "#"
+            }
+        }
+    }
+}
+
+# strict-tree schema, guards against misspelled properties
+strict_tree = {
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "https://example.com/strict-tree",
+    "$recursiveAnchor": True,
+    "$ref": "tree",
+    "unevaluatedProperties": False
+}
+
+# instance with misspelled field
+tree_instance = {
+    "children": [{"daat": 1}]
+}
+
+
+def test_recursive_schema_extension():
+    tree_schema = JSONSchema(tree)
+    strict_tree_schema = JSONSchema(strict_tree)
+    tree_json = JSON(tree_instance)
+    assert EvaluationNode(tree_json, tree_schema).valid is True
+    assert EvaluationNode(tree_json, strict_tree_schema).valid is False
