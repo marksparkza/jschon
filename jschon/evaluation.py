@@ -95,10 +95,11 @@ class EvaluationNode(Generic[AnyJSON]):
             yield from child.annotations(key)
 
     def __str__(self) -> str:
-        """Indicates which JSON value is input to which evaluator."""
-        jsonpath = self.json.path or 'root'
+        """By analogy with Bash input redirection, show which JSON value
+        is being input to which evaluator."""
         dynamicpath = self.dynamicpath or 'root'
-        return f'{jsonpath} > {dynamicpath}'
+        jsonpath = self.json.path or 'root'
+        return f'{dynamicpath} < {jsonpath}'
 
     def __repr__(self) -> str:
         return f"EvaluationNode({self.json!r}, {self.evaluator!r})"
