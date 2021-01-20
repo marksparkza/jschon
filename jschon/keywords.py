@@ -1,9 +1,9 @@
 import re
 from typing import *
 
+from jschon.evaluation import EvaluationNode
 from jschon.exceptions import JSONSchemaError, VocabularyError, URIError
 from jschon.json import *
-from jschon.jsoninstance import JSONInstance
 from jschon.jsonschema import *
 from jschon.types import tuplify, arrayify
 from jschon.uri import URI
@@ -177,7 +177,7 @@ class RefKeyword(Keyword):
         "format": "uri-reference"
     }
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         uri = URI(self.json.value)
         if not uri.can_absolute():
             if (base_uri := self.superschema.base_uri) is not None:
@@ -186,7 +186,7 @@ class RefKeyword(Keyword):
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
         refschema = JSONSchema.get(uri, self.superschema.metaschema_uri)
-        refschema(instance)
+        refschema(node)
 
 
 class AnchorKeyword(Keyword):
@@ -226,7 +226,7 @@ class RecursiveRefKeyword(Keyword):
         if value != '#':
             raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         if (base_uri := self.superschema.base_uri) is not None:
             refschema = JSONSchema.get(base_uri, self.superschema.metaschema_uri)
         else:
@@ -236,7 +236,7 @@ class RecursiveRefKeyword(Keyword):
         #         recursive_anchor.json.value is True:
         #     base_uri = ...
 
-        refschema(instance)
+        refschema(node)
 
 
 class RecursiveAnchorKeyword(Keyword):
@@ -273,16 +273,16 @@ class AllOfKeyword(Keyword):
 
     applicators = ArrayApplicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONArray[JSONSchema]
 
         for i, subschema in enumerate(self.json):
-            if child := instance.descend(instance.json, subschema, key=str(i)):
+            if child := node.descend(node.json, subschema, key=str(i)):
                 if not child.valid:
-                    instance.fail("The instance must be valid against all subschemas")
+                    node.fail("The instance must be valid against all subschemas")
                     return
 
-        instance.pass_()
+        node.pass_()
 
 
 class AnyOfKeyword(Keyword):
@@ -295,14 +295,14 @@ class AnyOfKeyword(Keyword):
 
     applicators = ArrayApplicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONArray[JSONSchema]
 
-        instance.fail("The instance must be valid against at least one subschema")
+        node.fail("The instance must be valid against at least one subschema")
         for i, subschema in enumerate(self.json):
-            if child := instance.descend(instance.json, subschema, key=str(i)):
+            if child := node.descend(node.json, subschema, key=str(i)):
                 if child.valid:
-                    instance.pass_()
+                    node.pass_()
 
 
 class OneOfKeyword(Keyword):
@@ -315,16 +315,16 @@ class OneOfKeyword(Keyword):
 
     applicators = ArrayApplicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONArray[JSONSchema]
 
         for i, subschema in enumerate(self.json):
-            instance.descend(instance.json, subschema, key=str(i))
+            node.descend(node.json, subschema, key=str(i))
 
-        if len([child for child in instance.children.values() if child.valid]) == 1:
-            instance.pass_()
+        if len([child for child in node.children.values() if child.valid]) == 1:
+            node.pass_()
         else:
-            instance.fail("The instance must be valid against exactly one subschema")
+            node.fail("The instance must be valid against exactly one subschema")
 
 
 class NotKeyword(Keyword):
@@ -333,14 +333,14 @@ class NotKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONSchema
-        self.json(instance)
+        self.json(node)
 
-        if not instance.valid:
-            instance.pass_()
+        if not node.valid:
+            node.pass_()
         else:
-            instance.fail("The instance must not be valid against the given subschema")
+            node.fail("The instance must not be valid against the given subschema")
 
 
 class IfKeyword(Keyword):
@@ -349,10 +349,10 @@ class IfKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONSchema
-        self.json(instance)
-        instance.assert_ = False
+        self.json(node)
+        node.assert_ = False
 
 
 class ThenKeyword(Keyword):
@@ -362,10 +362,10 @@ class ThenKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONSchema
-        if (if_ := instance.sibling("if")) and if_.valid:
-            self.json(instance)
+        if (if_ := node.sibling("if")) and if_.valid:
+            self.json(node)
 
 
 class ElseKeyword(Keyword):
@@ -375,10 +375,10 @@ class ElseKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONSchema
-        if (if_ := instance.sibling("if")) and not if_.valid:
-            self.json(instance)
+        if (if_ := node.sibling("if")) and not if_.valid:
+            self.json(node)
 
 
 class DependentSchemasKeyword(Keyword):
@@ -391,20 +391,20 @@ class DependentSchemasKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONObject[JSONSchema]
 
         annotation = []
         for name, subschema in self.json.items():
-            if name in instance.json:
-                if child := instance.descend(instance.json, subschema, key=name):
+            if name in node.json:
+                if child := node.descend(node.json, subschema, key=name):
                     if child.valid:
                         annotation += [name]
                     else:
-                        instance.fail(f'The instance is invalid against the "{name}" subschema')
+                        node.fail(f'The instance is invalid against the "{name}" subschema')
                         return
 
-        instance.pass_(annotation)
+        node.pass_(annotation)
 
 
 class ItemsKeyword(Keyword):
@@ -423,33 +423,33 @@ class ItemsKeyword(Keyword):
 
     applicators = Applicator, ArrayApplicator
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
-        if len(instance.json) == 0:
-            instance.pass_()
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
+        if len(node.json) == 0:
+            node.pass_()
 
         elif isinstance(self.json, JSONBooleanSchema):
-            self.json(instance)
+            self.json(node)
 
         elif isinstance(self.json, JSONSchema):
-            for index, item in enumerate(instance.json):
-                if child := instance.descend(item, self.json):
+            for index, item in enumerate(node.json):
+                if child := node.descend(item, self.json):
                     if not child.valid:
-                        instance.fail(f"Array element {index} is invalid")
+                        node.fail(f"Array element {index} is invalid")
                         return
 
-            instance.pass_(True)
+            node.pass_(True)
 
         elif isinstance(self.json, JSONArray):
             self.json: JSONArray[JSONSchema]
             annotation = None
-            for index, item in enumerate(instance.json[:len(self.json)]):
+            for index, item in enumerate(node.json[:len(self.json)]):
                 annotation = index
-                if child := instance.descend(item, self.json[index], key=str(index)):
+                if child := node.descend(item, self.json[index], key=str(index)):
                     if not child.valid:
-                        instance.fail(f"Array element {index} is invalid")
+                        node.fail(f"Array element {index} is invalid")
                         return
 
-            instance.pass_(annotation)
+            node.pass_(annotation)
 
 
 class AdditionalItemsKeyword(Keyword):
@@ -460,19 +460,19 @@ class AdditionalItemsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONSchema
 
-        if (items := instance.sibling("items")) and isinstance(items.annotation, int):
+        if (items := node.sibling("items")) and isinstance(items.annotation, int):
             annotation = None
-            for index, item in enumerate(instance.json[items.annotation + 1:]):
+            for index, item in enumerate(node.json[items.annotation + 1:]):
                 annotation = True
-                if child := instance.descend(item, self.json):
+                if child := node.descend(item, self.json):
                     if not child.valid:
-                        instance.fail(f"Array element {index} is invalid")
+                        node.fail(f"Array element {index} is invalid")
                         return
 
-            instance.pass_(annotation)
+            node.pass_(annotation)
 
 
 class UnevaluatedItemsKeyword(Keyword):
@@ -483,33 +483,33 @@ class UnevaluatedItemsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONSchema
 
         last_evaluated_item = -1
-        for items_annotation in instance.parent.annotations("items"):
+        for items_annotation in node.parent.annotations("items"):
             if items_annotation is True:
                 return
             if isinstance(items_annotation, int) and items_annotation > last_evaluated_item:
                 last_evaluated_item = items_annotation
 
-        for additional_items_annotation in instance.parent.annotations("additionalItems"):
+        for additional_items_annotation in node.parent.annotations("additionalItems"):
             if additional_items_annotation is True:
                 return
 
-        for unevaluated_items_annotation in instance.parent.annotations("unevaluatedItems"):
+        for unevaluated_items_annotation in node.parent.annotations("unevaluatedItems"):
             if unevaluated_items_annotation is True:
                 return
 
         annotation = None
-        for index, item in enumerate(instance.json[last_evaluated_item + 1:]):
+        for index, item in enumerate(node.json[last_evaluated_item + 1:]):
             annotation = True
-            if child := instance.descend(item, self.json):
+            if child := node.descend(item, self.json):
                 if not child.valid:
-                    instance.fail(f"Array element {index} is invalid")
+                    node.fail(f"Array element {index} is invalid")
                     return
 
-        instance.pass_(annotation)
+        node.pass_(annotation)
 
 
 class ContainsKeyword(Keyword):
@@ -519,19 +519,19 @@ class ContainsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONSchema
 
         annotation = 0
-        for index, item in enumerate(instance.json):
-            if child := instance.descend(item, self.json):
+        for index, item in enumerate(node.json):
+            if child := node.descend(item, self.json):
                 if child.valid:
                     annotation += 1
 
         if annotation > 0:
-            instance.pass_(annotation)
+            node.pass_(annotation)
         else:
-            instance.fail("The array does not contain a required element")
+            node.fail("The array does not contain a required element")
 
 
 class PropertiesKeyword(Keyword):
@@ -545,20 +545,20 @@ class PropertiesKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONObject[JSONSchema]
 
         annotation = []
-        for name, item in instance.json.items():
+        for name, item in node.json.items():
             if name in self.json:
-                if child := instance.descend(item, self.json[name], key=name):
+                if child := node.descend(item, self.json[name], key=name):
                     if child.valid:
                         annotation += [name]
                     else:
-                        instance.fail(f'Object property "{name}" is invalid')
+                        node.fail(f'Object property "{name}" is invalid')
                         return
 
-        instance.pass_(annotation)
+        node.pass_(annotation)
 
 
 class PatternPropertiesKeyword(Keyword):
@@ -573,21 +573,21 @@ class PatternPropertiesKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONObject[JSONSchema]
 
         matched_names = set()
-        for name, item in instance.json.items():
+        for name, item in node.json.items():
             for regex, subschema in self.json.items():
                 if re.search(regex, name) is not None:
-                    if child := instance.descend(item, subschema, key=regex):
+                    if child := node.descend(item, subschema, key=regex):
                         if child.valid:
                             matched_names |= {name}
                         else:
-                            instance.fail(f'Object property "{name}" is invalid')
+                            node.fail(f'Object property "{name}" is invalid')
                             return
 
-        instance.pass_(list(matched_names))
+        node.pass_(list(matched_names))
 
 
 class AdditionalPropertiesKeyword(Keyword):
@@ -598,26 +598,26 @@ class AdditionalPropertiesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONSchema
 
         evaluated_names = set()
-        if properties := instance.sibling("properties"):
+        if properties := node.sibling("properties"):
             evaluated_names |= set(properties.annotation or ())
-        if pattern_properties := instance.sibling("patternProperties"):
+        if pattern_properties := node.sibling("patternProperties"):
             evaluated_names |= set(pattern_properties.annotation or ())
 
         annotation = []
-        for name, item in instance.json.items():
+        for name, item in node.json.items():
             if name not in evaluated_names:
-                if child := instance.descend(item, self.json):
+                if child := node.descend(item, self.json):
                     if child.valid:
                         annotation += [name]
                     else:
-                        instance.fail(f'Object property "{name}" is invalid')
+                        node.fail(f'Object property "{name}" is invalid')
                         return
 
-        instance.pass_(annotation)
+        node.pass_(annotation)
 
 
 class UnevaluatedPropertiesKeyword(Keyword):
@@ -630,30 +630,30 @@ class UnevaluatedPropertiesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONSchema
 
         evaluated_names = set()
-        for properties_annotation in instance.parent.annotations("properties"):
+        for properties_annotation in node.parent.annotations("properties"):
             evaluated_names |= set(properties_annotation)
-        for pattern_properties_annotation in instance.parent.annotations("patternProperties"):
+        for pattern_properties_annotation in node.parent.annotations("patternProperties"):
             evaluated_names |= set(pattern_properties_annotation)
-        for additional_properties_annotation in instance.parent.annotations("additionalProperties"):
+        for additional_properties_annotation in node.parent.annotations("additionalProperties"):
             evaluated_names |= set(additional_properties_annotation)
-        for unevaluated_properties_annotation in instance.parent.annotations("unevaluatedProperties"):
+        for unevaluated_properties_annotation in node.parent.annotations("unevaluatedProperties"):
             evaluated_names |= set(unevaluated_properties_annotation)
 
         annotation = []
-        for name, item in instance.json.items():
+        for name, item in node.json.items():
             if name not in evaluated_names:
-                if child := instance.descend(item, self.json):
+                if child := node.descend(item, self.json):
                     if child.valid:
                         annotation += [name]
                     else:
-                        instance.fail(f'Object property "{name}" is invalid')
+                        node.fail(f'Object property "{name}" is invalid')
                         return
 
-        instance.pass_(annotation)
+        node.pass_(annotation)
 
 
 class PropertyNamesKeyword(Keyword):
@@ -663,16 +663,16 @@ class PropertyNamesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONSchema
 
-        for name in instance.json:
-            if child := instance.descend(JSON(name), self.json):
+        for name in node.json:
+            if child := node.descend(JSON(name), self.json):
                 if not child.valid:
-                    instance.fail(f'Object property name "{name}" is invalid')
+                    node.fail(f'Object property name "{name}" is invalid')
                     return
 
-        instance.pass_()
+        node.pass_()
 
 
 class TypeKeyword(Keyword):
@@ -696,35 +696,35 @@ class TypeKeyword(Keyword):
     ) -> None:
         super().__init__(arrayify(value), **kwargs)
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONArray[JSONString]
-        if any(instance.json.istype(item.value) for item in self.json):
-            instance.pass_()
+        if any(node.json.istype(item.value) for item in self.json):
+            node.pass_()
         else:
-            instance.fail(f"The value must be of type {self.json}")
+            node.fail(f"The value must be of type {self.json}")
 
 
 class EnumKeyword(Keyword):
     __keyword__ = "enum"
     __schema__ = {"type": "array", "items": True}
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         self.json: JSONArray
-        if instance.json in self.json:
-            instance.pass_()
+        if node.json in self.json:
+            node.pass_()
         else:
-            instance.fail(f"The value must be one of {self.json}")
+            node.fail(f"The value must be one of {self.json}")
 
 
 class ConstKeyword(Keyword):
     __keyword__ = "const"
     __schema__ = True
 
-    def __call__(self, instance: JSONInstance) -> None:
-        if instance.json == self.json:
-            instance.pass_()
+    def __call__(self, node: EvaluationNode) -> None:
+        if node.json == self.json:
+            node.pass_()
         else:
-            instance.fail(f"The value must be equal to {self.json}")
+            node.fail(f"The value must be equal to {self.json}")
 
 
 class MultipleOfKeyword(Keyword):
@@ -732,12 +732,12 @@ class MultipleOfKeyword(Keyword):
     __schema__ = {"type": "number", "exclusiveMinimum": 0}
     __types__ = "number"
 
-    def __call__(self, instance: JSONInstance[JSONNumber]) -> None:
+    def __call__(self, node: EvaluationNode[JSONNumber]) -> None:
         self.json: JSONNumber
-        if instance.json % self.json == 0:
-            instance.pass_()
+        if node.json % self.json == 0:
+            node.pass_()
         else:
-            instance.fail(f"The value must be a multiple of {self.json}")
+            node.fail(f"The value must be a multiple of {self.json}")
 
 
 class MaximumKeyword(Keyword):
@@ -745,12 +745,12 @@ class MaximumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def __call__(self, instance: JSONInstance[JSONNumber]) -> None:
+    def __call__(self, node: EvaluationNode[JSONNumber]) -> None:
         self.json: JSONNumber
-        if instance.json <= self.json:
-            instance.pass_()
+        if node.json <= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The value may not be greater than {self.json}")
+            node.fail(f"The value may not be greater than {self.json}")
 
 
 class ExclusiveMaximumKeyword(Keyword):
@@ -758,12 +758,12 @@ class ExclusiveMaximumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def __call__(self, instance: JSONInstance[JSONNumber]) -> None:
+    def __call__(self, node: EvaluationNode[JSONNumber]) -> None:
         self.json: JSONNumber
-        if instance.json < self.json:
-            instance.pass_()
+        if node.json < self.json:
+            node.pass_()
         else:
-            instance.fail(f"The value must be less than {self.json}")
+            node.fail(f"The value must be less than {self.json}")
 
 
 class MinimumKeyword(Keyword):
@@ -771,12 +771,12 @@ class MinimumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def __call__(self, instance: JSONInstance[JSONNumber]) -> None:
+    def __call__(self, node: EvaluationNode[JSONNumber]) -> None:
         self.json: JSONNumber
-        if instance.json >= self.json:
-            instance.pass_()
+        if node.json >= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The value may not be less than {self.json}")
+            node.fail(f"The value may not be less than {self.json}")
 
 
 class ExclusiveMinimumKeyword(Keyword):
@@ -784,12 +784,12 @@ class ExclusiveMinimumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def __call__(self, instance: JSONInstance[JSONNumber]) -> None:
+    def __call__(self, node: EvaluationNode[JSONNumber]) -> None:
         self.json: JSONNumber
-        if instance.json > self.json:
-            instance.pass_()
+        if node.json > self.json:
+            node.pass_()
         else:
-            instance.fail(f"The value must be greater than {self.json}")
+            node.fail(f"The value must be greater than {self.json}")
 
 
 class MaxLengthKeyword(Keyword):
@@ -797,12 +797,12 @@ class MaxLengthKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "string"
 
-    def __call__(self, instance: JSONInstance[JSONString]) -> None:
+    def __call__(self, node: EvaluationNode[JSONString]) -> None:
         self.json: JSONInteger
-        if len(instance.json) <= self.json:
-            instance.pass_()
+        if len(node.json) <= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The text is too long (maximum {self.json} characters)")
+            node.fail(f"The text is too long (maximum {self.json} characters)")
 
 
 class MinLengthKeyword(Keyword):
@@ -810,12 +810,12 @@ class MinLengthKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "string"
 
-    def __call__(self, instance: JSONInstance[JSONString]) -> None:
+    def __call__(self, node: EvaluationNode[JSONString]) -> None:
         self.json: JSONInteger
-        if len(instance.json) >= self.json:
-            instance.pass_()
+        if len(node.json) >= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The text is too short (minimum {self.json} characters)")
+            node.fail(f"The text is too short (minimum {self.json} characters)")
 
 
 class PatternKeyword(Keyword):
@@ -831,11 +831,11 @@ class PatternKeyword(Keyword):
         super().__init__(value, **kwargs)
         self.regex = re.compile(value)
 
-    def __call__(self, instance: JSONInstance[JSONString]) -> None:
-        if self.regex.search(instance.json.value) is not None:
-            instance.pass_()
+    def __call__(self, node: EvaluationNode[JSONString]) -> None:
+        if self.regex.search(node.json.value) is not None:
+            node.pass_()
         else:
-            instance.fail(f"The text must match the regular expression {self.json}")
+            node.fail(f"The text must match the regular expression {self.json}")
 
 
 class MaxItemsKeyword(Keyword):
@@ -843,12 +843,12 @@ class MaxItemsKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "array"
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONInteger
-        if len(instance.json) <= self.json:
-            instance.pass_()
+        if len(node.json) <= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The array has too many elements (maximum {self.json})")
+            node.fail(f"The array has too many elements (maximum {self.json})")
 
 
 class MinItemsKeyword(Keyword):
@@ -856,12 +856,12 @@ class MinItemsKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "array"
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONInteger
-        if len(instance.json) >= self.json:
-            instance.pass_()
+        if len(node.json) >= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The array has too few elements (minimum {self.json})")
+            node.fail(f"The array has too few elements (minimum {self.json})")
 
 
 class UniqueItemsKeyword(Keyword):
@@ -869,21 +869,21 @@ class UniqueItemsKeyword(Keyword):
     __schema__ = {"type": "boolean", "default": False}
     __types__ = "array"
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONBoolean
         if not self.json.value:
-            instance.pass_()
+            node.pass_()
             return
 
         uniquified = []
-        for item in instance.json:
+        for item in node.json:
             if item not in uniquified:
                 uniquified += [item]
 
-        if len(instance.json) == len(uniquified):
-            instance.pass_()
+        if len(node.json) == len(uniquified):
+            node.pass_()
         else:
-            instance.fail("The array's elements must all be unique")
+            node.fail("The array's elements must all be unique")
 
 
 class MaxContainsKeyword(Keyword):
@@ -892,14 +892,14 @@ class MaxContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains"
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONInteger
-        if contains := instance.sibling("contains"):
+        if contains := node.sibling("contains"):
             if contains.annotation <= self.json:
-                instance.pass_()
+                node.pass_()
             else:
-                instance.fail('The array has too many elements matching the '
-                              f'"contains" subschema (maximum {self.json})')
+                node.fail('The array has too many elements matching the '
+                          f'"contains" subschema (maximum {self.json})')
 
 
 class MinContainsKeyword(Keyword):
@@ -908,21 +908,21 @@ class MinContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains", "maxContains"
 
-    def __call__(self, instance: JSONInstance[JSONArray]) -> None:
+    def __call__(self, node: EvaluationNode[JSONArray]) -> None:
         self.json: JSONInteger
-        if contains := instance.sibling("contains"):
+        if contains := node.sibling("contains"):
             valid = contains.annotation >= self.json
 
             if valid and not contains.valid:
-                max_contains = instance.sibling("maxContains")
+                max_contains = node.sibling("maxContains")
                 if not max_contains or max_contains.valid:
                     contains.valid = True
 
             if valid:
-                instance.pass_()
+                node.pass_()
             else:
-                instance.fail('The array has too few elements matching the '
-                              f'"contains" subschema (minimum {self.json})')
+                node.fail('The array has too few elements matching the '
+                          f'"contains" subschema (minimum {self.json})')
 
 
 class MaxPropertiesKeyword(Keyword):
@@ -930,12 +930,12 @@ class MaxPropertiesKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "object"
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONInteger
-        if len(instance.json) <= self.json:
-            instance.pass_()
+        if len(node.json) <= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The object has too many properties (maximum {self.json})")
+            node.fail(f"The object has too many properties (maximum {self.json})")
 
 
 class MinPropertiesKeyword(Keyword):
@@ -943,12 +943,12 @@ class MinPropertiesKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "object"
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONInteger
-        if len(instance.json) >= self.json:
-            instance.pass_()
+        if len(node.json) >= self.json:
+            node.pass_()
         else:
-            instance.fail(f"The object has too few properties (minimum {self.json})")
+            node.fail(f"The object has too few properties (minimum {self.json})")
 
 
 class RequiredKeyword(Keyword):
@@ -961,14 +961,14 @@ class RequiredKeyword(Keyword):
     }
     __types__ = "object"
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONArray[JSONString]
 
-        missing = [name for name in self.json if name.value not in instance.json]
+        missing = [name for name in self.json if name.value not in node.json]
         if not missing:
-            instance.pass_()
+            node.pass_()
         else:
-            instance.fail(f"The object is missing required properties {missing}")
+            node.fail(f"The object is missing required properties {missing}")
 
 
 class DependentRequiredKeyword(Keyword):
@@ -984,20 +984,20 @@ class DependentRequiredKeyword(Keyword):
     }
     __types__ = "object"
 
-    def __call__(self, instance: JSONInstance[JSONObject]) -> None:
+    def __call__(self, node: EvaluationNode[JSONObject]) -> None:
         self.json: JSONObject[JSONArray[JSONString]]
 
         missing = {}
         for name, dependents in self.json.items():
-            if name in instance.json:
-                missing_deps = [dep for dep in dependents if dep.value not in instance.json]
+            if name in node.json:
+                missing_deps = [dep for dep in dependents if dep.value not in node.json]
                 if missing_deps:
                     missing[name] = missing_deps
 
         if not missing:
-            instance.pass_()
+            node.pass_()
         else:
-            instance.fail(f"The object is missing dependent properties {missing}")
+            node.fail(f"The object is missing dependent properties {missing}")
 
 
 class FormatKeyword(Keyword):
@@ -1013,37 +1013,37 @@ class FormatKeyword(Keyword):
         vocabulary = FormatVocabulary.get(self.vocabulary_uri)
         self.format_: Optional[Format] = vocabulary.formats.get(self.json.value)
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.assert_ = self.format_.assert_ if self.format_ else False
-        instance.pass_(self.json)
-        if self.format_ and isinstance(instance.json, tuple(JSON.classfor(t) for t in tuplify(self.format_.__types__))):
-            fmtresult = self.format_.evaluate(instance.json)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.assert_ = self.format_.assert_ if self.format_ else False
+        node.pass_(self.json)
+        if self.format_ and isinstance(node.json, tuple(JSON.classfor(t) for t in tuplify(self.format_.__types__))):
+            fmtresult = self.format_.evaluate(node.json)
             if not fmtresult.valid:
-                instance.fail(f'The text does not conform to the {self.json} format: {fmtresult.error}')
+                node.fail(f'The text does not conform to the {self.json} format: {fmtresult.error}')
 
 
 class TitleKeyword(Keyword):
     __keyword__ = "title"
     __schema__ = {"type": "string"}
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class DescriptionKeyword(Keyword):
     __keyword__ = "description"
     __schema__ = {"type": "string"}
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class DefaultKeyword(Keyword):
     __keyword__ = "default"
     __schema__ = True
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class DeprecatedKeyword(Keyword):
@@ -1053,8 +1053,8 @@ class DeprecatedKeyword(Keyword):
         "default": False
     }
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class ReadOnlyKeyword(Keyword):
@@ -1064,8 +1064,8 @@ class ReadOnlyKeyword(Keyword):
         "default": False
     }
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class WriteOnlyKeyword(Keyword):
@@ -1075,8 +1075,8 @@ class WriteOnlyKeyword(Keyword):
         "default": False
     }
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class ExamplesKeyword(Keyword):
@@ -1086,24 +1086,24 @@ class ExamplesKeyword(Keyword):
         "items": True
     }
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class ContentMediaTypeKeyword(Keyword):
     __keyword__ = "contentMediaType"
     __schema__ = {"type": "string"}
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class ContentEncodingKeyword(Keyword):
     __keyword__ = "contentEncoding"
     __schema__ = {"type": "string"}
 
-    def __call__(self, instance: JSONInstance) -> None:
-        instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        node.pass_(self.json.value)
 
 
 class ContentSchemaKeyword(Keyword):
@@ -1111,6 +1111,6 @@ class ContentSchemaKeyword(Keyword):
     __schema__ = {"$recursiveRef": "#"}
     __depends__ = "contentMediaType"
 
-    def __call__(self, instance: JSONInstance) -> None:
-        if instance.sibling("contentMediaType"):
-            instance.pass_(self.json.value)
+    def __call__(self, node: EvaluationNode) -> None:
+        if node.sibling("contentMediaType"):
+            node.pass_(self.json.value)

@@ -8,7 +8,7 @@ from jschon.jsonpointer import JSONPointer
 from jschon.types import AnyJSONCompatible
 
 __all__ = [
-    'JSONInstance',
+    'EvaluationNode',
 ]
 
 
@@ -17,21 +17,21 @@ class Annotation(NamedTuple):
     value: AnyJSONCompatible
 
 
-class JSONInstance(Generic[AnyJSON]):
+class EvaluationNode(Generic[AnyJSON]):
 
     def __init__(
             self,
             json: JSON,
-            evaluator: Callable[[JSONInstance], None],
+            evaluator: Callable[[EvaluationNode], None],
             *,
             dynamicpath: JSONPointer = None,
-            parent: JSONInstance = None,
+            parent: EvaluationNode = None,
     ):
         self.json: AnyJSON = json
-        self.evaluator: Callable[[JSONInstance], None] = evaluator
+        self.evaluator: Callable[[EvaluationNode], None] = evaluator
         self.dynamicpath: JSONPointer = dynamicpath or JSONPointer()
-        self.parent: Optional[JSONInstance] = parent
-        self.children: Dict[str, JSONInstance] = {}
+        self.parent: Optional[EvaluationNode] = parent
+        self.children: Dict[str, EvaluationNode] = {}
         self._valid: Optional[bool] = None
         self._annotation: Optional[Annotation] = None
         self.error: Optional[str] = None
@@ -39,17 +39,17 @@ class JSONInstance(Generic[AnyJSON]):
         self._childkey: int = 0
         self.evaluator(self)
 
-    def sibling(self, key: str) -> Optional[JSONInstance]:
+    def sibling(self, key: str) -> Optional[EvaluationNode]:
         return self.parent.children.get(key) if self.parent else None
 
     def descend(
             self,
             json: JSON,
-            evaluator: Callable[[JSONInstance], None],
+            evaluator: Callable[[EvaluationNode], None],
             *,
             key: str = None,
-    ) -> Optional[JSONInstance]:
-        child = JSONInstance(
+    ) -> Optional[EvaluationNode]:
+        child = EvaluationNode(
             json=json,
             evaluator=evaluator,
             dynamicpath=self.dynamicpath / key if key is not None else self.dynamicpath,
@@ -101,4 +101,4 @@ class JSONInstance(Generic[AnyJSON]):
         return f'{jsonpath} > {dynamicpath}'
 
     def __repr__(self) -> str:
-        return f"JSONInstance({self.json!r}, {self.evaluator!r})"
+        return f"EvaluationNode({self.json!r}, {self.evaluator!r})"

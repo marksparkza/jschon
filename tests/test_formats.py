@@ -5,9 +5,9 @@ import rfc3986.exceptions
 import rfc3986.validators
 from hypothesis import given, strategies as hs, provisional as hp
 
+from jschon.evaluation import EvaluationNode
 from jschon.exceptions import JSONPointerError
 from jschon.json import JSONString
-from jschon.jsoninstance import JSONInstance
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
 from jschon.keywords import FormatKeyword
@@ -16,7 +16,7 @@ from tests.strategies import jsonpointer
 
 
 def evaluate(format_attr, instval):
-    return JSONInstance(
+    return EvaluationNode(
         evaluator=FormatKeyword(format_attr, superschema=JSONSchema(True, metaschema_uri=metaschema_uri)),
         json=JSONString(instval),
     )

@@ -4,14 +4,14 @@ from unittest.mock import Mock
 import hypothesis.strategies as hs
 from hypothesis import given
 
+from jschon.evaluation import EvaluationNode
 from jschon.json import JSON
-from jschon.jsoninstance import JSONInstance
 from jschon.keywords import *
 from tests.strategies import *
 
 
 def evaluate(kwclass, kwvalue, instval):
-    return JSONInstance(
+    return EvaluationNode(
         evaluator=kwclass(kwvalue),
         json=JSON(instval),
     )
@@ -19,29 +19,29 @@ def evaluate(kwclass, kwvalue, instval):
 
 @given(kwvalue=jsontype | jsontypes, instval=json)
 def test_type(kwvalue, instval):
-    instance = evaluate(TypeKeyword, kwvalue, instval)
+    result = evaluate(TypeKeyword, kwvalue, instval)
     if type(kwvalue) is str:
         kwvalue = [kwvalue]
     if instval is None:
-        assert instance.valid == ("null" in kwvalue)
+        assert result.valid == ("null" in kwvalue)
     elif type(instval) is bool:
-        assert instance.valid == ("boolean" in kwvalue)
+        assert result.valid == ("boolean" in kwvalue)
     elif type(instval) is float:
-        assert instance.valid == ("number" in kwvalue)
+        assert result.valid == ("number" in kwvalue)
     elif type(instval) is int:
-        assert instance.valid == ("number" in kwvalue or "integer" in kwvalue)
+        assert result.valid == ("number" in kwvalue or "integer" in kwvalue)
     elif type(instval) is str:
-        assert instance.valid == ("string" in kwvalue)
+        assert result.valid == ("string" in kwvalue)
     elif type(instval) is list:
-        assert instance.valid == ("array" in kwvalue)
+        assert result.valid == ("array" in kwvalue)
     elif type(instval) is dict:
-        assert instance.valid == ("object" in kwvalue)
+        assert result.valid == ("object" in kwvalue)
 
 
 @given(kwvalue=jsonarray, instval=json)
 def test_enum(kwvalue, instval):
-    instance = evaluate(EnumKeyword, kwvalue, instval)
-    assert instance.valid == any(
+    result = evaluate(EnumKeyword, kwvalue, instval)
+    assert result.valid == any(
         instval == kwval for kwval in kwvalue
         if type(instval) == type(kwval) or {type(instval), type(kwval)} <= {int, float}
     )
@@ -49,8 +49,8 @@ def test_enum(kwvalue, instval):
 
 @given(kwvalue=json, instval=json)
 def test_const(kwvalue, instval):
-    instance = evaluate(ConstKeyword, kwvalue, instval)
-    assert instance.valid == (
+    result = evaluate(ConstKeyword, kwvalue, instval)
+    assert result.valid == (
             instval == kwvalue and
             (type(instval) == type(kwvalue) or {type(instval), type(kwvalue)} <= {int, float})
     )
@@ -58,62 +58,62 @@ def test_const(kwvalue, instval):
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
 def test_multiple_of(kwvalue, instval):
-    instance = evaluate(MultipleOfKeyword, kwvalue, instval)
-    assert instance.valid == (instval % kwvalue == 0)
+    result = evaluate(MultipleOfKeyword, kwvalue, instval)
+    assert result.valid == (instval % kwvalue == 0)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_maximum(kwvalue, instval):
-    instance = evaluate(MaximumKeyword, kwvalue, instval)
-    assert instance.valid == (instval <= kwvalue)
+    result = evaluate(MaximumKeyword, kwvalue, instval)
+    assert result.valid == (instval <= kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_exclusive_maximum(kwvalue, instval):
-    instance = evaluate(ExclusiveMaximumKeyword, kwvalue, instval)
-    assert instance.valid == (instval < kwvalue)
+    result = evaluate(ExclusiveMaximumKeyword, kwvalue, instval)
+    assert result.valid == (instval < kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_minimum(kwvalue, instval):
-    instance = evaluate(MinimumKeyword, kwvalue, instval)
-    assert instance.valid == (instval >= kwvalue)
+    result = evaluate(MinimumKeyword, kwvalue, instval)
+    assert result.valid == (instval >= kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_exclusive_minimum(kwvalue, instval):
-    instance = evaluate(ExclusiveMinimumKeyword, kwvalue, instval)
-    assert instance.valid == (instval > kwvalue)
+    result = evaluate(ExclusiveMinimumKeyword, kwvalue, instval)
+    assert result.valid == (instval > kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonstring)
 def test_max_length(kwvalue, instval):
-    instance = evaluate(MaxLengthKeyword, kwvalue, instval)
-    assert instance.valid == (len(instval) <= kwvalue)
+    result = evaluate(MaxLengthKeyword, kwvalue, instval)
+    assert result.valid == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonstring)
 def test_min_length(kwvalue, instval):
-    instance = evaluate(MinLengthKeyword, kwvalue, instval)
-    assert instance.valid == (len(instval) >= kwvalue)
+    result = evaluate(MinLengthKeyword, kwvalue, instval)
+    assert result.valid == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=hs.just(jsonpointer_regex), instval=hs.from_regex(jsonpointer_regex))
 def test_pattern(kwvalue, instval):
-    instance = evaluate(PatternKeyword, kwvalue, instval)
-    assert instance.valid == (re.search(kwvalue, instval) is not None)
+    result = evaluate(PatternKeyword, kwvalue, instval)
+    assert result.valid == (re.search(kwvalue, instval) is not None)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray)
 def test_max_items(kwvalue, instval):
-    instance = evaluate(MaxItemsKeyword, kwvalue, instval)
-    assert instance.valid == (len(instval) <= kwvalue)
+    result = evaluate(MaxItemsKeyword, kwvalue, instval)
+    assert result.valid == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray)
 def test_min_items(kwvalue, instval):
-    instance = evaluate(MinItemsKeyword, kwvalue, instval)
-    assert instance.valid == (len(instval) >= kwvalue)
+    result = evaluate(MinItemsKeyword, kwvalue, instval)
+    assert result.valid == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=jsonboolean, instval=jsonarray)
@@ -127,69 +127,69 @@ def test_unique_items(kwvalue, instval):
             return x.keys() == y.keys() and all(isequal(x[k], y[k]) for k in x)
         return x == y
 
-    instance = evaluate(UniqueItemsKeyword, kwvalue, instval)
+    result = evaluate(UniqueItemsKeyword, kwvalue, instval)
     if kwvalue:
         uniquified = []
         for item in instval:
             if not any(isequal(item, value) for value in uniquified):
                 uniquified += [item]
-        assert instance.valid == (len(instval) == len(uniquified))
+        assert result.valid == (len(instval) == len(uniquified))
     else:
-        assert instance.valid is True
+        assert result.valid is True
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray, containstype=jsontype)
 def test_max_contains(kwvalue, instval, containstype):
     count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
     kw = MaxContainsKeyword(kwvalue)
-    instance = JSONInstance(JSON(instval), kw)
-    instance.sibling = (mock_sibling_fn := Mock())
-    instance.sibling.return_value = (mock_contains_instance := Mock())
+    result = EvaluationNode(JSON(instval), kw)
+    result.sibling = (mock_sibling_fn := Mock())
+    result.sibling.return_value = (mock_contains_instance := Mock())
     mock_contains_instance.annotation = count
-    kw(instance)
+    kw(result)
     mock_sibling_fn.assert_called_once_with("contains")
-    assert instance.valid == (count <= kwvalue)
+    assert result.valid == (count <= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray, containstype=jsontype)
 def test_min_contains(kwvalue, instval, containstype):
     count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
     kw = MinContainsKeyword(kwvalue)
-    instance = JSONInstance(JSON(instval), kw)
-    instance.sibling = (mock_sibling_fn := Mock())
-    instance.sibling.return_value = (mock_contains_instance := Mock())
+    result = EvaluationNode(JSON(instval), kw)
+    result.sibling = (mock_sibling_fn := Mock())
+    result.sibling.return_value = (mock_contains_instance := Mock())
     mock_contains_instance.annotation = count
-    kw(instance)
+    kw(result)
     mock_sibling_fn.assert_called_once_with("contains")
-    assert instance.valid == (count >= kwvalue)
+    assert result.valid == (count >= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonobject)
 def test_max_properties(kwvalue, instval):
-    instance = evaluate(MaxPropertiesKeyword, kwvalue, instval)
-    assert instance.valid == (len(instval) <= kwvalue)
+    result = evaluate(MaxPropertiesKeyword, kwvalue, instval)
+    assert result.valid == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonobject)
 def test_min_properties(kwvalue, instval):
-    instance = evaluate(MinPropertiesKeyword, kwvalue, instval)
-    assert instance.valid == (len(instval) >= kwvalue)
+    result = evaluate(MinPropertiesKeyword, kwvalue, instval)
+    assert result.valid == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=propnames, instval=jsonproperties)
 def test_required(kwvalue, instval):
-    instance = evaluate(RequiredKeyword, kwvalue, instval)
+    result = evaluate(RequiredKeyword, kwvalue, instval)
     missing = any(name for name in kwvalue if name not in instval)
-    assert instance.valid == (not missing)
+    assert result.valid == (not missing)
 
 
 @given(kwvalue=hs.dictionaries(propname, propnames), instval=jsonproperties)
 def test_dependent_required(kwvalue, instval):
-    instance = evaluate(DependentRequiredKeyword, kwvalue, instval)
+    result = evaluate(DependentRequiredKeyword, kwvalue, instval)
     missing = False
     for name, deps in kwvalue.items():
         if name in instval:
             if any(dep for dep in deps if dep not in instval):
                 missing = True
                 break
-    assert instance.valid == (not missing)
+    assert result.valid == (not missing)

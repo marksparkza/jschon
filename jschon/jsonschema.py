@@ -5,9 +5,9 @@ from typing import *
 from uuid import uuid4
 
 from jschon.catalogue import Catalogue
+from jschon.evaluation import EvaluationNode
 from jschon.exceptions import *
 from jschon.json import JSON, JSONObject, JSONArray, AnyJSON
-from jschon.jsoninstance import JSONInstance
 from jschon.jsonpointer import JSONPointer
 from jschon.types import AnyJSONCompatible, tuplify, is_schema_compatible
 from jschon.uri import URI
@@ -108,8 +108,8 @@ class JSONSchema(JSON):
         if metaschema_uri is not None:
             JSONSchema.get(metaschema_uri, metaschema_uri)
 
-    def __call__(self, instance: JSONInstance) -> None:
-        """ Apply self to instance """
+    def __call__(self, node: EvaluationNode) -> None:
+        """Apply self to node."""
         raise NotImplementedError
 
     @property
@@ -161,11 +161,11 @@ class JSONBooleanSchema(JSONSchema):
             return object.__new__(cls)
         raise TypeError("Expecting bool")
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         if self.value:
-            instance.pass_()
+            node.pass_()
         else:
-            instance.fail()
+            node.fail()
 
 
 class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
@@ -209,7 +209,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             kwclass.__keyword__: kwclass(value[kwclass.__keyword__], superschema=self)
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
-        if self.superkeyword is None and not JSONInstance(JSON(value), self.metaschema).valid:
+        if self.superkeyword is None and not EvaluationNode(JSON(value), self.metaschema).valid:
             raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
@@ -230,18 +230,18 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                     yield kwclass
                     break
 
-    def __call__(self, instance: JSONInstance) -> None:
+    def __call__(self, node: EvaluationNode) -> None:
         for keyword in self.keywords.values():
             if keyword.__types__ is None or isinstance(
-                    instance.json, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
+                    node.json, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
             ):
-                instance.descend(instance.json, keyword, key=keyword.__keyword__)
+                node.descend(node.json, keyword, key=keyword.__keyword__)
 
         if all(child.valid or not child.assert_
-               for child in instance.children.values()):
-            instance.pass_()
+               for child in node.children.values()):
+            node.pass_()
         else:
-            instance.fail()
+            node.fail()
 
     def __getitem__(self, key: str) -> JSON:
         return self.keywords[key].json
@@ -283,8 +283,8 @@ class Keyword:
         else:
             self.json = JSON(value, path=self.path)
 
-    def __call__(self, instance: JSONInstance) -> None:
-        """ Apply self to instance """
+    def __call__(self, node: EvaluationNode) -> None:
+        """Apply self to node."""
 
     def __str__(self) -> str:
         return f'"{self.__keyword__}": {self.json}'
