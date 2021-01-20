@@ -1,5 +1,7 @@
+import datetime
 import re
 
+import dateutil.parser
 import email_validator
 import rfc3986.exceptions
 import rfc3986.validators
@@ -20,6 +22,54 @@ def evaluate(format_attr, instval):
         evaluator=FormatKeyword(format_attr, superschema=JSONSchema(True, metaschema_uri=metaschema_uri)),
         json=JSONString(instval),
     )
+
+
+@given(hs.datetimes())
+def test_datetime_valid(instval):
+    result = evaluate("date-time", datetime.datetime.isoformat(instval))
+    assert result.valid is True
+
+
+@given(hs.text())
+def test_datetime_invalid(instval):
+    result = evaluate("date-time", instval)
+    try:
+        dateutil.parser.isoparse(instval)
+        assert result.valid is True
+    except ValueError:
+        assert result.valid is False
+
+
+@given(hs.dates())
+def test_date_valid(instval):
+    result = evaluate("date", datetime.date.isoformat(instval))
+    assert result.valid is True
+
+
+@given(hs.text())
+def test_date_invalid(instval):
+    result = evaluate("date", instval)
+    try:
+        dateutil.parser.isoparser().parse_isodate(instval)
+        assert result.valid is True
+    except ValueError:
+        assert result.valid is False
+
+
+@given(hs.times())
+def test_time_valid(instval):
+    result = evaluate("time", datetime.time.isoformat(instval))
+    assert result.valid is True
+
+
+@given(hs.text())
+def test_time_invalid(instval):
+    result = evaluate("time", instval)
+    try:
+        dateutil.parser.isoparser().parse_isotime(instval)
+        assert result.valid is True
+    except ValueError:
+        assert result.valid is False
 
 
 @given(hs.emails() | hs.text())

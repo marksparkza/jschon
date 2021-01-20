@@ -13,6 +13,7 @@ setup(
     ],
     extras_require={
         'formats': [
+            'python-dateutil',
             'email-validator',
         ],
         'test': [

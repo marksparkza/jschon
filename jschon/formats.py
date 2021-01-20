@@ -1,5 +1,6 @@
 import re
 
+import dateutil.parser
 import email_validator
 
 from jschon.exceptions import JSONPointerError, URIError
@@ -35,21 +36,36 @@ class DateTimeFormat(Format):
     __attr__ = "date-time"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            dateutil.parser.isoparse(instance.value)
+        except ValueError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class DateFormat(Format):
     __attr__ = "date"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            dateutil.parser.isoparser().parse_isodate(instance.value)
+        except ValueError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class TimeFormat(Format):
     __attr__ = "time"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            dateutil.parser.isoparser().parse_isotime(instance.value)
+        except ValueError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class DurationFormat(Format):
