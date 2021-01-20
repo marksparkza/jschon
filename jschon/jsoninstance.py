@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Generic, Optional, Dict, Callable
+from typing import *
 
 from jschon.exceptions import JSONSchemaError
 from jschon.json import AnyJSON, JSON
@@ -10,6 +10,11 @@ from jschon.types import AnyJSONCompatible
 __all__ = [
     'JSONInstance',
 ]
+
+
+class Annotation(NamedTuple):
+    key: str
+    value: AnyJSONCompatible
 
 
 class JSONInstance(Generic[AnyJSON]):
@@ -28,7 +33,7 @@ class JSONInstance(Generic[AnyJSON]):
         self.parent: Optional[JSONInstance] = parent
         self.children: Dict[str, JSONInstance] = {}
         self._valid: Optional[bool] = None
-        self.annotation: Optional[AnyJSONCompatible] = None
+        self._annotation: Optional[Annotation] = None
         self.error: Optional[str] = None
         self.assert_: bool = True
         self._childkey: int = 0
@@ -59,12 +64,13 @@ class JSONInstance(Generic[AnyJSON]):
 
     def pass_(self, annotation: AnyJSONCompatible = None) -> None:
         self._valid = True
-        self.annotation = annotation
+        # todo: careful here; this will only work for keyword evaluators
+        self._annotation = Annotation(self.evaluator.__keyword__, annotation) if annotation is not None else None
         self.error = None
 
     def fail(self, error: str = None) -> None:
         self._valid = False
-        self.annotation = None
+        self._annotation = None
         self.error = error
 
     @property
@@ -76,6 +82,17 @@ class JSONInstance(Generic[AnyJSON]):
     @valid.setter
     def valid(self, value: bool) -> None:
         self._valid = value
+
+    @property
+    def annotation(self) -> Optional[AnyJSONCompatible]:
+        return self._annotation.value if self._annotation else None
+
+    def annotations(self, key: str) -> Iterator[AnyJSONCompatible]:
+        """Yield annotations produced by a given keyword in this subtree."""
+        if self._valid and self._annotation and self._annotation.key == key:
+            yield self._annotation.value
+        for child in self.children.values():
+            yield from child.annotations(key)
 
     def __str__(self) -> str:
         """Indicates which JSON value is input to which evaluator."""

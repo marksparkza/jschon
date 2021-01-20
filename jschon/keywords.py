@@ -484,25 +484,32 @@ class UnevaluatedItemsKeyword(Keyword):
     applicators = Applicator,
 
     def __call__(self, instance: JSONInstance[JSONArray]) -> None:
-        # TODO:
-        #  check annotation results for items, additionalItems and unevaluatedItems
-        #  from adjacent in-place applicator keywords
         self.json: JSONSchema
 
-        items = instance.sibling("items")
-        additional_items = instance.sibling("additionalItems")
+        last_evaluated_item = -1
+        for items_annotation in instance.parent.annotations("items"):
+            if items_annotation is True:
+                return
+            if isinstance(items_annotation, int) and items_annotation > last_evaluated_item:
+                last_evaluated_item = items_annotation
 
-        if items and isinstance(items.annotation, int) and \
-                (not additional_items or additional_items.annotation is None):
-            annotation = None
-            for index, item in enumerate(instance.json[items.annotation + 1:]):
-                annotation = True
-                if child := instance.descend(item, self.json):
-                    if not child.valid:
-                        instance.fail(f"Array element {index} is invalid")
-                        return
+        for additional_items_annotation in instance.parent.annotations("additionalItems"):
+            if additional_items_annotation is True:
+                return
 
-            instance.pass_(annotation)
+        for unevaluated_items_annotation in instance.parent.annotations("unevaluatedItems"):
+            if unevaluated_items_annotation is True:
+                return
+
+        annotation = None
+        for index, item in enumerate(instance.json[last_evaluated_item + 1:]):
+            annotation = True
+            if child := instance.descend(item, self.json):
+                if not child.valid:
+                    instance.fail(f"Array element {index} is invalid")
+                    return
+
+        instance.pass_(annotation)
 
 
 class ContainsKeyword(Keyword):
@@ -624,18 +631,17 @@ class UnevaluatedPropertiesKeyword(Keyword):
     applicators = Applicator,
 
     def __call__(self, instance: JSONInstance[JSONObject]) -> None:
-        # TODO:
-        #  check annotation results for properties, patternProperties, additionalProperties
-        #  and unevaluatedProperties from adjacent in-place applicator keywords
         self.json: JSONSchema
 
         evaluated_names = set()
-        if properties := instance.sibling("properties"):
-            evaluated_names |= set(properties.annotation or ())
-        if pattern_properties := instance.sibling("patternProperties"):
-            evaluated_names |= set(pattern_properties.annotation or ())
-        if additional_properties := instance.sibling("additionalProperties"):
-            evaluated_names |= set(additional_properties.annotation or ())
+        for properties_annotation in instance.parent.annotations("properties"):
+            evaluated_names |= set(properties_annotation)
+        for pattern_properties_annotation in instance.parent.annotations("patternProperties"):
+            evaluated_names |= set(pattern_properties_annotation)
+        for additional_properties_annotation in instance.parent.annotations("additionalProperties"):
+            evaluated_names |= set(additional_properties_annotation)
+        for unevaluated_properties_annotation in instance.parent.annotations("unevaluatedProperties"):
+            evaluated_names |= set(unevaluated_properties_annotation)
 
         annotation = []
         for name, item in instance.json.items():
