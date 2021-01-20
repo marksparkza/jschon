@@ -64,8 +64,13 @@ class EvaluationNode(Generic[AnyJSON]):
 
     def pass_(self, annotation: AnyJSONCompatible = None) -> None:
         self._valid = True
-        # todo: careful here; this will only work for keyword evaluators
-        self._annotation = Annotation(self.evaluator.__keyword__, annotation) if annotation is not None else None
+        if annotation is not None:
+            if hasattr(self.evaluator, '__keyword__'):
+                self._annotation = Annotation(self.evaluator.__keyword__, annotation)
+            else:
+                raise ValueError("annotation can only be set by a keyword")
+        else:
+            self._annotation = None
         self.error = None
 
     def fail(self, error: str = None) -> None:
