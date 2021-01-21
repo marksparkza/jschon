@@ -5,6 +5,7 @@ import dateutil.parser
 import email_validator
 import idna
 import rfc3987
+import uri_template
 import validators
 
 from jschon.exceptions import JSONPointerError, URIError
@@ -220,7 +221,10 @@ class URITemplateFormat(Format):
     __attr__ = "uri-template"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        if uri_template.validate(instance.value):
+            return FormatResult(valid=True)
+        else:
+            return FormatResult(valid=False, error="Invalid URI Template")
 
 
 class JSONPointerFormat(Format):

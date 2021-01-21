@@ -8,6 +8,7 @@ import idna
 import rfc3986.exceptions
 import rfc3986.validators
 import rfc3987
+import uri_template
 import validators
 from hypothesis import given, strategies as hs, provisional as hp
 
@@ -211,6 +212,15 @@ def test_uuid_valid(instval):
 def test_uuid_invalid(instval):
     result = evaluate("uuid", instval)
     if validators.uuid(instval):
+        assert result.valid is True
+    else:
+        assert result.valid is False
+
+
+@given(hs.text())
+def test_uri_template(instval):
+    result = evaluate("uri-template", instval)
+    if uri_template.validate(instval):
         assert result.valid is True
     else:
         assert result.valid is False

@@ -18,6 +18,7 @@ setup(
             'idna',
             'rfc3987',
             'validators',
+            'uri-template',
         ],
         'test': [
             'pytest',
