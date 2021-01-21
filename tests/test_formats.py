@@ -7,6 +7,7 @@ import email_validator
 import idna
 import rfc3986.exceptions
 import rfc3986.validators
+import rfc3987
 from hypothesis import given, strategies as hs, provisional as hp
 
 from jschon.evaluation import EvaluationNode
@@ -178,6 +179,24 @@ def test_urireference_invalid(instval):
         validator.validate(rfc3986.uri_reference(instval))
         assert result.valid is True
     except rfc3986.exceptions.ValidationError:
+        assert result.valid is False
+
+
+@given(hp.urls() | hs.text())
+def test_iri(instval):
+    result = evaluate("iri", instval)
+    if rfc3987.match(instval, rule='IRI') is not None:
+        assert result.valid is True
+    else:
+        assert result.valid is False
+
+
+@given(hp.urls() | jsonpointer | hs.text())
+def test_irireference(instval):
+    result = evaluate("iri-reference", instval)
+    if rfc3987.match(instval, rule='IRI_reference') is not None:
+        assert result.valid is True
+    else:
         assert result.valid is False
 
 

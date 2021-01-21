@@ -4,6 +4,7 @@ import re
 import dateutil.parser
 import email_validator
 import idna
+import rfc3987
 
 from jschon.exceptions import JSONPointerError, URIError
 from jschon.json import JSONString
@@ -188,14 +189,20 @@ class IRIFormat(Format):
     __attr__ = "iri"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        if rfc3987.match(instance.value, rule='IRI') is not None:
+            return FormatResult(valid=True)
+        else:
+            return FormatResult(valid=False, error="Invalid IRI")
 
 
 class IRIReferenceFormat(Format):
     __attr__ = "iri-reference"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        if rfc3987.match(instance.value, rule='IRI_reference') is not None:
+            return FormatResult(valid=True)
+        else:
+            return FormatResult(valid=False, error="Invalid IRI Reference")
 
 
 class UUIDFormat(Format):

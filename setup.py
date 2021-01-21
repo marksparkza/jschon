@@ -16,6 +16,7 @@ setup(
             'python-dateutil',
             'email-validator',
             'idna',
+            'rfc3987',
         ],
         'test': [
             'pytest',
