@@ -243,7 +243,6 @@ class RecursiveAnchorKeyword(Keyword):
     __keyword__ = "$recursiveAnchor"
     __schema__ = {
         "type": "boolean",
-        "const": True,
         "default": False
     }
 
