@@ -1,3 +1,4 @@
+import ipaddress
 import re
 
 import dateutil.parser
@@ -137,14 +138,24 @@ class IPv4Format(Format):
     __attr__ = "ipv4"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            ipaddress.IPv4Address(instance.value)
+        except ipaddress.AddressValueError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class IPv6Format(Format):
     __attr__ = "ipv6"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            ipaddress.IPv6Address(instance.value)
+        except ipaddress.AddressValueError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class URIFormat(Format):

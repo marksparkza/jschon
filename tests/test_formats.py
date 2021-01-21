@@ -1,4 +1,5 @@
 import datetime
+import ipaddress
 import re
 
 import dateutil.parser
@@ -111,6 +112,38 @@ def test_idnhostname(instval):
         idna.encode(instval)
         assert result.valid is True
     except idna.IDNAError:
+        assert result.valid is False
+
+
+@given(hs.ip_addresses(v=4))
+def test_ipv4_valid(instval):
+    result = evaluate("ipv4", str(instval))
+    assert result.valid is True
+
+
+@given(hs.text())
+def test_ipv4_invalid(instval):
+    result = evaluate("ipv4", instval)
+    try:
+        ipaddress.IPv4Address(instval)
+        assert result.valid is True
+    except ipaddress.AddressValueError:
+        assert result.valid is False
+
+
+@given(hs.ip_addresses(v=6))
+def test_ipv6_valid(instval):
+    result = evaluate("ipv6", str(instval))
+    assert result.valid is True
+
+
+@given(hs.text())
+def test_ipv6_invalid(instval):
+    result = evaluate("ipv6", instval)
+    try:
+        ipaddress.IPv6Address(instval)
+        assert result.valid is True
+    except ipaddress.AddressValueError:
         assert result.valid is False
 
 
