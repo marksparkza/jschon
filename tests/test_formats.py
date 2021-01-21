@@ -3,6 +3,7 @@ import re
 
 import dateutil.parser
 import email_validator
+import idna
 import rfc3986.exceptions
 import rfc3986.validators
 from hypothesis import given, strategies as hs, provisional as hp
@@ -89,6 +90,27 @@ def test_idnemail(instval):
         email_validator.validate_email(instval, allow_smtputf8=True, check_deliverability=False)
         assert result.valid is True
     except email_validator.EmailNotValidError:
+        assert result.valid is False
+
+
+@given(hs.text())
+def test_hostname(instval):
+    result = evaluate("hostname", instval)
+    try:
+        instval.encode('ascii')
+        idna.encode(instval)
+        assert result.valid is True
+    except (UnicodeEncodeError, idna.IDNAError):
+        assert result.valid is False
+
+
+@given(hs.text())
+def test_idnhostname(instval):
+    result = evaluate("idn-hostname", instval)
+    try:
+        idna.encode(instval)
+        assert result.valid is True
+    except idna.IDNAError:
         assert result.valid is False
 
 

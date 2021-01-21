@@ -15,6 +15,7 @@ setup(
         'formats': [
             'python-dateutil',
             'email-validator',
+            'idna',
         ],
         'test': [
             'pytest',

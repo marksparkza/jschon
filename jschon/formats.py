@@ -2,6 +2,7 @@ import re
 
 import dateutil.parser
 import email_validator
+import idna
 
 from jschon.exceptions import JSONPointerError, URIError
 from jschon.json import JSONString
@@ -111,14 +112,25 @@ class HostnameFormat(Format):
     __attr__ = "hostname"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            instance.value.encode('ascii')
+            idna.encode(instance.value)
+        except (UnicodeEncodeError, idna.IDNAError) as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class IDNHostnameFormat(Format):
     __attr__ = "idn-hostname"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        try:
+            idna.encode(instance.value)
+        except idna.IDNAError as e:
+            return FormatResult(valid=False, error=str(e))
+
+        return FormatResult(valid=True)
 
 
 class IPv4Format(Format):
