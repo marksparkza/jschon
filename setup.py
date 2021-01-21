@@ -17,6 +17,7 @@ setup(
             'email-validator',
             'idna',
             'rfc3987',
+            'validators',
         ],
         'test': [
             'pytest',

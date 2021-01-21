@@ -8,6 +8,7 @@ import idna
 import rfc3986.exceptions
 import rfc3986.validators
 import rfc3987
+import validators
 from hypothesis import given, strategies as hs, provisional as hp
 
 from jschon.evaluation import EvaluationNode
@@ -195,6 +196,21 @@ def test_iri(instval):
 def test_irireference(instval):
     result = evaluate("iri-reference", instval)
     if rfc3987.match(instval, rule='IRI_reference') is not None:
+        assert result.valid is True
+    else:
+        assert result.valid is False
+
+
+@given(hs.uuids())
+def test_uuid_valid(instval):
+    result = evaluate("uuid", str(instval))
+    assert result.valid is True
+
+
+@given(hs.text())
+def test_uuid_invalid(instval):
+    result = evaluate("uuid", instval)
+    if validators.uuid(instval):
         assert result.valid is True
     else:
         assert result.valid is False

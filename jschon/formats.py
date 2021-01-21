@@ -5,6 +5,7 @@ import dateutil.parser
 import email_validator
 import idna
 import rfc3987
+import validators
 
 from jschon.exceptions import JSONPointerError, URIError
 from jschon.json import JSONString
@@ -209,7 +210,10 @@ class UUIDFormat(Format):
     __attr__ = "uuid"
 
     def evaluate(self, instance: JSONString) -> FormatResult:
-        raise NotImplementedError
+        if validators.uuid(instance.value):
+            return FormatResult(valid=True)
+        else:
+            return FormatResult(valid=False, error="Invalid UUID")
 
 
 class URITemplateFormat(Format):
