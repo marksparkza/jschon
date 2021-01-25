@@ -2,7 +2,6 @@ import pytest
 from hypothesis import given
 
 from jschon.json import JSON
-from jschon.evaluation import EvaluationNode
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema, JSONObjectSchema
 from jschon.uri import URI
@@ -162,5 +161,5 @@ def test_recursive_schema_extension():
     tree_schema = JSONSchema(tree)
     strict_tree_schema = JSONSchema(strict_tree)
     tree_json = JSON(tree_instance)
-    assert EvaluationNode(tree_json, tree_schema).valid is True
-    assert EvaluationNode(tree_json, strict_tree_schema).valid is False
+    assert tree_schema.evaluate(tree_json) is True
+    assert strict_tree_schema.evaluate(tree_json) is False

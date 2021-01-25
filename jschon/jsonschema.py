@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import dataclasses
+from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import *
 from uuid import uuid4
 
 from jschon.catalogue import Catalogue
-from jschon.evaluation import EvaluationNode
 from jschon.exceptions import *
 from jschon.json import JSON, JSONObject, JSONArray, AnyJSON
 from jschon.jsonpointer import JSONPointer
@@ -28,6 +28,9 @@ __all__ = [
     'Format',
     'FormatClass',
     'FormatResult',
+    'Annotation',
+    'Error',
+    'Scope',
 ]
 
 
@@ -108,8 +111,7 @@ class JSONSchema(JSON):
         if metaschema_uri is not None:
             JSONSchema.get(metaschema_uri, metaschema_uri)
 
-    def __call__(self, node: EvaluationNode) -> None:
-        """Apply self to node."""
+    def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
         raise NotImplementedError
 
     @property
@@ -161,11 +163,14 @@ class JSONBooleanSchema(JSONSchema):
             return object.__new__(cls)
         raise TypeError("Expecting bool")
 
-    def __call__(self, node: EvaluationNode) -> None:
-        if self.value:
-            node.pass_()
-        else:
-            node.fail()
+    def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
+        if scope is None:
+            scope = Scope(self)
+
+        if not self.value and assert_:
+            scope.fail(instance, "Instance is disallowed by boolean false schema")
+
+        return self.value
 
 
 class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
@@ -209,7 +214,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             kwclass.__keyword__: kwclass(value[kwclass.__keyword__], superschema=self)
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
-        if self.superkeyword is None and not EvaluationNode(JSON(value), self.metaschema).valid:
+        if self.superkeyword is None and not self.metaschema.evaluate(JSON(value), assert_=False):
             raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
@@ -230,18 +235,27 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                     yield kwclass
                     break
 
-    def __call__(self, node: EvaluationNode) -> None:
+    def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
+        if scope is None:
+            scope = Scope(self)
+
+        err_kw = []
         for keyword in self.keywords.values():
             if keyword.__types__ is None or isinstance(
-                    node.json, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
+                    instance, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
             ):
-                node.descend(node.json, keyword, key=keyword.__keyword__)
+                with scope(self, keyword.__keyword__) as subscope:
+                    keyword.evaluate(instance, subscope)
+                    if keyword.assert_ and not subscope.valid:
+                        err_kw += [keyword.__keyword__]
 
-        if all(child.valid or not child.assert_
-               for child in node.children.values()):
-            node.pass_()
-        else:
-            node.fail()
+        if not err_kw:
+            return True
+
+        if assert_:
+            scope.fail(instance, f"The instance failed validation against keywords {err_kw}")
+
+        return False
 
     def __getitem__(self, key: str) -> JSON:
         return self.keywords[key].json
@@ -271,6 +285,7 @@ class Keyword:
         self.json: JSON
         self.path: JSONPointer = superschema.path / self.__keyword__
         self.superschema: JSONSchema = superschema
+        self.assert_: bool = True
 
         # there may be several possible ways in which to set up subschemas for
         # an applicator keyword; we try a series of applicator classes in turn
@@ -283,8 +298,8 @@ class Keyword:
         else:
             self.json = JSON(value, path=self.path)
 
-    def __call__(self, node: EvaluationNode) -> None:
-        """Apply self to node."""
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        pass
 
     def __str__(self) -> str:
         return f'"{self.__keyword__}": {self.json}'
@@ -445,7 +460,89 @@ class Format:
 FormatClass = Type[Format]
 
 
-@dataclasses.dataclass
+@dataclass
 class FormatResult:
     valid: bool
     error: Optional[str] = None
+
+
+@dataclass
+class Annotation:
+    instance_path: JSONPointer
+    evaluation_path: JSONPointer
+    schema_uri: URI
+    value: AnyJSONCompatible
+
+
+@dataclass
+class Error:
+    instance_path: JSONPointer
+    evaluation_path: JSONPointer
+    schema_uri: URI
+    message: str
+
+
+class Scope:
+    def __init__(
+            self,
+            schema: JSONSchema,
+            path: JSONPointer = None,
+            parent: Scope = None,
+    ):
+        self.schema: JSONSchema = schema
+        self.path: JSONPointer = path or JSONPointer()
+        self.parent: Scope = parent
+        self.children: Dict[str, Scope] = {}
+        self.annotations: Dict[str, Annotation] = {}
+        self.errors: List[Error] = []
+        self.keep: bool = False  # True to keep empty results
+
+    @contextmanager
+    def __call__(self, schema: JSONSchema, key: str) -> Scope:
+        self.children[key] = (child := Scope(schema, self.path / key, self))
+        try:
+            yield child
+        finally:
+            if not child.children and not child.annotations and not child.errors and not child.keep:
+                del self.children[key]
+
+    @property
+    def root(self) -> Scope:
+        scope = self
+        while scope.parent is not None:
+            scope = scope.parent
+        return scope
+
+    def sibling(self, key: str) -> Optional[Scope]:
+        return self.parent.children.get(key) if self.parent else None
+
+    def annotate(self, instance: JSON, key: str, value: AnyJSONCompatible) -> None:
+        if value is not None:
+            self.annotations[key] = Annotation(
+                instance_path=instance.path,
+                evaluation_path=self.path,
+                schema_uri=None,
+                value=value,
+            )
+
+    def fail(self, instance: JSON, error: str) -> None:
+        self.errors += [Error(
+            instance_path=instance.path,
+            evaluation_path=self.path,
+            schema_uri=None,
+            message=error,
+        )]
+
+    @property
+    def valid(self) -> bool:
+        return not self.errors
+
+    def collect_annotations(self, instance: JSON, key: str = None) -> Iterator[Annotation]:
+        """Return an iterator over annotations produced in this subtree
+        for the given instance, optionally filtered by keyword."""
+        if self.valid:
+            for annotation_key, annotation in self.annotations.items():
+                if (key is None or key == annotation_key) and annotation.instance_path == instance.path:
+                    yield annotation
+            for child in self.children.values():
+                yield from child.collect_annotations(instance, key)
