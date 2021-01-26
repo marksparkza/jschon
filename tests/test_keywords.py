@@ -1,5 +1,6 @@
 import re
 from contextlib import contextmanager
+from math import modf
 from unittest.mock import Mock
 
 import hypothesis.strategies as hs
@@ -25,10 +26,10 @@ def test_type(kwvalue, instval):
         assert result == ("null" in kwvalue)
     elif type(instval) is bool:
         assert result == ("boolean" in kwvalue)
+    elif type(instval) is int or type(instval) is float and not modf(instval)[0]:
+        assert result == ("number" in kwvalue or "integer" in kwvalue)
     elif type(instval) is float:
         assert result == ("number" in kwvalue)
-    elif type(instval) is int:
-        assert result == ("number" in kwvalue or "integer" in kwvalue)
     elif type(instval) is str:
         assert result == ("string" in kwvalue)
     elif type(instval) is list:

@@ -9,7 +9,7 @@ from jschon.catalogue import Catalogue
 from jschon.exceptions import *
 from jschon.json import JSON, JSONObject, JSONArray, AnyJSON
 from jschon.jsonpointer import JSONPointer
-from jschon.types import AnyJSONCompatible, tuplify, is_schema_compatible
+from jschon.types import JSONCompatible, AnyJSONCompatible, tuplify
 from jschon.uri import URI
 
 __all__ = [
@@ -36,6 +36,10 @@ __all__ = [
 
 class JSONSchema(JSON):
     _cache: Dict[URI, JSONSchema] = {}
+
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return JSONBooleanSchema.iscompatible(value) or JSONObjectSchema.iscompatible(value)
 
     @classmethod
     def get(cls, uri: URI, metaschema_uri: URI = None) -> JSONSchema:
@@ -84,11 +88,11 @@ class JSONSchema(JSON):
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             **kwargs: Any,
     ) -> JSONSchema:
-        if isinstance(value, bool):
-            return object.__new__(JSONBooleanSchema)
-        if is_schema_compatible(value, allowbool=False):
-            return object.__new__(JSONObjectSchema)
-        raise TypeError("Expecting bool or Mapping[str, AnyJSONCompatible]")
+        for c in (JSONBooleanSchema, JSONObjectSchema):
+            if c.iscompatible(value):
+                return object.__new__(c)
+
+        raise TypeError(f"{value=} is not JSONSchema-compatible")
 
     def __init__(
             self,
@@ -154,14 +158,9 @@ class JSONSchema(JSON):
 class JSONBooleanSchema(JSONSchema):
     __type__ = "boolean"
 
-    def __new__(
-            cls,
-            value: bool,
-            **kwargs: Any,
-    ) -> JSONBooleanSchema:
-        if isinstance(value, bool):
-            return object.__new__(cls)
-        raise TypeError("Expecting bool")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, bool)
 
     def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
         if scope is None:
@@ -179,17 +178,14 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
     _bootstrap_kwclasses: Tuple[KeywordClass, ...] = ...
 
     @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, Mapping) and \
+               all(isinstance(k, str) and isinstance(v, JSONCompatible)
+                   for k, v in value.items())
+
+    @classmethod
     def bootstrap(cls, *kwclasses: KeywordClass) -> None:
         cls._bootstrap_kwclasses = kwclasses
-
-    def __new__(
-            cls,
-            value: Mapping[str, AnyJSONCompatible],
-            **kwargs: Any,
-    ) -> JSONObjectSchema:
-        if is_schema_compatible(value, allowbool=False):
-            return object.__new__(cls)
-        raise TypeError("Expecting Mapping[str, AnyJSONCompatible]")
 
     def __init__(
             self,
@@ -308,13 +304,13 @@ KeywordClass = Type[Keyword]
 
 
 class Applicator:
-    """ Sets up a subschema for an applicator keyword. """
+    """Sets up a subschema for an applicator keyword."""
 
     def __init__(self, keyword: Keyword):
         self.keyword = keyword
 
     def __call__(self, value: AnyJSONCompatible) -> Optional[JSONSchema]:
-        if is_schema_compatible(value):
+        if JSONSchema.iscompatible(value):
             return JSONSchema(
                 value,
                 path=self.keyword.path,
@@ -326,10 +322,10 @@ ApplicatorClass = Type[Applicator]
 
 
 class ArrayApplicator(Applicator):
-    """ Sets up an array of subschemas for an applicator keyword. """
+    """Sets up an array of subschemas for an applicator keyword."""
 
     def __call__(self, value: AnyJSONCompatible) -> Optional[JSONArray[JSONSchema]]:
-        if isinstance(value, Sequence) and all(is_schema_compatible(v) for v in value):
+        if isinstance(value, Sequence) and all(JSONSchema.iscompatible(v) for v in value):
             return JSONArray(
                 [
                     JSONSchema(
@@ -344,11 +340,11 @@ class ArrayApplicator(Applicator):
 
 
 class PropertyApplicator(Applicator):
-    """ Sets up property-based subschemas for an applicator keyword. """
+    """Sets up property-based subschemas for an applicator keyword."""
 
     def __call__(self, value: AnyJSONCompatible) -> Optional[JSONObject[JSONSchema]]:
         if isinstance(value, Mapping) and all(
-                isinstance(k, str) and is_schema_compatible(v)
+                isinstance(k, str) and JSONSchema.iscompatible(v)
                 for k, v in value.items()
         ):
             return JSONObject(

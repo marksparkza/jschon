@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from math import modf
 from typing import *
 
 from jschon.jsonpointer import JSONPointer
@@ -43,26 +44,20 @@ class JSON:
         except KeyError:
             raise ValueError(f"{jsontype=} is not a recognized JSON type")
 
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        raise NotImplementedError
+
     def __new__(
             cls,
             value: AnyJSONCompatible,
             **kwargs: Any,
     ) -> JSON:
-        if value is None:
-            return object.__new__(JSONNull)
-        if isinstance(value, bool):
-            return object.__new__(JSONBoolean)
-        if isinstance(value, float):
-            return object.__new__(JSONNumber)
-        if isinstance(value, int):
-            return object.__new__(JSONInteger)
-        if isinstance(value, str):
-            return object.__new__(JSONString)
-        if isinstance(value, Sequence):
-            return object.__new__(JSONArray)
-        if isinstance(value, Mapping):
-            return object.__new__(JSONObject)
-        raise TypeError(f"{value=} is not one of {JSONCompatible}")
+        for c in (JSONNull, JSONBoolean, JSONInteger, JSONNumber, JSONString, JSONArray, JSONObject):
+            if c.iscompatible(value):
+                return object.__new__(c)
+
+        raise TypeError(f"{value=} is not JSON-compatible")
 
     def __init__(
             self,
@@ -96,27 +91,17 @@ AnyJSON = TypeVar('AnyJSON', bound=JSON)
 class JSONNull(JSON):
     __type__ = "null"
 
-    def __new__(
-            cls,
-            value: None,
-            **kwargs: Any,
-    ) -> JSONNull:
-        if value is None:
-            return object.__new__(JSONNull)
-        raise TypeError("Expecting None")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return value is None
 
 
 class JSONBoolean(JSON):
     __type__ = "boolean"
 
-    def __new__(
-            cls,
-            value: bool,
-            **kwargs: Any,
-    ) -> JSONBoolean:
-        if isinstance(value, bool):
-            return object.__new__(JSONBoolean)
-        raise TypeError("Expecting bool")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, bool)
 
     def __eq__(self, other: Union[JSONBoolean, bool]) -> bool:
         if isinstance(other, JSONBoolean):
@@ -129,14 +114,14 @@ class JSONBoolean(JSON):
 class JSONNumber(JSON):
     __type__ = "number"
 
-    def __new__(
-            cls,
-            value: Union[int, float],
-            **kwargs: Any,
-    ) -> JSONNumber:
-        if isinstance(value, (int, float)):
-            return object.__new__(JSONNumber)
-        raise TypeError("Expecting int or float")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, (int, float))
+
+    def istype(self, jsontype: str) -> bool:
+        if jsontype == "integer":
+            return JSONInteger.iscompatible(self.value)
+        return jsontype == "number"
 
     def __eq__(self, other: Union[JSONNumber, int, float]) -> bool:
         if isinstance(other, JSONNumber):
@@ -184,14 +169,9 @@ class JSONNumber(JSON):
 class JSONInteger(JSONNumber):
     __type__ = "integer"
 
-    def __new__(
-            cls,
-            value: int,
-            **kwargs: Any,
-    ) -> JSONInteger:
-        if isinstance(value, int):
-            return object.__new__(JSONInteger)
-        raise TypeError("Expecting int")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, int) or isinstance(value, float) and not modf(value)[0]
 
     def istype(self, jsontype: str) -> bool:
         return jsontype in ("integer", "number")
@@ -200,14 +180,9 @@ class JSONInteger(JSONNumber):
 class JSONString(JSON, Sized):
     __type__ = "string"
 
-    def __new__(
-            cls,
-            value: str,
-            **kwargs: Any,
-    ) -> JSONString:
-        if isinstance(value, str):
-            return object.__new__(JSONString)
-        raise TypeError("Expecting str")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, str)
 
     def __len__(self) -> int:
         return len(self.value)
@@ -216,14 +191,9 @@ class JSONString(JSON, Sized):
 class JSONArray(JSON, Sequence[AnyJSON]):
     __type__ = "array"
 
-    def __new__(
-            cls,
-            value: Sequence[Union[JSON, AnyJSONCompatible]],
-            **kwargs: Any,
-    ) -> JSONArray:
-        if isinstance(value, Sequence) and not isinstance(value, str):
-            return object.__new__(JSONArray)
-        raise TypeError("Expecting Sequence")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, Sequence) and not isinstance(value, str)
 
     def __init__(
             self,
@@ -252,14 +222,9 @@ class JSONArray(JSON, Sequence[AnyJSON]):
 class JSONObject(JSON, Mapping[str, AnyJSON]):
     __type__ = "object"
 
-    def __new__(
-            cls,
-            value: Mapping[str, Union[JSON, AnyJSONCompatible]],
-            **kwargs: Any,
-    ) -> JSONObject:
-        if isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
-            return object.__new__(JSONObject)
-        raise TypeError("Expecting Mapping[str, Any]")
+    @classmethod
+    def iscompatible(cls, value: Any) -> bool:
+        return isinstance(value, Mapping) and all(isinstance(k, str) for k in value)
 
     def __init__(
             self,
