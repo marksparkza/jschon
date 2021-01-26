@@ -1,5 +1,6 @@
 import re
-from unittest.mock import Mock, MagicMock
+from contextlib import contextmanager
+from unittest.mock import Mock
 
 import hypothesis.strategies as hs
 from hypothesis import given
@@ -136,44 +137,56 @@ def test_unique_items(kwvalue, instval):
         assert result is True
 
 
-@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray, containstype=jsontype)
+@contextmanager
+def mock_contains_scope(test_kw, contains_count):
+    def get_sibling(key):
+        if key == "contains":
+            return contains
+        elif key == "maxContains":
+            return max_contains
+
+    scope = Scope(JSONSchema(True))
+    scope.sibling = Mock(side_effect=get_sibling)
+    contains = Mock()
+    contains.annotations.get = Mock(return_value=(contains_annotation := Mock()))
+    contains_annotation.value = contains_count
+    contains.valid = contains_count > 0
+    if test_kw == "minContains":
+        max_contains = Mock()
+        max_contains.valid = True
+
+    yield scope
+
+    if test_kw == "minContains":
+        # minContains == 0 makes contains valid
+        if scope.valid and not contains.valid:
+            contains.errors.clear.assert_called_once()
+
+
+@given(
+    kwvalue=hs.integers(min_value=0, max_value=20),
+    instval=jsonflatarray,
+    containstype=jsontype,
+)
 def test_max_contains(kwvalue, instval, containstype):
-    def get_annotation(key):
-        mock_annotation = Mock()
-        mock_annotation.value = count
-        return mock_annotation
-
-    count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
+    contains_count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
     kw = MaxContainsKeyword(kwvalue)
-    scope = Scope(JSONSchema(True))
-    scope.sibling = (mock_sibling_fn := Mock())
-    scope.sibling.return_value = (mock_contains := Mock())
-    mock_contains.annotations = MagicMock()
-    mock_contains.annotations.__getitem__.side_effect = get_annotation
-    kw.evaluate(JSON(instval), scope)
-    mock_sibling_fn.assert_called_once_with("contains")
-    mock_contains.annotations.__getitem__.assert_called_once_with("contains")
-    assert scope.valid == (count <= kwvalue)
+    with mock_contains_scope("maxContains", contains_count) as scope:
+        kw.evaluate(JSON(instval), scope)
+        assert scope.valid == (contains_count <= kwvalue)
 
 
-@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray, containstype=jsontype)
+@given(
+    kwvalue=hs.integers(min_value=0, max_value=20),
+    instval=jsonflatarray,
+    containstype=jsontype,
+)
 def test_min_contains(kwvalue, instval, containstype):
-    def get_annotation(key):
-        mock_annotation = Mock()
-        mock_annotation.value = count
-        return mock_annotation
-
-    count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
+    contains_count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
     kw = MinContainsKeyword(kwvalue)
-    scope = Scope(JSONSchema(True))
-    scope.sibling = (mock_sibling_fn := Mock())
-    scope.sibling.return_value = (mock_contains := Mock())
-    mock_contains.annotations = MagicMock()
-    mock_contains.annotations.__getitem__.side_effect = get_annotation
-    kw.evaluate(JSON(instval), scope)
-    mock_sibling_fn.assert_called_once_with("contains")
-    mock_contains.annotations.__getitem__.assert_called_once_with("contains")
-    assert scope.valid == (count >= kwvalue)
+    with mock_contains_scope("minContains", contains_count) as scope:
+        kw.evaluate(JSON(instval), scope)
+        assert scope.valid == (contains_count >= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonobject)

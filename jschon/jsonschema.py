@@ -168,7 +168,7 @@ class JSONBooleanSchema(JSONSchema):
             scope = Scope(self)
 
         if not self.value and assert_:
-            scope.fail(instance, "Instance is disallowed by boolean false schema")
+            scope.fail(instance, "The instance is disallowed by a boolean false schema")
 
         return self.value
 
@@ -239,21 +239,18 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
         if scope is None:
             scope = Scope(self)
 
-        err_kw = []
         for keyword in self.keywords.values():
             if keyword.__types__ is None or isinstance(
                     instance, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
             ):
                 with scope(self, keyword.__keyword__) as subscope:
                     keyword.evaluate(instance, subscope)
-                    if keyword.assert_ and not subscope.valid:
-                        err_kw += [keyword.__keyword__]
 
-        if not err_kw:
+        if all(child.valid or not child.assert_ for child in scope.children.values()):
             return True
 
         if assert_:
-            scope.fail(instance, f"The instance failed validation against keywords {err_kw}")
+            scope.fail(instance, "The instance failed validation against the schema")
 
         return False
 
@@ -285,7 +282,6 @@ class Keyword:
         self.json: JSON
         self.path: JSONPointer = superschema.path / self.__keyword__
         self.superschema: JSONSchema = superschema
-        self.assert_: bool = True
 
         # there may be several possible ways in which to set up subschemas for
         # an applicator keyword; we try a series of applicator classes in turn
@@ -495,7 +491,8 @@ class Scope:
         self.children: Dict[str, Scope] = {}
         self.annotations: Dict[str, Annotation] = {}
         self.errors: List[Error] = []
-        self.keep: bool = False  # True to keep empty results
+        self.assert_: bool = True  # False => parent schema ignores validity
+        self.keep: bool = False  # True => don't discard the scope if it has no results or children
 
     @contextmanager
     def __call__(self, schema: JSONSchema, key: str) -> Scope:

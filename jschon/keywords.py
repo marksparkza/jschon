@@ -368,17 +368,10 @@ class IfKeyword(Keyword):
 
     applicators = Applicator,
 
-    def __init__(
-            self,
-            value: Any,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
-        self.assert_ = False
-
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.json: JSONSchema
         self.json.evaluate(instance, scope)
+        scope.assert_ = False
         scope.keep = True
 
 
@@ -901,12 +894,12 @@ class MaxContainsKeyword(Keyword):
 
     def evaluate(self, instance: JSONArray, scope: Scope) -> None:
         self.json: JSONInteger
-        if (contains := scope.sibling("contains")) and \
-                (contains_annotation := contains.annotations.get("contains")) and \
-                contains_annotation.value > self.json:
-            scope.fail(instance,
-                       'The array has too many elements matching the '
-                       f'"contains" subschema (maximum {self.json})')
+        if contains := scope.sibling("contains"):
+            if (contains_annotation := contains.annotations.get("contains")) and \
+                    contains_annotation.value > self.json:
+                scope.fail(instance,
+                           'The array has too many elements matching the '
+                           f'"contains" subschema (maximum {self.json})')
 
 
 class MinContainsKeyword(Keyword):
@@ -917,14 +910,17 @@ class MinContainsKeyword(Keyword):
 
     def evaluate(self, instance: JSONArray, scope: Scope) -> None:
         self.json: JSONInteger
-        if (contains := scope.sibling("contains")) and \
-                (contains_annotation := contains.annotations.get("contains")):
-            valid = contains_annotation.value >= self.json
+        if contains := scope.sibling("contains"):
+            contains_count = contains_annotation.value \
+                if (contains_annotation := contains.annotations.get("contains")) \
+                else 0
+
+            valid = contains_count >= self.json
 
             if valid and not contains.valid:
                 max_contains = scope.sibling("maxContains")
                 if not max_contains or max_contains.valid:
-                    contains.valid = True
+                    contains.errors.clear()
 
             if not valid:
                 scope.fail(instance,

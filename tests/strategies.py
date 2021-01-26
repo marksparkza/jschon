@@ -10,6 +10,7 @@ __all__ = [
     'jsonstring',
     'json',
     'jsonarray',
+    'jsonflatarray',
     'jsonobject',
     'propname',
     'propnames',
@@ -43,6 +44,7 @@ json = hs.recursive(
     max_leaves=10,
 )
 jsonarray = hs.lists(json, max_size=10)
+jsonflatarray = hs.lists(jsonnull | jsonboolean | jsonnumber | jsonstring, max_size=20)
 jsonobject = hs.dictionaries(jsonstring, json, max_size=10)
 
 propname = hs.characters(min_codepoint=ord('a'), max_codepoint=ord('z'))
