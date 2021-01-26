@@ -491,7 +491,7 @@ class AdditionalItemsKeyword(Keyword):
         self.json: JSONSchema
 
         if (items := scope.sibling("items")) and (items_annotation := items.annotations.get("items")) and \
-                isinstance(items_annotation.value, int):
+                type(items_annotation.value) is int:
             annotation = None
             for index, item in enumerate(instance[items_annotation.value + 1:]):
                 annotation = True
@@ -516,7 +516,7 @@ class UnevaluatedItemsKeyword(Keyword):
         for items_annotation in scope.parent.collect_annotations(instance, "items"):
             if items_annotation.value is True:
                 return
-            if isinstance(items_annotation.value, int) and items_annotation.value > last_evaluated_item:
+            if type(items_annotation.value) is int and items_annotation.value > last_evaluated_item:
                 last_evaluated_item = items_annotation.value
 
         for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):

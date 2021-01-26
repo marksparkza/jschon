@@ -288,7 +288,7 @@ class Keyword:
         # until one is found that works for the keyword's value, else we fall
         # through to the default behaviour of simply JSON-ifying the value
         for applicator in self.applicators:
-            if jsonified := applicator(self)(value):
+            if (jsonified := applicator(self)(value)) is not None:
                 self.json = jsonified
                 break
         else:
