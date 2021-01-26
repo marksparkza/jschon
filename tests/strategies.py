@@ -12,6 +12,7 @@ __all__ = [
     'jsonarray',
     'jsonflatarray',
     'jsonobject',
+    'jsonflatobject',
     'propname',
     'propnames',
     'jsonproperties',
@@ -37,19 +38,21 @@ jsonboolean = hs.booleans()
 jsonnumber = hs.integers() | hs.floats(allow_infinity=False, allow_nan=False)
 jsoninteger = hs.integers()
 jsonstring = hs.text()
+jsonleaf = jsonnull | jsonboolean | jsonnumber | jsonstring
 
 json = hs.recursive(
-    base=jsonnull | jsonboolean | jsonnumber | jsonstring,
+    base=jsonleaf,
     extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
     max_leaves=10,
 )
 jsonarray = hs.lists(json, max_size=10)
-jsonflatarray = hs.lists(jsonnull | jsonboolean | jsonnumber | jsonstring, max_size=20)
+jsonflatarray = hs.lists(jsonleaf, max_size=20)
 jsonobject = hs.dictionaries(jsonstring, json, max_size=10)
+jsonflatobject = hs.dictionaries(jsonstring, jsonleaf, max_size=20)
 
 propname = hs.characters(min_codepoint=ord('a'), max_codepoint=ord('z'))
 propnames = hs.lists(propname, unique=True, max_size=10)
-jsonproperties = hs.dictionaries(propname, json, max_size=10)
+jsonproperties = hs.dictionaries(propname, jsonleaf, max_size=10)
 
 jsonpointer_regex = r'^(/([^~/]|(~[01]))*)*$'
 jsonpointer = hs.from_regex(jsonpointer_regex, fullmatch=True)

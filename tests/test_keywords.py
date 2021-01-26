@@ -104,13 +104,13 @@ def test_pattern(kwvalue, instval):
     assert result == (re.search(kwvalue, instval) is not None)
 
 
-@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray)
+@given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatarray)
 def test_max_items(kwvalue, instval):
     result = evaluate(MaxItemsKeyword, kwvalue, instval)
     assert result == (len(instval) <= kwvalue)
 
 
-@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonarray)
+@given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatarray)
 def test_min_items(kwvalue, instval):
     result = evaluate(MinItemsKeyword, kwvalue, instval)
     assert result == (len(instval) >= kwvalue)
@@ -190,13 +190,13 @@ def test_min_contains(kwvalue, instval, containstype):
         assert scope.valid == (contains_count >= kwvalue)
 
 
-@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonobject)
+@given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
 def test_max_properties(kwvalue, instval):
     result = evaluate(MaxPropertiesKeyword, kwvalue, instval)
     assert result == (len(instval) <= kwvalue)
 
 
-@given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonobject)
+@given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
 def test_min_properties(kwvalue, instval):
     result = evaluate(MinPropertiesKeyword, kwvalue, instval)
     assert result == (len(instval) >= kwvalue)
