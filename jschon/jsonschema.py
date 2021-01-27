@@ -7,10 +7,10 @@ from uuid import uuid4
 
 from jschon.catalogue import Catalogue
 from jschon.exceptions import *
-from jschon.json import JSON, JSONObject, JSONArray, AnyJSON
+from jschon.json import JSON, JSONObject, JSONArray, AnyJSON, JSONCompatible, AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
-from jschon.types import JSONCompatible, AnyJSONCompatible, tuplify
 from jschon.uri import URI
+from jschon.utils import tuplify
 
 __all__ = [
     'JSONSchema',

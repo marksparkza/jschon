@@ -4,7 +4,7 @@ from os import PathLike
 from typing import Dict
 
 from jschon.exceptions import CatalogueError
-from jschon.types import AnyJSONCompatible
+from jschon.json import AnyJSONCompatible
 from jschon.uri import URI
 
 __all__ = [

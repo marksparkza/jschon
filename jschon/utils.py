@@ -1,17 +1,9 @@
 from typing import *
 
 __all__ = [
-    'JSONCompatible',
-    'AnyJSONCompatible',
     'tuplify',
     'arrayify',
 ]
-
-# for runtime type checks
-JSONCompatible = (type(None), bool, int, float, str, Sequence, Mapping)
-
-# for type hints
-AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, str, Sequence, Mapping)
 
 
 def tuplify(value: Any) -> Tuple:

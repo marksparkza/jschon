@@ -5,9 +5,10 @@ from math import modf
 from typing import *
 
 from jschon.jsonpointer import JSONPointer
-from jschon.types import JSONCompatible, AnyJSONCompatible
 
 __all__ = [
+    'JSONCompatible',
+    'AnyJSONCompatible',
     'JSON',
     'AnyJSON',
     'JSONNull',
@@ -18,6 +19,12 @@ __all__ = [
     'JSONArray',
     'JSONObject',
 ]
+
+# for runtime type checks
+JSONCompatible = (type(None), bool, int, float, str, Sequence, Mapping)
+
+# for type hints
+AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, str, Sequence, Mapping)
 
 
 class JSON:

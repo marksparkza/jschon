@@ -4,8 +4,8 @@ from typing import *
 from jschon.exceptions import JSONSchemaError, VocabularyError, URIError
 from jschon.json import *
 from jschon.jsonschema import *
-from jschon.types import tuplify, arrayify
 from jschon.uri import URI
+from jschon.utils import tuplify, arrayify
 
 __all__ = [
     # core vocabulary
