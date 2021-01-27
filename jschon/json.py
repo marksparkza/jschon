@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from math import modf
+from decimal import Decimal
 from typing import *
 
 from jschon.jsonpointer import JSONPointer
@@ -21,19 +21,27 @@ __all__ = [
 ]
 
 # for runtime type checks
-JSONCompatible = (type(None), bool, int, float, str, Sequence, Mapping)
+JSONCompatible = (type(None), bool, int, float, Decimal, str, Sequence, Mapping)
+JSONCompatibleNumber = (int, float, Decimal)
 
 # for type hints
-AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, str, Sequence, Mapping)
+AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, Decimal, str, Sequence, Mapping)
+AnyJSONCompatibleNumber = TypeVar('AnyJSONCompatibleNumber', int, float, Decimal)
 
 
 class JSON:
     __type__: str = ...
 
     class _Encoder(json.JSONEncoder):
+        def __init__(self, *args, **kwargs):
+            kwargs.update({'ensure_ascii': False, 'allow_nan': False})
+            super().__init__(*args, **kwargs)
+
         def default(self, o: Any) -> AnyJSONCompatible:
             if isinstance(o, JSON):
-                return o.value
+                return self.default(o.value)
+            if isinstance(o, Decimal):
+                return float(o)
             return super().default(o)
 
     @classmethod
@@ -123,52 +131,52 @@ class JSONNumber(JSON):
 
     @classmethod
     def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, (int, float))
+        return isinstance(value, JSONCompatibleNumber) and not isinstance(value, bool)
 
     def istype(self, jsontype: str) -> bool:
         if jsontype == "integer":
             return JSONInteger.iscompatible(self.value)
         return jsontype == "number"
 
-    def __eq__(self, other: Union[JSONNumber, int, float]) -> bool:
+    def __eq__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value == other.value
-        if isinstance(other, (int, float)) and not isinstance(other, bool):
+        if self.iscompatible(other):
             return self.value == other
         return NotImplemented
 
-    def __ge__(self, other: Union[JSONNumber, int, float]) -> bool:
+    def __ge__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value >= other.value
-        if isinstance(other, (int, float)) and not isinstance(other, bool):
+        if self.iscompatible(other):
             return self.value >= other
         return NotImplemented
 
-    def __gt__(self, other: Union[JSONNumber, int, float]) -> bool:
+    def __gt__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value > other.value
-        if isinstance(other, (int, float)) and not isinstance(other, bool):
+        if self.iscompatible(other):
             return self.value > other
         return NotImplemented
 
-    def __le__(self, other: Union[JSONNumber, int, float]) -> bool:
+    def __le__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value <= other.value
-        if isinstance(other, (int, float)) and not isinstance(other, bool):
+        if self.iscompatible(other):
             return self.value <= other
         return NotImplemented
 
-    def __lt__(self, other: Union[JSONNumber, int, float]) -> bool:
+    def __lt__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
         if isinstance(other, JSONNumber):
             return self.value < other.value
-        if isinstance(other, (int, float)) and not isinstance(other, bool):
+        if self.iscompatible(other):
             return self.value < other
         return NotImplemented
 
-    def __mod__(self, other: Union[JSONNumber, int, float]) -> Union[int, float]:
+    def __mod__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> AnyJSONCompatibleNumber:
         if isinstance(other, JSONNumber):
             return self.value % other.value
-        if isinstance(other, (int, float)) and not isinstance(other, bool):
+        if self.iscompatible(other):
             return self.value % other
         return NotImplemented
 
@@ -178,7 +186,8 @@ class JSONInteger(JSONNumber):
 
     @classmethod
     def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, int) or isinstance(value, float) and not modf(value)[0]
+        return isinstance(value, int) and not isinstance(value, bool) or \
+               isinstance(value, (float, Decimal)) and value == int(value)
 
     def istype(self, jsontype: str) -> bool:
         return jsontype in ("integer", "number")

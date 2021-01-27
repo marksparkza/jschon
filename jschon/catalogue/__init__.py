@@ -1,4 +1,3 @@
-import json
 import pathlib
 from os import PathLike
 from typing import Dict
@@ -6,6 +5,7 @@ from typing import Dict
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible
 from jschon.uri import URI
+from jschon.utils import load_json
 
 __all__ = [
     'Catalogue',
@@ -27,8 +27,6 @@ class Catalogue:
         uristr = str(uri)
         for base_uri, base_dir in cls._dirs.items():
             if uristr.startswith(str(base_uri)):
-                filepath = pathlib.Path(base_dir) / uristr[len(base_uri):]
-                with open(filepath) as f:
-                    return json.load(f)
+                return load_json(pathlib.Path(base_dir) / uristr[len(base_uri):])
 
         raise CatalogueError(f"File not found for '{uri}'")

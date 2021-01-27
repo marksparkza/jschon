@@ -1,5 +1,3 @@
-from math import modf
-
 from hypothesis import given
 
 from jschon.json import *
@@ -20,7 +18,7 @@ def test_create_json(value):
             assert type(inst) is JSONNull
         elif isinstance(val, bool):
             assert type(inst) is JSONBoolean
-        elif isinstance(val, int) or isinstance(val, float) and not modf(val)[0]:
+        elif isinstance(val, int) or isinstance(val, float) and val == int(val):
             assert type(inst) is JSONInteger
         elif isinstance(val, float):
             assert type(inst) is JSONNumber
