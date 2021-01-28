@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from hypothesis import given
 
 from jschon.json import *
@@ -8,7 +10,6 @@ from tests.test_jsonpointer import jsonpointer_escape
 
 @given(json)
 def test_create_json(value):
-
     def assert_node(inst, val, ptr):
         assert inst.value == val
         assert inst.path == JSONPointer(ptr)
@@ -18,9 +19,9 @@ def test_create_json(value):
             assert type(inst) is JSONNull
         elif isinstance(val, bool):
             assert type(inst) is JSONBoolean
-        elif isinstance(val, int) or isinstance(val, float) and val == int(val):
+        elif isinstance(val, int) or isinstance(val, (float, Decimal)) and val == int(val):
             assert type(inst) is JSONInteger
-        elif isinstance(val, float):
+        elif isinstance(val, (float, Decimal)):
             assert type(inst) is JSONNumber
         elif isinstance(val, str):
             assert type(inst) is JSONString

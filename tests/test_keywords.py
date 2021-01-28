@@ -1,5 +1,6 @@
 import re
 from contextlib import contextmanager
+from decimal import Decimal, InvalidOperation
 from unittest.mock import Mock
 
 import hypothesis.strategies as hs
@@ -19,21 +20,21 @@ def evaluate(kwclass, kwvalue, instval):
 @given(kwvalue=jsontype | jsontypes, instval=json)
 def test_type(kwvalue, instval):
     result = evaluate(TypeKeyword, kwvalue, instval)
-    if type(kwvalue) is str:
+    if isinstance(kwvalue, str):
         kwvalue = [kwvalue]
     if instval is None:
         assert result == ("null" in kwvalue)
-    elif type(instval) is bool:
+    elif isinstance(instval, bool):
         assert result == ("boolean" in kwvalue)
-    elif type(instval) is int or type(instval) is float and instval == int(instval):
+    elif isinstance(instval, int) or isinstance(instval, (float, Decimal)) and instval == int(instval):
         assert result == ("number" in kwvalue or "integer" in kwvalue)
-    elif type(instval) is float:
+    elif isinstance(instval, float):
         assert result == ("number" in kwvalue)
-    elif type(instval) is str:
+    elif isinstance(instval, str):
         assert result == ("string" in kwvalue)
-    elif type(instval) is list:
+    elif isinstance(instval, list):
         assert result == ("array" in kwvalue)
-    elif type(instval) is dict:
+    elif isinstance(instval, dict):
         assert result == ("object" in kwvalue)
 
 
@@ -42,7 +43,7 @@ def test_enum(kwvalue, instval):
     result = evaluate(EnumKeyword, kwvalue, instval)
     assert result == any(
         instval == kwval for kwval in kwvalue
-        if type(instval) == type(kwval) or {type(instval), type(kwval)} <= {int, float}
+        if type(instval) == type(kwval) or {type(instval), type(kwval)} <= {int, float, Decimal}
     )
 
 
@@ -51,14 +52,20 @@ def test_const(kwvalue, instval):
     result = evaluate(ConstKeyword, kwvalue, instval)
     assert result == (
             instval == kwvalue and
-            (type(instval) == type(kwvalue) or {type(instval), type(kwvalue)} <= {int, float})
+            (type(instval) == type(kwvalue) or {type(instval), type(kwvalue)} <= {int, float, Decimal})
     )
 
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
 def test_multiple_of(kwvalue, instval):
     result = evaluate(MultipleOfKeyword, kwvalue, instval)
-    assert result == (instval % kwvalue == 0)
+    try:
+        try:
+            assert result == (instval % kwvalue == 0)
+        except TypeError:
+            assert result == (Decimal(instval) % Decimal(kwvalue) == 0)
+    except InvalidOperation:
+        assert result is False
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)

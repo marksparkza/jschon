@@ -35,7 +35,9 @@ jsontypes = hs.lists(jsontype, unique=True)
 
 jsonnull = hs.none()
 jsonboolean = hs.booleans()
-jsonnumber = hs.integers() | hs.floats(allow_infinity=False, allow_nan=False)
+jsonnumber = hs.integers() | \
+             hs.floats(allow_nan=False, allow_infinity=False) | \
+             hs.decimals(allow_nan=False, allow_infinity=False)
 jsoninteger = hs.integers()
 jsonstring = hs.text()
 jsonleaf = jsonnull | jsonboolean | jsonnumber | jsonstring

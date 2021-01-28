@@ -175,9 +175,15 @@ class JSONNumber(JSON):
 
     def __mod__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> AnyJSONCompatibleNumber:
         if isinstance(other, JSONNumber):
-            return self.value % other.value
+            try:
+                return self.value % other.value
+            except TypeError:  # cannot mod float and Decimal
+                return Decimal(self.value) % Decimal(other.value)
         if self.iscompatible(other):
-            return self.value % other
+            try:
+                return self.value % other
+            except TypeError:  # cannot mod float and Decimal
+                return Decimal(self.value) % Decimal(other)
         return NotImplemented
 
 
