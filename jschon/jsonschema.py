@@ -539,3 +539,6 @@ class Scope:
                     yield annotation
             for child in self.children.values():
                 yield from child.collect_annotations(instance, key)
+
+    def __str__(self) -> str:
+        return str(self.path)
