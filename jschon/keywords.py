@@ -160,8 +160,6 @@ class IdKeyword(Keyword):
         super().__init__(value, **kwargs)
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
-            if not self.superschema.path:
-                raise JSONSchemaError('The "$id" of the root schema, if present, must be an absolute URI')
             if (base_uri := self.superschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
