@@ -24,6 +24,7 @@ setup(
             'pytest',
             'coverage',
             'hypothesis',
+            'pytest-benchmark',
         ],
     },
     classifiers=[
