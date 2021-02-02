@@ -15,16 +15,16 @@ from hypothesis import given, strategies as hs, provisional as hp
 from jschon.exceptions import JSONPointerError
 from jschon.json import JSONString
 from jschon.jsonpointer import JSONPointer
-from jschon.jsonschema import JSONSchema, Scope
+from jschon.jsonschema import JSONSchema, Scope, Vocabulary
 from jschon.keywords import FormatKeyword
-from tests import metaschema_uri
+from jschon.uri import URI
 from tests.strategies import jsonpointer
+
+Vocabulary(URI('https://json-schema.org/draft/2019-09/vocab/format'), True)
 
 
 def evaluate(format_attr, instval):
-    schema = JSONSchema(True, metaschema_uri=metaschema_uri)
-    kw = FormatKeyword(format_attr, superschema=schema)
-    kw.evaluate(JSONString(instval), scope := Scope(schema))
+    FormatKeyword(format_attr).evaluate(JSONString(instval), scope := Scope(JSONSchema(True)))
     return scope.valid
 
 

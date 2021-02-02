@@ -112,9 +112,6 @@ class JSONSchema(JSON):
         self.keywords: Dict[str, Keyword] = {}
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
-        if metaschema_uri is not None:
-            JSONSchema.get(metaschema_uri, metaschema_uri)
-
     def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
         raise NotImplementedError
 
