@@ -112,7 +112,7 @@ class JSONSchema(JSON):
         self.keywords: Dict[str, Keyword] = {}
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
-    def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
+    def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
         raise NotImplementedError
 
     @property
@@ -159,11 +159,11 @@ class JSONBooleanSchema(JSONSchema):
     def iscompatible(cls, value: Any) -> bool:
         return isinstance(value, bool)
 
-    def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
+    def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
         if scope is None:
             scope = Scope(self)
 
-        if not self.value and assert_:
+        if not self.value:
             scope.fail(instance, "The instance is disallowed by a boolean false schema")
 
         return self.value
@@ -207,7 +207,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             kwclass.__keyword__: kwclass(value[kwclass.__keyword__], superschema=self)
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
-        if self.superkeyword is None and not self.metaschema.evaluate(JSON(value), assert_=False):
+        if self.superkeyword is None and not self.metaschema.evaluate(JSON(value)):
             raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
@@ -228,7 +228,7 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                     yield kwclass
                     break
 
-    def evaluate(self, instance: JSON, scope: Scope = None, *, assert_: bool = True) -> bool:
+    def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
         if scope is None:
             scope = Scope(self)
 
@@ -239,13 +239,11 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                 with scope(self, keyword.__keyword__) as subscope:
                     keyword.evaluate(instance, subscope)
 
-        if all(child.valid or not child.assert_ for child in scope.children.values()):
-            return True
-
-        if assert_:
+        if any(child.assert_ and not child.valid for child in scope.children.values()):
             scope.fail(instance, "The instance failed validation against the schema")
+            return False
 
-        return False
+        return True
 
     def __getitem__(self, key: str) -> JSON:
         return self.keywords[key].json

@@ -547,8 +547,10 @@ class ContainsKeyword(Keyword):
 
         annotation = 0
         for index, item in enumerate(instance):
-            if self.json.evaluate(item, scope, assert_=False):
+            if self.json.evaluate(item, scope):
                 annotation += 1
+            else:
+                scope.errors.clear()
 
         if annotation > 0:
             scope.annotate(instance, "contains", annotation)
@@ -696,10 +698,11 @@ class PropertyNamesKeyword(Keyword):
 
         err_names = []
         for name in instance:
-            if not self.json.evaluate(JSON(name, path=instance.path), scope, assert_=False):
+            if not self.json.evaluate(JSON(name, path=instance.path), scope):
                 err_names += [name]
 
         if err_names:
+            scope.errors.clear()
             scope.fail(instance, f"Property names {err_names} are invalid")
 
 
