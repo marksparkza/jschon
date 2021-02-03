@@ -6,7 +6,9 @@ import pytest
 from pytest import param as p
 
 from jschon.json import JSON
+from jschon.jsonschema import JSONSchema
 from jschon.utils import load_json
+from tests import metaschema_uri
 
 example_1_json = load_json(
     pathlib.Path(__file__).parent /
@@ -39,3 +41,12 @@ example_2_json = load_json(
 def test_create_json(benchmark, value, jsontype):
     result = benchmark(lambda v: JSON(v), value)
     assert result.istype(jsontype)
+
+
+@pytest.mark.parametrize('value', (
+        p(True, id='boolean'),
+        p({}, id='empty'),
+        p({"const": "foo"}, id='const'),
+))
+def test_create_schema(benchmark, value):
+    benchmark(lambda v: JSONSchema(v, metaschema_uri=metaschema_uri), value)

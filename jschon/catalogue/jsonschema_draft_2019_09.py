@@ -133,3 +133,7 @@ def initialize():
             ContentSchemaKeyword,
         )
     )
+
+    # cache and self-validate the metaschema and its vocabularies
+    metaschema_uri = URI("https://json-schema.org/draft/2019-09/schema")
+    JSONSchema.get(metaschema_uri, metaschema_uri)
