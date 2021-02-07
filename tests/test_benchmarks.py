@@ -77,6 +77,13 @@ def test_evaluate_json(benchmark, request, value):
     assert result is (True if '[valid]' in request.node.name else False)
 
 
+@pytest.fixture
+def reset_cache():
+    JSONSchema.clear()
+    metaschema = JSONSchema.get(metaschema_uri, metaschema_uri)
+    metaschema.validate()
+
+
 schema_tests = (
     p(True, id='bool'),
     p({}, id='empty'),
@@ -86,11 +93,11 @@ schema_tests = (
 
 
 @pytest.mark.parametrize('value', schema_tests)
-def test_create_schema(benchmark, value):
+def test_create_schema(benchmark, value, reset_cache):
     benchmark(JSONSchema, value, metaschema_uri=metaschema_uri)
 
 
 @pytest.mark.parametrize('value', schema_tests)
-def test_validate_schema(benchmark, value):
+def test_validate_schema(benchmark, value, reset_cache):
     schema = JSONSchema(value, metaschema_uri=metaschema_uri)
     benchmark(schema.validate)

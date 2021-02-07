@@ -75,6 +75,10 @@ class JSONSchema(JSON):
         cls._encache(uri, schema)
 
     @classmethod
+    def clear(cls) -> None:
+        cls._cache.clear()
+
+    @classmethod
     def _encache(cls, uri: Optional[URI], schema: JSONSchema) -> None:
         if uri is not None:
             cls._cache[uri] = schema
