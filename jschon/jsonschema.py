@@ -112,6 +112,10 @@ class JSONSchema(JSON):
         self.keywords: Dict[str, Keyword] = {}
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
+    def validate(self) -> None:
+        if not self.metaschema.evaluate(JSON(self.value)):
+            raise JSONSchemaError("The schema is invalid against its metaschema")
+
     def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
         raise NotImplementedError
 
@@ -207,8 +211,6 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
             kwclass.__keyword__: kwclass(value[kwclass.__keyword__], superschema=self)
             for kwclass in self._resolve_keyword_dependencies(kwclasses)
         })
-        if self.superkeyword is None and not self.metaschema.evaluate(JSON(value)):
-            raise JSONSchemaError("The schema is invalid against its metaschema")
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
