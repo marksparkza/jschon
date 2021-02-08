@@ -1,21 +1,38 @@
 import pytest
 from hypothesis import given
+from pytest import param as p
 
 from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
-from jschon.jsonschema import JSONSchema, JSONObjectSchema
+from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
-from tests import metaschema_uri
+from tests import metaschema_uri, example_schema, example_valid, example_invalid
 from tests.strategies import *
 
+schema_tests = (
+    p(False, False, False, id='false'),
+    p(True, True, True, id='true'),
+    p({}, True, True, id='empty'),
+    p({"not": {}}, False, False, id='not'),
+    p({"const": example_valid}, True, False, id='simple'),
+    p(example_schema, True, False, id='complex'),
+)
+json1 = JSON(example_valid)
+json2 = JSON(example_invalid)
 
-@given(jsonboolean | jsonobject)
-def test_create_schema(value):
-    schema = JSONSchema(value, metaschema_uri=metaschema_uri)
-    assert schema.value == value
+
+@pytest.mark.parametrize('example, json1_valid, json2_valid', schema_tests)
+def test_schema_examples(example, json1_valid, json2_valid):
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    schema.validate()
+    assert schema.value == example
+    assert schema.type == "boolean" if isinstance(example, bool) else "object"
+    assert schema.parent is None
+    assert schema.key is None
     assert not schema.path
-    assert schema.superkeyword is None
     assert schema.metaschema_uri == metaschema_uri
+    assert schema.evaluate(json1).valid is json1_valid
+    assert schema.evaluate(json2).valid is json2_valid
 
 
 @given(interdependent_keywords)
@@ -26,12 +43,12 @@ def test_keyword_dependency_resolution(value: list):
         except ValueError:
             pass
 
-    metaschema = JSONSchema.get(metaschema_uri)
+    metaschema = JSONSchema.load(metaschema_uri)
     kwclasses = {
         kw: metaschema.kwclasses[kw] for kw in value
     }
     keywords = [
-        kwclass.__keyword__ for kwclass in JSONObjectSchema._resolve_keyword_dependencies(kwclasses)
+        kwclass.__keyword__ for kwclass in JSONSchema._resolve_keyword_dependencies(kwclasses)
     ]
 
     assert_keyword_order("properties", "additionalProperties")
@@ -66,7 +83,7 @@ def test_keyword_dependency_resolution(value: list):
 
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#idExamples
-example = {
+id_example = {
     "$id": "https://example.com/root.json",
     "$defs": {
         "A": {"$anchor": "foo"},
@@ -96,7 +113,7 @@ example = {
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f'),
 ])
 def test_base_uri(ptr: str, base_uri: str):
-    rootschema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr).evaluate(rootschema)
     assert schema.base_uri == URI(base_uri)
 
@@ -119,9 +136,9 @@ def test_base_uri(ptr: str, base_uri: str):
     ('#/$defs/C', 'https://example.com/root.json#/$defs/C', False),
 ])
 def test_uri(ptr: str, uri: str, canonical: bool):
-    rootschema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr).evaluate(rootschema)
-    assert schema == JSONSchema.get(URI(uri))
+    assert schema == JSONSchema.load(URI(uri))
 
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#recursive-example
@@ -161,5 +178,5 @@ def test_recursive_schema_extension():
     tree_schema = JSONSchema(tree)
     strict_tree_schema = JSONSchema(strict_tree)
     tree_json = JSON(tree_instance)
-    assert tree_schema.evaluate(tree_json) is True
-    assert strict_tree_schema.evaluate(tree_json) is False
+    assert tree_schema.evaluate(tree_json).valid is True
+    assert strict_tree_schema.evaluate(tree_json).valid is False

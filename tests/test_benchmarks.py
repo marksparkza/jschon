@@ -6,42 +6,7 @@ from pytest import param as p
 
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema
-from tests import metaschema_uri
-
-example_schema = {
-    "$id": "recursiveRef8_main.json",
-    "$defs": {
-        "inner": {
-            "$id": "recursiveRef8_inner.json",
-            "$recursiveAnchor": True,
-            "title": "inner",
-            "additionalProperties": {
-                "$recursiveRef": "#"
-            }
-        }
-    },
-    "if": {
-        "propertyNames": {
-            "pattern": "^[a-m]"
-        }
-    },
-    "then": {
-        "title": "any type of node",
-        "$id": "recursiveRef8_anyLeafNode.json",
-        "$recursiveAnchor": True,
-        "$ref": "recursiveRef8_main.json#/$defs/inner"
-    },
-    "else": {
-        "title": "integer node",
-        "$id": "recursiveRef8_integerNode.json",
-        "$recursiveAnchor": True,
-        "type": ["object", "integer"],
-        "$ref": "recursiveRef8_main.json#/$defs/inner"
-    }
-}
-
-example_valid = {"alpha": 1.1}
-example_invalid = {"november": 1.1}
+from tests import metaschema_uri, example_schema, example_valid, example_invalid
 
 
 @pytest.mark.parametrize('value', (
@@ -73,14 +38,14 @@ def test_create_json(benchmark, value):
 def test_evaluate_json(benchmark, request, value):
     json = JSON(value)
     schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri)
-    result = benchmark(schema.evaluate, json)
-    assert result is (True if '[valid]' in request.node.name else False)
+    scope = benchmark(schema.evaluate, json)
+    assert scope.valid is (True if '[valid]' in request.node.name else False)
 
 
 @pytest.fixture
 def reset_cache():
     JSONSchema.clear()
-    metaschema = JSONSchema.get(metaschema_uri, metaschema_uri)
+    metaschema = JSONSchema.load(metaschema_uri, metaschema_uri=metaschema_uri)
     metaschema.validate()
 
 

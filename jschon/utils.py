@@ -4,7 +4,6 @@ from typing import *
 
 __all__ = [
     'tuplify',
-    'arrayify',
     'load_json',
 ]
 
@@ -17,16 +16,6 @@ def tuplify(value: Any) -> Tuple:
     if isinstance(value, Iterable) and not isinstance(value, str):
         return tuple(value)
     return value,
-
-
-def arrayify(value: Any) -> List:
-    if value is None:
-        return []
-    if isinstance(value, List):
-        return value
-    if isinstance(value, Iterable) and not isinstance(value, str):
-        return list(value)
-    return [value]
 
 
 def load_json(filepath) -> Any:

@@ -1,275 +1,178 @@
 from __future__ import annotations
 
 import json
+from collections import deque
 from decimal import Decimal
 from typing import *
 
 from jschon.jsonpointer import JSONPointer
 
 __all__ = [
-    'JSONCompatible',
-    'AnyJSONCompatible',
     'JSON',
-    'AnyJSON',
-    'JSONNull',
-    'JSONBoolean',
-    'JSONNumber',
-    'JSONInteger',
-    'JSONString',
-    'JSONArray',
-    'JSONObject',
+    'Null',
+    'Boolean',
+    'Number',
+    'String',
+    'Array',
+    'Object',
+    'AnyJSONValue',
+    'AnyJSONCompatible',
+    'AnyJSONCompatibleNumber',
 ]
 
-# for runtime type checks
-JSONCompatible = (type(None), bool, int, float, Decimal, str, Sequence, Mapping)
-JSONCompatibleNumber = (int, float, Decimal)
+Null = NewType('Null', type(None))
+Boolean = NewType('Boolean', bool)
+Number = NewType('Number', Decimal)
+String = NewType('String', str)
+Array = NewType('Array', List['JSON'])
+Object = NewType('Object', Dict[str, 'JSON'])
+AnyJSONValue = TypeVar('AnyJSONValue', Null, Boolean, Number, String, Array, Object)
 
-# for type hints
 AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, Decimal, str, Sequence, Mapping)
 AnyJSONCompatibleNumber = TypeVar('AnyJSONCompatibleNumber', int, float, Decimal)
 
 
-class JSON:
-    __type__: str = ...
-
-    class _Encoder(json.JSONEncoder):
-        def __init__(self, *args, **kwargs):
-            kwargs.update({'ensure_ascii': False, 'allow_nan': False})
-            super().__init__(*args, **kwargs)
-
-        def default(self, o: Any) -> AnyJSONCompatible:
-            if isinstance(o, JSON):
-                return self.default(o.value)
-            if isinstance(o, Decimal):
-                return float(o)
-            return super().default(o)
-
-    @classmethod
-    def classfor(cls, jsontype: str):
-        try:
-            return {
-                "null": JSONNull,
-                "boolean": JSONBoolean,
-                "number": JSONNumber,
-                "integer": JSONInteger,
-                "string": JSONString,
-                "array": JSONArray,
-                "object": JSONObject,
-            }[jsontype]
-        except KeyError:
-            raise ValueError(f"{jsontype=} is not a recognized JSON type")
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        raise NotImplementedError
-
-    def __new__(
-            cls,
-            value: AnyJSONCompatible,
-            **kwargs: Any,
-    ) -> JSON:
-        for c in (JSONNull, JSONBoolean, JSONInteger, JSONNumber, JSONString, JSONArray, JSONObject):
-            if c.iscompatible(value):
-                return object.__new__(c)
-
-        raise TypeError(f"{value=} is not JSON-compatible")
+class JSON(Generic[AnyJSONValue], Sequence['JSON'], Mapping[str, 'JSON']):
 
     def __init__(
             self,
             value: AnyJSONCompatible,
             *,
-            path: JSONPointer = None,
-    ) -> None:
-        self.value: AnyJSONCompatible = value
-        self.path: JSONPointer = path or JSONPointer()
+            parent: JSON = None,
+            key: str = None,
+            itemclass: Type[JSON] = None,
+    ):
+        self.value: AnyJSONValue
+        self.type: str
+        self.parent: Optional[JSON] = parent
+        self.key: Optional[str] = key
 
-    def __eq__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
-        if isinstance(other, type(self)):
-            return self.value == other.value
-        if isinstance(other, JSONCompatible):
-            return self.value == other
-        return NotImplemented
+        if value is None:
+            self.type = "null"
+            self.value = None
 
-    def __str__(self) -> str:
-        return json.dumps(self.value, cls=self._Encoder)
+        elif isinstance(value, bool):
+            self.type = "boolean"
+            self.value = value
+
+        elif isinstance(value, (int, Decimal)):
+            self.type = "number"
+            self.value = value
+
+        elif isinstance(value, float):
+            self.type = "number"
+            self.value = Decimal(value)
+
+        elif isinstance(value, str):
+            self.type = "string"
+            self.value = value
+
+        elif isinstance(value, Sequence):
+            self.type = "array"
+            self.value = []
+            itemclass = itemclass or JSON
+            for i, v in enumerate(value):
+                if isinstance(v, JSON):
+                    v = v.value
+                self.value += [itemclass(v, parent=self, key=str(i))]
+
+        elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
+            self.type = "object"
+            self.value = {}
+            itemclass = itemclass or JSON
+            for k, v in value.items():
+                if isinstance(v, JSON):
+                    v = v.value
+                self.value[k] = itemclass(v, parent=self, key=k)
+
+        else:
+            raise TypeError(f"{value=} is not JSON-compatible")
+
+    @property
+    def path(self) -> JSONPointer:
+        keys = deque()
+        node = self
+        while node.parent is not None:
+            keys.appendleft(node.key)
+            node = node.parent
+        return JSONPointer(keys)
 
     def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.value!r})'
+        # ugly but useful!
+        return f'{self.__class__.__name__}({json.loads(str(self))!r})'
 
-    def istype(self, jsontype: str) -> bool:
-        return self.__type__ == jsontype
+    def __str__(self) -> str:
+        def default(o):
+            if isinstance(o, JSON):
+                return o.value
+            if isinstance(o, Decimal):
+                return float(o)
+            raise TypeError
 
+        return json.dumps(self.value, default=default,
+                          ensure_ascii=False, allow_nan=False)
 
-AnyJSON = TypeVar('AnyJSON', bound=JSON)
-
-
-class JSONNull(JSON):
-    __type__ = "null"
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return value is None
-
-
-class JSONBoolean(JSON):
-    __type__ = "boolean"
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, bool)
-
-    def __eq__(self, other: Union[JSONBoolean, bool]) -> bool:
-        if isinstance(other, JSONBoolean):
-            return self.value is other.value
-        if isinstance(other, bool):
-            return self.value is other
-        return NotImplemented
-
-
-class JSONNumber(JSON):
-    __type__ = "number"
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, JSONCompatibleNumber) and not isinstance(value, bool)
-
-    def istype(self, jsontype: str) -> bool:
-        if jsontype == "integer":
-            return JSONInteger.iscompatible(self.value)
-        return jsontype == "number"
-
-    def __eq__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
-        if isinstance(other, JSONNumber):
-            return self.value == other.value
-        if self.iscompatible(other):
-            return self.value == other
-        return NotImplemented
-
-    def __ge__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
-        if isinstance(other, JSONNumber):
-            return self.value >= other.value
-        if self.iscompatible(other):
-            return self.value >= other
-        return NotImplemented
-
-    def __gt__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
-        if isinstance(other, JSONNumber):
-            return self.value > other.value
-        if self.iscompatible(other):
-            return self.value > other
-        return NotImplemented
-
-    def __le__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
-        if isinstance(other, JSONNumber):
-            return self.value <= other.value
-        if self.iscompatible(other):
-            return self.value <= other
-        return NotImplemented
-
-    def __lt__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> bool:
-        if isinstance(other, JSONNumber):
-            return self.value < other.value
-        if self.iscompatible(other):
-            return self.value < other
-        return NotImplemented
-
-    def __mod__(self, other: Union[JSONNumber, AnyJSONCompatibleNumber]) -> AnyJSONCompatibleNumber:
-        if isinstance(other, JSONNumber):
-            try:
-                return self.value % other.value
-            except TypeError:  # cannot mod float and Decimal
-                return Decimal(self.value) % Decimal(other.value)
-        if self.iscompatible(other):
-            try:
-                return self.value % other
-            except TypeError:  # cannot mod float and Decimal
-                return Decimal(self.value) % Decimal(other)
-        return NotImplemented
-
-
-class JSONInteger(JSONNumber):
-    __type__ = "integer"
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, int) and not isinstance(value, bool) or \
-               isinstance(value, (float, Decimal)) and value == int(value)
-
-    def istype(self, jsontype: str) -> bool:
-        return jsontype in ("integer", "number")
-
-
-class JSONString(JSON, Sized):
-    __type__ = "string"
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, str)
+    def __bool__(self) -> bool:
+        return bool(self.value)
 
     def __len__(self) -> int:
         return len(self.value)
 
+    def __iter__(self) -> Iterator:
+        if self.type in ("array", "object"):
+            return iter(self.value)
+        raise TypeError(f"{self!r} is not iterable")
 
-class JSONArray(JSON, Sequence[AnyJSON]):
-    __type__ = "array"
+    def __getitem__(self, index: Union[int, slice, str]) -> JSON:
+        if isinstance(index, (int, slice)) and self.type == "array" or \
+                isinstance(index, str) and self.type == "object":
+            return self.value[index]
+        raise TypeError(f"{self!r} is not subscriptable")
 
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, Sequence) and not isinstance(value, str)
-
-    def __init__(
-            self,
-            value: Sequence[Union[JSON, AnyJSONCompatible]],
-            *,
-            path: JSONPointer = None,
-    ) -> None:
-        super().__init__(value, path=path)
-        self._items = [
-            v if isinstance(v, JSON) else JSON(v, path=self.path / str(i))
-            for i, v in enumerate(value)
-        ]
-
-    def __getitem__(self, index: int) -> AnyJSON:
-        return self._items[index]
-
-    def __len__(self) -> int:
-        return len(self._items)
-
-    def __eq__(self, other: Union[JSONArray, Sequence]) -> bool:
-        if isinstance(other, (JSONArray, Sequence)) and not isinstance(other, str):
-            return len(self) == len(other) and all(item == other[i] for i, item in enumerate(self))
+    def __eq__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+        if not isinstance(other, JSON):
+            other = JSON(other)
+        if self.type == other.type:
+            if self.type == "array":
+                return len(self) == len(other) and \
+                       all(item == other[i] for i, item in enumerate(self))
+            if self.type == "object":
+                return self.keys() == other.keys() and \
+                       all(item == other[k] for k, item in self.items())
+            return self.value == other.value
         return NotImplemented
 
+    def __ge__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+        if not isinstance(other, JSON):
+            other = JSON(other)
+        if self.type == other.type:
+            return self.value >= other.value
+        return NotImplemented
 
-class JSONObject(JSON, Mapping[str, AnyJSON]):
-    __type__ = "object"
+    def __gt__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+        if not isinstance(other, JSON):
+            other = JSON(other)
+        if self.type == other.type:
+            return self.value > other.value
+        return NotImplemented
 
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, Mapping) and all(isinstance(k, str) for k in value)
+    def __le__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+        if not isinstance(other, JSON):
+            other = JSON(other)
+        if self.type == other.type:
+            return self.value <= other.value
+        return NotImplemented
 
-    def __init__(
-            self,
-            value: Mapping[str, Union[JSON, AnyJSONCompatible]],
-            *,
-            path: JSONPointer = None,
-    ) -> None:
-        super().__init__(value, path=path)
-        self._properties = {
-            k: v if isinstance(v, JSON) else JSON(v, path=self.path / k)
-            for k, v in value.items()
-        }
+    def __lt__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+        if not isinstance(other, JSON):
+            other = JSON(other)
+        if self.type == other.type:
+            return self.value < other.value
+        return NotImplemented
 
-    def __getitem__(self, key: str) -> AnyJSON:
-        return self._properties[key]
-
-    def __iter__(self) -> Iterator[str]:
-        yield from self._properties
-
-    def __len__(self) -> int:
-        return len(self._properties)
-
-    def __eq__(self, other: Union[JSONObject, Mapping]) -> bool:
-        if isinstance(other, (JSONObject, Mapping)):
-            return self.keys() == other.keys() and all(item == other[k] for k, item in self.items())
+    def __mod__(self, other: Union[JSON[Number], AnyJSONCompatibleNumber]) -> JSON[Number]:
+        if not isinstance(other, JSON):
+            other = JSON(other)
+        if self.type == other.type == "number":
+            return JSON(self.value % other.value)
         return NotImplemented

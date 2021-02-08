@@ -7,15 +7,13 @@ from uuid import uuid4
 
 from jschon.catalogue import Catalogue
 from jschon.exceptions import *
-from jschon.json import JSON, JSONObject, JSONArray, AnyJSON, JSONCompatible, AnyJSONCompatible
+from jschon.json import *
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
 from jschon.utils import tuplify
 
 __all__ = [
     'JSONSchema',
-    'JSONBooleanSchema',
-    'JSONObjectSchema',
     'Keyword',
     'KeywordClass',
     'Applicator',
@@ -36,13 +34,20 @@ __all__ = [
 
 class JSONSchema(JSON):
     _cache: Dict[URI, JSONSchema] = {}
+    _bootstrap_kwclasses: Tuple[KeywordClass, ...] = ...
 
     @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return JSONBooleanSchema.iscompatible(value) or JSONObjectSchema.iscompatible(value)
+    def bootstrap(cls, *kwclasses: KeywordClass) -> None:
+        cls._bootstrap_kwclasses = kwclasses
 
     @classmethod
-    def get(cls, uri: URI, metaschema_uri: URI = None) -> JSONSchema:
+    def load(cls, uri: URI, **kwargs: Any) -> JSONSchema:
+        """Load a (sub)schema identified by uri from the cache, or from the
+        catalogue if not already cached.
+
+        Additional kwargs are passed to the JSONSchema constructor for
+        catalogue-loaded instances.
+        """
         try:
             return cls._cache[uri]
         except KeyError:
@@ -59,7 +64,7 @@ class JSONSchema(JSON):
 
         if schema is None:
             doc = Catalogue.load(base_uri)
-            schema = JSONSchema(doc, uri=base_uri, metaschema_uri=metaschema_uri)
+            schema = JSONSchema(doc, uri=base_uri, **kwargs)
 
         if uri.fragment:
             ptr = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
@@ -71,11 +76,13 @@ class JSONSchema(JSON):
         return schema
 
     @classmethod
-    def set(cls, uri: URI, schema: JSONSchema) -> None:
+    def store(cls, uri: URI, schema: JSONSchema) -> None:
+        """Store the schema identified by uri to the cache."""
         cls._encache(uri, schema)
 
     @classmethod
     def clear(cls) -> None:
+        """Clear the JSONSchema cache."""
         cls._cache.clear()
 
     @classmethod
@@ -87,16 +94,10 @@ class JSONSchema(JSON):
     def _decache(cls, uri: Optional[URI]) -> None:
         cls._cache.pop(uri, None)
 
-    def __new__(
-            cls,
-            value: Union[bool, Mapping[str, AnyJSONCompatible]],
-            **kwargs: Any,
-    ) -> JSONSchema:
-        for c in (JSONBooleanSchema, JSONObjectSchema):
-            if c.iscompatible(value):
-                return object.__new__(c)
-
-        raise TypeError(f"{value=} is not JSONSchema-compatible")
+    @staticmethod
+    def iscompatible(value: Any) -> bool:
+        return isinstance(value, bool) or \
+               isinstance(value, Mapping) and all(isinstance(k, str) for k in value)
 
     def __init__(
             self,
@@ -104,122 +105,57 @@ class JSONSchema(JSON):
             *,
             uri: URI = None,
             metaschema_uri: URI = None,
-            path: JSONPointer = None,
-            superkeyword: Keyword = None,
-    ) -> None:
-        super().__init__(value, path=path)
-
+            parent: JSON = None,
+            key: str = None,
+    ):
         self._encache(uri, self)
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
-        self.superkeyword: Optional[Keyword] = superkeyword
         self.keywords: Dict[str, Keyword] = {}
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
-    def validate(self) -> None:
-        if not self.metaschema.evaluate(JSON(self.value)):
-            raise JSONSchemaError("The schema is invalid against its metaschema")
+        # don't call super().__init__
+        self.value: AnyJSONValue
+        self.type: str
+        self.parent: Optional[JSON] = parent
+        self.key: Optional[str] = key
 
-    def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
-        raise NotImplementedError
+        if isinstance(value, bool):
+            self.type = "boolean"
+            self.value = value
 
-    @property
-    def metaschema(self) -> JSONSchema:
-        if (uri := self.metaschema_uri) is None:
-            raise JSONSchemaError("The schema's metaschema URI has not been set")
+        elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
+            self.type = "object"
+            self.value = {}
 
-        return JSONSchema.get(uri, uri)
+            if self.parent is None and self.uri is None:
+                self.uri = URI(f'mem:{uuid4()}')
 
-    @property
-    def metaschema_uri(self) -> Optional[URI]:
-        if self._metaschema_uri is not None:
-            return self._metaschema_uri
-        if self.superkeyword is not None:
-            return self.superkeyword.superschema.metaschema_uri
+            for kwclass in self._bootstrap_kwclasses:
+                if (key := kwclass.__keyword__) in value:
+                    kw = kwclass(self, value[key])
+                    self.keywords[key] = kw
+                    self.value[key] = kw.json
 
-    @metaschema_uri.setter
-    def metaschema_uri(self, value: Optional[URI]) -> None:
-        self._metaschema_uri = value
+            kwclasses = {
+                key: kwclass for key in value
+                if (kwclass := self.metaschema.kwclasses.get(key)) and
+                   kwclass not in self._bootstrap_kwclasses
+            }
 
-    @property
-    def base_uri(self) -> Optional[URI]:
-        if self._uri is not None:
-            return self._uri.copy(fragment=False)
-        if self.superkeyword is not None:
-            return self.superkeyword.superschema.base_uri
+            for kwclass in self._resolve_keyword_dependencies(kwclasses):
+                kw = kwclass(self, value[(key := kwclass.__keyword__)])
+                self.keywords[key] = kw
+                self.value[key] = kw.json
 
-    @property
-    def uri(self) -> Optional[URI]:
-        return self._uri
-
-    @uri.setter
-    def uri(self, value: Optional[URI]) -> None:
-        if self._uri != value:
-            self._decache(self._uri)
-            self._encache(value, self)
-            self._uri = value
-
-
-class JSONBooleanSchema(JSONSchema):
-    __type__ = "boolean"
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, bool)
-
-    def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
-        if scope is None:
-            scope = Scope(self)
-
-        if not self.value:
-            scope.fail(instance, "The instance is disallowed by a boolean false schema")
-
-        return self.value
-
-
-class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
-    __type__ = "object"
-
-    _bootstrap_kwclasses: Tuple[KeywordClass, ...] = ...
-
-    @classmethod
-    def iscompatible(cls, value: Any) -> bool:
-        return isinstance(value, Mapping) and \
-               all(isinstance(k, str) and isinstance(v, JSONCompatible)
-                   for k, v in value.items())
-
-    @classmethod
-    def bootstrap(cls, *kwclasses: KeywordClass) -> None:
-        cls._bootstrap_kwclasses = kwclasses
-
-    def __init__(
-            self,
-            value: Mapping[str, AnyJSONCompatible],
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
-
-        if self.superkeyword is None and self.uri is None:
-            self.uri = URI(f'mem:{uuid4()}')
-
-        self.keywords: Dict[str, Keyword] = {
-            kw: kwclass(value[kw], superschema=self)
-            for kwclass in self._bootstrap_kwclasses
-            if (kw := kwclass.__keyword__) in value
-        }
-        kwclasses = {
-            kw: kwclass for kw in value
-            if (kwclass := self.metaschema.kwclasses.get(kw)) and kwclass not in self._bootstrap_kwclasses
-        }
-        self.keywords.update({
-            kwclass.__keyword__: kwclass(value[kwclass.__keyword__], superschema=self)
-            for kwclass in self._resolve_keyword_dependencies(kwclasses)
-        })
+        else:
+            raise TypeError(f"{value=} is not JSONSchema-compatible")
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
         dependencies = {
-            kwclass: [depclass for dep in tuplify(kwclass.__depends__) if (depclass := kwclasses.get(dep))]
+            kwclass: [depclass for dep in tuplify(kwclass.__depends__)
+                      if (depclass := kwclasses.get(dep))]
             for kwclass in kwclasses.values()
         }
         while dependencies:
@@ -234,31 +170,79 @@ class JSONObjectSchema(JSONSchema, Mapping[str, AnyJSON]):
                     yield kwclass
                     break
 
-    def evaluate(self, instance: JSON, scope: Scope = None) -> bool:
+    def validate(self) -> None:
+        if not (scope := self.metaschema.evaluate(JSON(self.value))).valid:
+            messages = ''
+            for error in scope.collect_errors():
+                messages += f"\ninstance path={error.instance_path};" \
+                            f" evaluation path={error.evaluation_path};" \
+                            f" error={error.message=}"
+            raise JSONSchemaError(f"The schema is invalid against its metaschema:{messages}")
+
+    def evaluate(self, instance: JSON, scope: Scope = None) -> Scope:
         if scope is None:
             scope = Scope(self)
 
-        for keyword in self.keywords.values():
-            if keyword.__types__ is None or isinstance(
-                    instance, tuple(JSON.classfor(t) for t in tuplify(keyword.__types__))
-            ):
-                with scope(self, keyword.__keyword__) as subscope:
-                    keyword.evaluate(instance, subscope)
+        if self.value is True:
+            pass
 
-        if any(child.assert_ and not child.valid for child in scope.children.values()):
-            scope.fail(instance, "The instance failed validation against the schema")
-            return False
+        elif self.value is False:
+            scope.fail(instance, "The instance is disallowed by a boolean false schema")
 
-        return True
+        else:
+            for key, keyword in self.keywords.items():
+                if keyword.can_evaluate(instance):
+                    with scope(self, key) as subscope:
+                        keyword.evaluate(instance, subscope)
 
-    def __getitem__(self, key: str) -> JSON:
-        return self.keywords[key].json
+            if any(child.assert_ and not child.valid for child in scope.children.values()):
+                scope.fail(instance, "The instance failed validation against the schema")
 
-    def __iter__(self) -> Iterator[str]:
-        yield from self.keywords
+        return scope
 
-    def __len__(self) -> int:
-        return len(self.keywords)
+    @property
+    def parentschema(self) -> Optional[JSONSchema]:
+        parent = self.parent
+        while parent is not None:
+            if isinstance(parent, JSONSchema):
+                return parent
+            parent = parent.parent
+
+    @property
+    def metaschema(self) -> JSONSchema:
+        if (uri := self.metaschema_uri) is None:
+            raise JSONSchemaError("The schema's metaschema URI has not been set")
+
+        return JSONSchema.load(uri, metaschema_uri=uri)
+
+    @property
+    def metaschema_uri(self) -> Optional[URI]:
+        if self._metaschema_uri is not None:
+            return self._metaschema_uri
+        if self.parentschema is not None:
+            return self.parentschema.metaschema_uri
+
+    @metaschema_uri.setter
+    def metaschema_uri(self, value: Optional[URI]) -> None:
+        self._metaschema_uri = value
+
+    @property
+    def base_uri(self) -> Optional[URI]:
+        if self._uri is not None:
+            return self._uri.copy(fragment=False)
+        if self.parentschema is not None:
+            return self.parentschema.base_uri
+
+    @property
+    def uri(self) -> Optional[URI]:
+        return self._uri
+
+    @uri.setter
+    def uri(self, value: Optional[URI]) -> None:
+        if self._uri != value:
+            self._decache(self._uri)
+            self._encache(value, self)
+            self._uri = value
 
 
 class Keyword:
@@ -270,35 +254,38 @@ class Keyword:
     applicators: Tuple[ApplicatorClass, ...] = ()
     vocabulary_uri: URI
 
-    def __init__(
-            self,
-            value: AnyJSONCompatible,
-            *,
-            superschema: JSONSchema = JSONSchema(True),
-    ) -> None:
-        self.json: JSON
-        self.path: JSONPointer = superschema.path / self.__keyword__
-        self.superschema: JSONSchema = superschema
-
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
         # there may be several possible ways in which to set up subschemas for
         # an applicator keyword; we try a series of applicator classes in turn
         # until one is found that works for the keyword's value, else we fall
         # through to the default behaviour of simply JSON-ifying the value
         for applicator in self.applicators:
-            if (jsonified := applicator(self)(value)) is not None:
-                self.json = jsonified
+            if (kwjson := applicator(parentschema, self.__keyword__)(value)) is not None:
                 break
         else:
-            self.json = JSON(value, path=self.path)
+            kwjson = JSON(value, parent=parentschema, key=self.__keyword__)
+
+        self.json: JSON = kwjson
+        self.parentschema: JSONSchema = parentschema
+
+    def can_evaluate(self, instance: JSON) -> bool:
+        if self.__types__ is None:
+            return True
+
+        types = tuplify(self.__types__)
+        if instance.type in types:
+            return True
+
+        if instance.type == "number" and "integer" in types:
+            return instance.value == int(instance.value)
+
+        return False
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         pass
 
     def __str__(self) -> str:
-        return f'"{self.__keyword__}": {self.json}'
-
-    def __repr__(self) -> str:
-        return f'{self.__class__.__name__}({self.json.value!r})'
+        return f'{self.json.path}: {self.json}'
 
 
 KeywordClass = Type[Keyword]
@@ -307,16 +294,13 @@ KeywordClass = Type[Keyword]
 class Applicator:
     """Sets up a subschema for an applicator keyword."""
 
-    def __init__(self, keyword: Keyword):
-        self.keyword = keyword
+    def __init__(self, parent: JSONSchema, key: str):
+        self.parent = parent
+        self.key = key
 
     def __call__(self, value: AnyJSONCompatible) -> Optional[JSONSchema]:
         if JSONSchema.iscompatible(value):
-            return JSONSchema(
-                value,
-                path=self.keyword.path,
-                superkeyword=self.keyword,
-            )
+            return JSONSchema(value, parent=self.parent, key=self.key)
 
 
 ApplicatorClass = Type[Applicator]
@@ -325,40 +309,20 @@ ApplicatorClass = Type[Applicator]
 class ArrayApplicator(Applicator):
     """Sets up an array of subschemas for an applicator keyword."""
 
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSONArray[JSONSchema]]:
+    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON[Array[JSONSchema]]]:
         if isinstance(value, Sequence) and all(JSONSchema.iscompatible(v) for v in value):
-            return JSONArray(
-                [
-                    JSONSchema(
-                        item,
-                        path=self.keyword.path / str(index),
-                        superkeyword=self.keyword,
-                    )
-                    for index, item in enumerate(value)
-                ],
-                path=self.keyword.path,
-            )
+            return JSON(value, parent=self.parent, key=self.key, itemclass=JSONSchema)
 
 
 class PropertyApplicator(Applicator):
     """Sets up property-based subschemas for an applicator keyword."""
 
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSONObject[JSONSchema]]:
+    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON[Object[JSONSchema]]]:
         if isinstance(value, Mapping) and all(
                 isinstance(k, str) and JSONSchema.iscompatible(v)
                 for k, v in value.items()
         ):
-            return JSONObject(
-                {
-                    name: JSONSchema(
-                        item,
-                        path=self.keyword.path / name,
-                        superkeyword=self.keyword,
-                    )
-                    for name, item in value.items()
-                },
-                path=self.keyword.path,
-            )
+            return JSON(value, parent=self.parent, key=self.key, itemclass=JSONSchema)
 
 
 class Vocabulary:
@@ -392,7 +356,7 @@ class Vocabulary:
         except KeyError as e:
             raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
 
-    def __init__(self, uri: URI, required: bool) -> None:
+    def __init__(self, uri: URI, required: bool):
         self.uri: URI = uri
         self.required: bool = required
         self.kwclasses: Dict[str, KeywordClass] = {
@@ -430,7 +394,7 @@ class FormatVocabulary(Vocabulary):
             return vocab
         raise VocabularyError(f"The vocabulary identified by '{uri}' does not support formats")
 
-    def __init__(self, uri: URI, required: bool) -> None:
+    def __init__(self, uri: URI, required: bool):
         super().__init__(uri, required)
         assert_ = force_assert if (force_assert := self._assertfmt[uri]) is not None else required
         self.formats: Dict[str, Format] = {
@@ -443,7 +407,7 @@ class Format:
     __attr__: str = ...
     __types__: Union[str, Tuple[str, ...]] = "string"
 
-    def __init__(self, assert_: bool) -> None:
+    def __init__(self, assert_: bool):
         self.assert_: bool = assert_
 
     def evaluate(self, instance: JSON) -> FormatResult:
@@ -484,7 +448,7 @@ class Scope:
     ):
         self.schema: JSONSchema = schema
         self.path: JSONPointer = path or JSONPointer()
-        self.parent: Scope = parent
+        self.parent: Optional[Scope] = parent
         self.children: Dict[str, Scope] = {}
         self.annotations: Dict[str, Annotation] = {}
         self.errors: List[Error] = []
@@ -540,6 +504,13 @@ class Scope:
                     yield annotation
             for child in self.children.values():
                 yield from child.collect_annotations(instance, key)
+
+    def collect_errors(self) -> Iterator[Error]:
+        """Return an iterator over errors produced in this subtree."""
+        if not self.valid:
+            yield from self.errors
+            for child in self.children.values():
+                yield from child.collect_errors()
 
     def __str__(self) -> str:
         return str(self.path)

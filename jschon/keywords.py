@@ -6,7 +6,7 @@ from jschon.exceptions import JSONSchemaError, VocabularyError, URIError
 from jschon.json import *
 from jschon.jsonschema import *
 from jschon.uri import URI
-from jschon.utils import tuplify, arrayify
+from jschon.utils import tuplify
 
 __all__ = [
     # core vocabulary
@@ -87,13 +87,9 @@ class SchemaKeyword(Keyword):
         "format": "uri"
     }
 
-    def __init__(
-            self,
-            value: str,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
-        if self.superschema.superkeyword is not None:
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
+        if parentschema.parent is not None:
             raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
 
         try:
@@ -101,7 +97,7 @@ class SchemaKeyword(Keyword):
         except URIError as e:
             raise JSONSchemaError from e
 
-        self.superschema.metaschema_uri = uri
+        parentschema.metaschema_uri = uri
 
 
 class VocabularyKeyword(Keyword):
@@ -117,13 +113,9 @@ class VocabularyKeyword(Keyword):
         }
     }
 
-    def __init__(
-            self,
-            value: JSONObject[JSONBoolean],
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
-        if self.superschema.superkeyword is not None:
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
+        if parentschema.parent is not None:
             raise JSONSchemaError('The "$vocabulary" keyword must not appear in a subschema')
 
         for vocab_uri, vocab_required in value.items():
@@ -137,7 +129,7 @@ class VocabularyKeyword(Keyword):
 
             try:
                 vocabulary = Vocabulary(vocab_uri, vocab_required)
-                self.superschema.kwclasses.update(vocabulary.kwclasses)
+                parentschema.kwclasses.update(vocabulary.kwclasses)
             except VocabularyError as e:
                 if vocab_required:
                     raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'") from e
@@ -152,20 +144,16 @@ class IdKeyword(Keyword):
         "pattern": "^[^#]*#?$"
     }
 
-    def __init__(
-            self,
-            value: str,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
-            if (base_uri := self.superschema.base_uri) is not None:
+            if (base_uri := parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
-        self.superschema.uri = uri
+        parentschema.uri = uri
 
 
 class RefKeyword(Keyword):
@@ -178,12 +166,12 @@ class RefKeyword(Keyword):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         uri = URI(self.json.value)
         if not uri.can_absolute():
-            if (base_uri := self.superschema.base_uri) is not None:
+            if (base_uri := self.parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
-        refschema = JSONSchema.get(uri, self.superschema.metaschema_uri)
+        refschema = JSONSchema.load(uri, metaschema_uri=self.parentschema.metaschema_uri)
         refschema.evaluate(instance, scope)
 
 
@@ -194,18 +182,14 @@ class AnchorKeyword(Keyword):
         "pattern": "^[A-Za-z][-A-Za-z0-9.:_]*$"
     }
 
-    def __init__(
-            self,
-            value: str,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
-        if (base_uri := self.superschema.base_uri) is not None:
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
+        if (base_uri := parentschema.base_uri) is not None:
             uri = URI(f'{base_uri}#{value}')
         else:
             raise JSONSchemaError(f'No base URI for anchor "{value}"')
 
-        JSONSchema.set(uri, self.superschema)
+        JSONSchema.store(uri, parentschema)
 
 
 class RecursiveRefKeyword(Keyword):
@@ -215,30 +199,26 @@ class RecursiveRefKeyword(Keyword):
         "format": "uri-reference"
     }
 
-    def __init__(
-            self,
-            value: str,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
         if value != '#':
             raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (base_uri := self.superschema.base_uri) is not None:
-            refschema = JSONSchema.get(base_uri, self.superschema.metaschema_uri)
+        if (base_uri := self.parentschema.base_uri) is not None:
+            refschema = JSONSchema.load(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
         else:
             raise JSONSchemaError(f'No base URI against which to resolve "$recursiveRef"')
 
-        if (recursive_anchor := refschema.keywords.get("$recursiveAnchor")) and \
-                recursive_anchor.json.value is True:
+        if (recursive_anchor := refschema.get("$recursiveAnchor")) and \
+                recursive_anchor.value is True:
             base_scope = scope.root
             for key in scope.path:
                 if isinstance(base_schema := base_scope.schema, JSONSchema):
-                    if base_schema == refschema:
+                    if base_schema is refschema:
                         break
-                    if (base_anchor := base_schema.keywords.get("$recursiveAnchor")) and \
-                            base_anchor.json.value is True:
+                    if (base_anchor := base_schema.get("$recursiveAnchor")) and \
+                            base_anchor.value is True:
                         refschema = base_schema
                         break
                 base_scope = base_scope.children[key]
@@ -280,11 +260,9 @@ class AllOfKeyword(Keyword):
     applicators = ArrayApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONArray[JSONSchema]
-
         err_indices = []
         for index, subschema in enumerate(self.json):
-            with scope(self.superschema, str(index)) as subscope:
+            with scope(self.parentschema, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if not subscope.valid:
                     err_indices += [index]
@@ -304,11 +282,9 @@ class AnyOfKeyword(Keyword):
     applicators = ArrayApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONArray[JSONSchema]
-
         valid = False
         for index, subschema in enumerate(self.json):
-            with scope(self.superschema, str(index)) as subscope:
+            with scope(self.parentschema, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if subscope.valid:
                     valid = True
@@ -328,12 +304,10 @@ class OneOfKeyword(Keyword):
     applicators = ArrayApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONArray[JSONSchema]
-
         valid_indices = []
         err_indices = []
         for index, subschema in enumerate(self.json):
-            with scope(self.superschema, str(index)) as subscope:
+            with scope(self.parentschema, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if subscope.valid:
                     valid_indices += [index]
@@ -352,7 +326,6 @@ class NotKeyword(Keyword):
     applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONSchema
         self.json.evaluate(instance, scope)
 
         if scope.valid:
@@ -368,7 +341,6 @@ class IfKeyword(Keyword):
     applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONSchema
         self.json.evaluate(instance, scope)
         scope.assert_ = False
         scope.keep = True
@@ -382,7 +354,6 @@ class ThenKeyword(Keyword):
     applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONSchema
         if (if_ := scope.sibling("if")) and if_.valid:
             self.json.evaluate(instance, scope)
 
@@ -395,7 +366,6 @@ class ElseKeyword(Keyword):
     applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONSchema
         if (if_ := scope.sibling("if")) and not if_.valid:
             self.json.evaluate(instance, scope)
 
@@ -410,14 +380,12 @@ class DependentSchemasKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONObject[JSONSchema]
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
         err_names = []
         for name, subschema in self.json.items():
             if name in instance:
-                with scope(self.superschema, name) as subscope:
+                with scope(self.parentschema, name) as subscope:
                     subschema.evaluate(instance, subscope)
                     if subscope.valid:
                         annotation += [name]
@@ -447,11 +415,11 @@ class ItemsKeyword(Keyword):
 
     applicators = Applicator, ArrayApplicator
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) == 0:
             return
 
-        elif isinstance(self.json, JSONBooleanSchema):
+        elif isinstance(self.json.value, bool):
             self.json.evaluate(instance, scope)
 
         elif isinstance(self.json, JSONSchema):
@@ -461,13 +429,12 @@ class ItemsKeyword(Keyword):
             if scope.valid:
                 scope.annotate(instance, "items", True)
 
-        elif isinstance(self.json, JSONArray):
-            self.json: JSONArray[JSONSchema]
+        elif self.json.type == "array":
             eval_index = None
             err_indices = []
             for index, item in enumerate(instance[:len(self.json)]):
                 eval_index = index
-                with scope(self.superschema, str(index)) as subscope:
+                with scope(self.parentschema, str(index)) as subscope:
                     self.json[index].evaluate(item, subscope)
                     if not subscope.valid:
                         err_indices += [index]
@@ -486,9 +453,7 @@ class AdditionalItemsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONSchema
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (items := scope.sibling("items")) and (items_annotation := items.annotations.get("items")) and \
                 type(items_annotation.value) is int:
             annotation = None
@@ -508,9 +473,7 @@ class UnevaluatedItemsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONSchema
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1
         for items_annotation in scope.parent.collect_annotations(instance, "items"):
             if items_annotation.value is True:
@@ -542,12 +505,10 @@ class ContainsKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONSchema
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = 0
         for index, item in enumerate(instance):
-            if self.json.evaluate(item, scope):
+            if self.json.evaluate(item, scope).valid:
                 annotation += 1
             else:
                 scope.errors.clear()
@@ -570,14 +531,12 @@ class PropertiesKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONObject[JSONSchema]
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
         err_names = []
         for name, item in instance.items():
             if name in self.json:
-                with scope(self.superschema, name) as subscope:
+                with scope(self.parentschema, name) as subscope:
                     self.json[name].evaluate(item, subscope)
                     if subscope.valid:
                         annotation += [name]
@@ -602,15 +561,13 @@ class PatternPropertiesKeyword(Keyword):
 
     applicators = PropertyApplicator,
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONObject[JSONSchema]
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         matched_names = set()
         err_names = []
         for name, item in instance.items():
             for regex, subschema in self.json.items():
                 if re.search(regex, name) is not None:
-                    with scope(self.superschema, regex) as subscope:
+                    with scope(self.parentschema, regex) as subscope:
                         subschema.evaluate(item, subscope)
                         if subscope.valid:
                             matched_names |= {name}
@@ -631,9 +588,7 @@ class AdditionalPropertiesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONSchema
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
         if (properties := scope.sibling("properties")) and \
                 (properties_annotation := properties.annotations.get("properties")):
@@ -646,7 +601,7 @@ class AdditionalPropertiesKeyword(Keyword):
         annotation = []
         for name, item in instance.items():
             if name not in evaluated_names:
-                if self.json.evaluate(item, scope):
+                if self.json.evaluate(item, scope).valid:
                     annotation += [name]
 
         if scope.valid:
@@ -663,9 +618,7 @@ class UnevaluatedPropertiesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONSchema
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
         for properties_annotation in scope.parent.collect_annotations(instance, "properties"):
             evaluated_names |= set(properties_annotation.value)
@@ -679,7 +632,7 @@ class UnevaluatedPropertiesKeyword(Keyword):
         annotation = []
         for name, item in instance.items():
             if name not in evaluated_names:
-                if self.json.evaluate(item, scope):
+                if self.json.evaluate(item, scope).valid:
                     annotation += [name]
 
         if scope.valid:
@@ -693,12 +646,10 @@ class PropertyNamesKeyword(Keyword):
 
     applicators = Applicator,
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONSchema
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_names = []
         for name in instance:
-            if not self.json.evaluate(JSON(name, path=instance.path), scope):
+            if not self.json.evaluate(JSON(name), scope).valid:
                 err_names += [name]
 
         if err_names:
@@ -720,17 +671,17 @@ class TypeKeyword(Keyword):
         ]
     }
 
-    def __init__(
-            self,
-            value: Union[str, Sequence[str]],
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(arrayify(value), **kwargs)
-
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONArray[JSONString]
-        if not any(instance.istype(item.value) for item in self.json):
-            scope.fail(instance, f"The value must be of type {self.json}")
+        types = tuplify(self.json.value)
+        if instance.type in types:
+            valid = True
+        elif instance.type == "number" and "integer" in types:
+            valid = instance.value == int(instance.value)
+        else:
+            valid = False
+
+        if not valid:
+            scope.fail(instance, f"The instance must be of type {self.json}")
 
 
 class EnumKeyword(Keyword):
@@ -738,7 +689,6 @@ class EnumKeyword(Keyword):
     __schema__ = {"type": "array", "items": True}
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.json: JSONArray
         if instance not in self.json:
             scope.fail(instance, f"The value must be one of {self.json}")
 
@@ -757,8 +707,7 @@ class MultipleOfKeyword(Keyword):
     __schema__ = {"type": "number", "exclusiveMinimum": 0}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber, scope: Scope) -> None:
-        self.json: JSONNumber
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
             if instance % self.json != 0:
                 scope.fail(instance, f"The value must be a multiple of {self.json}")
@@ -771,8 +720,7 @@ class MaximumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber, scope: Scope) -> None:
-        self.json: JSONNumber
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance > self.json:
             scope.fail(instance, f"The value may not be greater than {self.json}")
 
@@ -782,8 +730,7 @@ class ExclusiveMaximumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber, scope: Scope) -> None:
-        self.json: JSONNumber
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance >= self.json:
             scope.fail(instance, f"The value must be less than {self.json}")
 
@@ -793,8 +740,7 @@ class MinimumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber, scope: Scope) -> None:
-        self.json: JSONNumber
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance < self.json:
             scope.fail(instance, f"The value may not be less than {self.json}")
 
@@ -804,8 +750,7 @@ class ExclusiveMinimumKeyword(Keyword):
     __schema__ = {"type": "number"}
     __types__ = "number"
 
-    def evaluate(self, instance: JSONNumber, scope: Scope) -> None:
-        self.json: JSONNumber
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance <= self.json:
             scope.fail(instance, f"The value must be greater than {self.json}")
 
@@ -815,8 +760,7 @@ class MaxLengthKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "string"
 
-    def evaluate(self, instance: JSONString, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
             scope.fail(instance, f"The text is too long (maximum {self.json} characters)")
 
@@ -826,8 +770,7 @@ class MinLengthKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "string"
 
-    def evaluate(self, instance: JSONString, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
             scope.fail(instance, f"The text is too short (minimum {self.json} characters)")
 
@@ -837,15 +780,11 @@ class PatternKeyword(Keyword):
     __schema__ = {"type": "string", "format": "regex"}
     __types__ = "string"
 
-    def __init__(
-            self,
-            value: str,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
         self.regex = re.compile(value)
 
-    def evaluate(self, instance: JSONString, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if self.regex.search(instance.value) is None:
             scope.fail(instance, f"The text must match the regular expression {self.json}")
 
@@ -855,8 +794,7 @@ class MaxItemsKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "array"
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
             scope.fail(instance, f"The array has too many elements (maximum {self.json})")
 
@@ -866,8 +804,7 @@ class MinItemsKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "array"
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
             scope.fail(instance, f"The array has too few elements (minimum {self.json})")
 
@@ -877,8 +814,7 @@ class UniqueItemsKeyword(Keyword):
     __schema__ = {"type": "boolean", "default": False}
     __types__ = "array"
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONBoolean
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if not self.json.value:
             return
 
@@ -897,8 +833,7 @@ class MaxContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains"
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling("contains"):
             if (contains_annotation := contains.annotations.get("contains")) and \
                     contains_annotation.value > self.json:
@@ -913,8 +848,7 @@ class MinContainsKeyword(Keyword):
     __types__ = "array"
     __depends__ = "contains", "maxContains"
 
-    def evaluate(self, instance: JSONArray, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling("contains"):
             contains_count = contains_annotation.value \
                 if (contains_annotation := contains.annotations.get("contains")) \
@@ -938,8 +872,7 @@ class MaxPropertiesKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0}
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
             scope.fail(instance, f"The object has too many properties (maximum {self.json})")
 
@@ -949,8 +882,7 @@ class MinPropertiesKeyword(Keyword):
     __schema__ = {"type": "integer", "minimum": 0, "default": 0}
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONInteger
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
             scope.fail(instance, f"The object has too few properties (minimum {self.json})")
 
@@ -965,9 +897,7 @@ class RequiredKeyword(Keyword):
     }
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONArray[JSONString]
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = [name for name in self.json if name.value not in instance]
         if missing:
             scope.fail(instance, f"The object is missing required properties {missing}")
@@ -986,9 +916,7 @@ class DependentRequiredKeyword(Keyword):
     }
     __types__ = "object"
 
-    def evaluate(self, instance: JSONObject, scope: Scope) -> None:
-        self.json: JSONObject[JSONArray[JSONString]]
-
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = {}
         for name, dependents in self.json.items():
             if name in instance:
@@ -1004,21 +932,32 @@ class FormatKeyword(Keyword):
     __keyword__ = "format"
     __schema__ = {"type": "string"}
 
-    def __init__(
-            self,
-            value: str,
-            **kwargs: Any,
-    ) -> None:
-        super().__init__(value, **kwargs)
+    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        super().__init__(parentschema, value)
         vocabulary = FormatVocabulary.get(self.vocabulary_uri)
-        self.format_: Optional[Format] = vocabulary.formats.get(self.json.value)
+        self.format_: Optional[Format] = vocabulary.formats.get(value)
         self.assert_ = self.format_.assert_ if self.format_ else False
 
+    def can_evaluate(self, instance: JSON) -> bool:
+        if not super().can_evaluate(instance):
+            return False
+
+        if not self.format_:
+            return False
+
+        types = tuplify(self.format_.__types__)
+        if instance.type in types:
+            return True
+
+        if instance.type == "number" and "integer" in types:
+            return instance.value == int(instance.value)
+
+        return False
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if self.format_ and isinstance(instance, tuple(JSON.classfor(t) for t in tuplify(self.format_.__types__))):
-            fmtresult = self.format_.evaluate(instance)
-            if not fmtresult.valid:
-                scope.fail(instance, f'The text does not conform to the {self.json} format: {fmtresult.error}')
+        fmtresult = self.format_.evaluate(instance)
+        if not fmtresult.valid:
+            scope.fail(instance, f'The text does not conform to the {self.json} format: {fmtresult.error}')
 
         if scope.valid:
             scope.annotate(instance, "format", self.json.value)

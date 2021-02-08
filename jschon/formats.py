@@ -9,7 +9,7 @@ import uri_template
 import validators
 
 from jschon.exceptions import JSONPointerError, URIError
-from jschon.json import JSONString
+from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import Format, FormatResult
 from jschon.uri import URI
@@ -40,7 +40,7 @@ __all__ = [
 class DateTimeFormat(Format):
     __attr__ = "date-time"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             dateutil.parser.isoparse(instance.value)
         except ValueError as e:
@@ -52,7 +52,7 @@ class DateTimeFormat(Format):
 class DateFormat(Format):
     __attr__ = "date"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             dateutil.parser.isoparser().parse_isodate(instance.value)
         except ValueError as e:
@@ -64,7 +64,7 @@ class DateFormat(Format):
 class TimeFormat(Format):
     __attr__ = "time"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             dateutil.parser.isoparser().parse_isotime(instance.value)
         except ValueError as e:
@@ -76,14 +76,14 @@ class TimeFormat(Format):
 class DurationFormat(Format):
     __attr__ = "duration"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         raise NotImplementedError
 
 
 class EmailFormat(Format):
     __attr__ = "email"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             email_validator.validate_email(
                 instance.value,
@@ -99,7 +99,7 @@ class EmailFormat(Format):
 class IDNEmailFormat(Format):
     __attr__ = "idn-email"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             email_validator.validate_email(
                 instance.value,
@@ -115,7 +115,7 @@ class IDNEmailFormat(Format):
 class HostnameFormat(Format):
     __attr__ = "hostname"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             instance.value.encode('ascii')
             idna.encode(instance.value)
@@ -128,7 +128,7 @@ class HostnameFormat(Format):
 class IDNHostnameFormat(Format):
     __attr__ = "idn-hostname"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             idna.encode(instance.value)
         except idna.IDNAError as e:
@@ -140,7 +140,7 @@ class IDNHostnameFormat(Format):
 class IPv4Format(Format):
     __attr__ = "ipv4"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             ipaddress.IPv4Address(instance.value)
         except ipaddress.AddressValueError as e:
@@ -152,7 +152,7 @@ class IPv4Format(Format):
 class IPv6Format(Format):
     __attr__ = "ipv6"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             ipaddress.IPv6Address(instance.value)
         except ipaddress.AddressValueError as e:
@@ -164,7 +164,7 @@ class IPv6Format(Format):
 class URIFormat(Format):
     __attr__ = "uri"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         uri = URI(instance.value)
         try:
             uri.validate(require_scheme=True)
@@ -177,7 +177,7 @@ class URIFormat(Format):
 class URIReferenceFormat(Format):
     __attr__ = "uri-reference"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         uri = URI(instance.value)
         try:
             uri.validate()
@@ -190,7 +190,7 @@ class URIReferenceFormat(Format):
 class IRIFormat(Format):
     __attr__ = "iri"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         if rfc3987.match(instance.value, rule='IRI') is not None:
             return FormatResult(valid=True)
         else:
@@ -200,7 +200,7 @@ class IRIFormat(Format):
 class IRIReferenceFormat(Format):
     __attr__ = "iri-reference"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         if rfc3987.match(instance.value, rule='IRI_reference') is not None:
             return FormatResult(valid=True)
         else:
@@ -210,7 +210,7 @@ class IRIReferenceFormat(Format):
 class UUIDFormat(Format):
     __attr__ = "uuid"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         if validators.uuid(instance.value):
             return FormatResult(valid=True)
         else:
@@ -220,7 +220,7 @@ class UUIDFormat(Format):
 class URITemplateFormat(Format):
     __attr__ = "uri-template"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         if uri_template.validate(instance.value):
             return FormatResult(valid=True)
         else:
@@ -230,7 +230,7 @@ class URITemplateFormat(Format):
 class JSONPointerFormat(Format):
     __attr__ = "json-pointer"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             JSONPointer(instance.value)
         except JSONPointerError as e:
@@ -242,14 +242,14 @@ class JSONPointerFormat(Format):
 class RelativeJSONPointerFormat(Format):
     __attr__ = "relative-json-pointer"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         raise NotImplementedError
 
 
 class RegexFormat(Format):
     __attr__ = "regex"
 
-    def evaluate(self, instance: JSONString) -> FormatResult:
+    def evaluate(self, instance: JSON) -> FormatResult:
         try:
             re.compile(instance.value)
         except re.error as e:

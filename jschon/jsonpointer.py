@@ -119,18 +119,27 @@ class JSONPointer(Sequence[str]):
 
         :raise JSONPointerError: if the location does not exist
         """
+
         def resolve(value, keys):
+            from jschon.json import JSON
             if not keys:
                 return value
+
             key = keys.popleft()
             try:
-                if isinstance(value, Mapping):
+                if (isjson := isinstance(value, JSON)) and value.type == "object" or \
+                        not isjson and isinstance(value, Mapping):
                     return resolve(value[key], keys)
-                if isinstance(value, Sequence) and not isinstance(value, str) and \
+
+                if isjson and value.type == "array" or \
+                        not isjson and isinstance(value, Sequence) and \
+                        not isinstance(value, str) and \
                         self._array_index_re.fullmatch(key):
                     return resolve(value[int(key)], keys)
+
             except (KeyError, IndexError):
                 pass
+
             raise JSONPointerError(f"Failed to resolve '{self}' against the given document")
 
         return resolve(document, collections.deque(self._keys))

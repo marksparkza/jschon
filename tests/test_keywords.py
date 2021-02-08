@@ -1,7 +1,5 @@
 import re
-from contextlib import contextmanager
 from decimal import Decimal, InvalidOperation
-from unittest.mock import Mock
 
 import hypothesis.strategies as hs
 from hypothesis import given
@@ -9,11 +7,13 @@ from hypothesis import given
 from jschon.json import JSON
 from jschon.jsonschema import Scope, JSONSchema
 from jschon.keywords import *
+from tests import metaschema_uri
 from tests.strategies import *
 
 
 def evaluate(kwclass, kwvalue, instval):
-    kwclass(kwvalue).evaluate(JSON(instval), scope := Scope(JSONSchema(True)))
+    schema = JSONSchema(True)
+    kwclass(schema, kwvalue).evaluate(JSON(instval), scope := Scope(schema))
     return scope.valid
 
 
@@ -60,10 +60,7 @@ def test_const(kwvalue, instval):
 def test_multiple_of(kwvalue, instval):
     result = evaluate(MultipleOfKeyword, kwvalue, instval)
     try:
-        try:
-            assert result == (instval % kwvalue == 0)
-        except TypeError:
-            assert result == (Decimal(instval) % Decimal(kwvalue) == 0)
+        assert result == (Decimal(instval) % Decimal(kwvalue) == 0)
     except InvalidOperation:
         assert result is False
 
@@ -144,56 +141,21 @@ def test_unique_items(kwvalue, instval):
         assert result is True
 
 
-@contextmanager
-def mock_contains_scope(test_kw, contains_count):
-    def get_sibling(key):
-        if key == "contains":
-            return contains
-        elif key == "maxContains":
-            return max_contains
-
-    scope = Scope(JSONSchema(True))
-    scope.sibling = Mock(side_effect=get_sibling)
-    contains = Mock()
-    contains.annotations.get = Mock(return_value=(contains_annotation := Mock()))
-    contains_annotation.value = contains_count
-    contains.valid = contains_count > 0
-    if test_kw == "minContains":
-        max_contains = Mock()
-        max_contains.valid = True
-
-    yield scope
-
-    if test_kw == "minContains":
-        # minContains == 0 makes contains valid
-        if scope.valid and not contains.valid:
-            contains.errors.clear.assert_called_once()
-
-
 @given(
-    kwvalue=hs.integers(min_value=0, max_value=20),
+    minmax=hs.tuples(hs.integers(min_value=0, max_value=20), hs.integers(min_value=0, max_value=20)),
     instval=jsonflatarray,
-    containstype=jsontype,
 )
-def test_max_contains(kwvalue, instval, containstype):
-    contains_count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
-    kw = MaxContainsKeyword(kwvalue)
-    with mock_contains_scope("maxContains", contains_count) as scope:
-        kw.evaluate(JSON(instval), scope)
-        assert scope.valid == (contains_count <= kwvalue)
-
-
-@given(
-    kwvalue=hs.integers(min_value=0, max_value=20),
-    instval=jsonflatarray,
-    containstype=jsontype,
-)
-def test_min_contains(kwvalue, instval, containstype):
-    contains_count = len(list(filter(lambda item: JSON(item).istype(containstype), instval)))
-    kw = MinContainsKeyword(kwvalue)
-    with mock_contains_scope("minContains", contains_count) as scope:
-        kw.evaluate(JSON(instval), scope)
-        assert scope.valid == (contains_count >= kwvalue)
+def test_contains(minmax, instval):
+    min_contains = min(minmax)
+    max_contains = max(minmax)
+    contains_count = len(list(filter(lambda item: JSON(item).type == "boolean", instval)))
+    schema = JSONSchema({
+        "contains": {"type": "boolean"},
+        "minContains": min_contains,
+        "maxContains": max_contains,
+    }, metaschema_uri=metaschema_uri)
+    scope = schema.evaluate(JSON(instval))
+    assert scope.valid == (min_contains <= contains_count <= max_contains)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)

@@ -8,7 +8,7 @@ from jschon.uri import URI
 
 
 def initialize():
-    JSONObjectSchema.bootstrap(
+    JSONSchema.bootstrap(
         IdKeyword,
         SchemaKeyword,
         VocabularyKeyword,
@@ -136,5 +136,5 @@ def initialize():
 
     # cache and self-validate the metaschema and its vocabularies
     metaschema_uri = URI("https://json-schema.org/draft/2019-09/schema")
-    metaschema = JSONSchema.get(metaschema_uri, metaschema_uri)
+    metaschema = JSONSchema.load(metaschema_uri, metaschema_uri=metaschema_uri)
     metaschema.validate()

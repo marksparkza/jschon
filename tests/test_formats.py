@@ -13,7 +13,7 @@ import validators
 from hypothesis import given, strategies as hs, provisional as hp
 
 from jschon.exceptions import JSONPointerError
-from jschon.json import JSONString
+from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.keywords import FormatKeyword
@@ -21,7 +21,8 @@ from tests.strategies import jsonpointer
 
 
 def evaluate(format_attr, instval):
-    FormatKeyword(format_attr).evaluate(JSONString(instval), scope := Scope(JSONSchema(True)))
+    schema = JSONSchema(True)
+    FormatKeyword(schema, format_attr).evaluate(JSON(instval), scope := Scope(schema))
     return scope.valid
 
 
