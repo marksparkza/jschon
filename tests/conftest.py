@@ -1,2 +1,8 @@
 def pytest_addoption(parser):
-    parser.addoption("--optionals", action="store_true", help="include optional tests")
+    testsuite = parser.getgroup("testsuite", "JSON Schema Test Suite")
+    testsuite.addoption("--testsuite-version", choices=["2019-09", "2020-12"],
+                        help="Only run tests for the specified version")
+    testsuite.addoption("--testsuite-optionals", action="store_true",
+                        help="Include optional tests")
+    testsuite.addoption("--testsuite-formats", action="store_true",
+                        help="Include format tests")

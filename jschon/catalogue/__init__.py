@@ -27,6 +27,10 @@ class Catalogue:
         uristr = str(uri)
         for base_uri, base_dir in cls._dirs.items():
             if uristr.startswith(str(base_uri)):
-                return load_json(pathlib.Path(base_dir) / uristr[len(base_uri):])
+                filepath = pathlib.Path(base_dir) / uristr[len(base_uri):]
+                try:
+                    return load_json(filepath)
+                except FileNotFoundError:
+                    return load_json(filepath.with_suffix('.json'))
 
         raise CatalogueError(f"File not found for '{uri}'")

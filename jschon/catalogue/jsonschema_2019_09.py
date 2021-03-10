@@ -1,5 +1,4 @@
-import pathlib
-
+import submodules
 from jschon.catalogue import Catalogue
 from jschon.formats import *
 from jschon.jsonschema import *
@@ -16,7 +15,7 @@ def initialize():
 
     Catalogue.add_local(
         base_uri=URI('https://json-schema.org/draft/2019-09/'),
-        base_dir=pathlib.Path(__file__).parent / 'json-schema.org' / 'draft' / '2019-09',
+        base_dir=submodules.rootdir / 'json-schema-spec-2019-09',
     )
 
     Vocabulary.register(

@@ -1,3 +1,11 @@
-[submodule "JSON-Schema-Test-Suite"]
-	path = tests/test_suite/JSON-Schema-Test-Suite
-	url = https://github.com/json-schema-org/JSON-Schema-Test-Suite.git
+[submodule "submodules/JSON-Schema-Test-Suite"]
+	path = submodules/JSON-Schema-Test-Suite
+	url = https://github.com/json-schema-org/JSON-Schema-Test-Suite
+[submodule "submodules/json-schema-spec-2019-09"]
+	path = submodules/json-schema-spec-2019-09
+	url = https://github.com/json-schema-org/json-schema-spec
+	branch = 2019-09
+[submodule "submodules/json-schema-spec-2020-12"]
+	path = submodules/json-schema-spec-2020-12
+	url = https://github.com/json-schema-org/json-schema-spec
+	branch = 2020-12
