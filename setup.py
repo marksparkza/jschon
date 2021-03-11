@@ -12,14 +12,6 @@ setup(
         'rfc3986',
     ],
     extras_require={
-        'formats': [
-            'python-dateutil',
-            'email-validator',
-            'idna',
-            'rfc3987',
-            'validators',
-            'uri-template',
-        ],
         'test': [
             'pytest',
             'coverage',

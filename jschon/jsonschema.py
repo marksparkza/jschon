@@ -21,11 +21,6 @@ __all__ = [
     'PropertyApplicator',
     'ApplicatorClass',
     'Vocabulary',
-    'VocabularyClass',
-    'FormatVocabulary',
-    'Format',
-    'FormatClass',
-    'FormatResult',
     'Annotation',
     'Error',
     'Scope',
@@ -327,7 +322,6 @@ class PropertyApplicator(Applicator):
 
 class Vocabulary:
     _kwclasses: Dict[URI, List[KeywordClass]] = {}
-    _vcclass: Dict[URI, VocabularyClass] = {}
     _cache: Dict[URI, Vocabulary] = {}
 
     @classmethod
@@ -337,7 +331,6 @@ class Vocabulary:
             kwclasses: Iterable[KeywordClass],
     ) -> None:
         cls._kwclasses[uri] = []
-        cls._vcclass[uri] = cls
         for kwclass in kwclasses:
             if issubclass(kwclass, Keyword):
                 kwclass.vocabulary_uri = uri
@@ -350,77 +343,17 @@ class Vocabulary:
         except KeyError as e:
             raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
 
-    def __new__(cls, uri: URI, required: bool) -> Vocabulary:
-        try:
-            return object.__new__(Vocabulary._vcclass[uri])
-        except KeyError as e:
-            raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
-
     def __init__(self, uri: URI, required: bool):
         self.uri: URI = uri
         self.required: bool = required
-        self.kwclasses: Dict[str, KeywordClass] = {
-            kwclass.__keyword__: kwclass for kwclass in self._kwclasses[uri]
-        }
+        try:
+            self.kwclasses: Dict[str, KeywordClass] = {
+                kwclass.__keyword__: kwclass for kwclass in self._kwclasses[uri]
+            }
+        except KeyError as e:
+            raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
+
         self._cache[uri] = self
-
-
-VocabularyClass = Type[Vocabulary]
-
-
-class FormatVocabulary(Vocabulary):
-    _fmtclasses: Dict[URI, List[FormatClass]] = {}
-    _assertfmt: Dict[URI, Optional[bool]] = {}
-
-    @classmethod
-    def register(
-            cls,
-            uri: URI,
-            kwclasses: Iterable[KeywordClass],
-            fmtclasses: Iterable[FormatClass] = (),
-            assert_: bool = None,
-    ) -> None:
-        super().register(uri, kwclasses)
-        cls._fmtclasses[uri] = []
-        cls._assertfmt[uri] = assert_
-        for fmtclass in fmtclasses:
-            if issubclass(fmtclass, Format):
-                cls._fmtclasses[uri] += [fmtclass]
-
-    @classmethod
-    def get(cls, uri: URI) -> FormatVocabulary:
-        vocab = super().get(uri)
-        if isinstance(vocab, FormatVocabulary):
-            return vocab
-        raise VocabularyError(f"The vocabulary identified by '{uri}' does not support formats")
-
-    def __init__(self, uri: URI, required: bool):
-        super().__init__(uri, required)
-        assert_ = force_assert if (force_assert := self._assertfmt[uri]) is not None else required
-        self.formats: Dict[str, Format] = {
-            fmtclass.__attr__: fmtclass(assert_)
-            for fmtclass in self._fmtclasses[uri]
-        }
-
-
-class Format:
-    __attr__: str = ...
-    __types__: Union[str, Tuple[str, ...]] = "string"
-
-    def __init__(self, assert_: bool):
-        self.assert_: bool = assert_
-
-    def evaluate(self, instance: JSON) -> FormatResult:
-        raise NotImplementedError
-
-
-FormatClass = Type[Format]
-
-
-@dataclass
-class FormatResult:
-    valid: bool
-    error: Optional[str] = None
 
 
 @dataclass

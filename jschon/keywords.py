@@ -87,7 +87,7 @@ class SchemaKeyword(Keyword):
         "format": "uri"
     }
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
         if parentschema.parent is not None:
             raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
@@ -113,7 +113,7 @@ class VocabularyKeyword(Keyword):
         }
     }
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: Mapping[str, bool]):
         super().__init__(parentschema, value)
         if parentschema.parent is not None:
             raise JSONSchemaError('The "$vocabulary" keyword must not appear in a subschema')
@@ -144,7 +144,7 @@ class IdKeyword(Keyword):
         "pattern": "^[^#]*#?$"
     }
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
@@ -182,7 +182,7 @@ class AnchorKeyword(Keyword):
         "pattern": "^[A-Za-z][-A-Za-z0-9.:_]*$"
     }
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
         if (base_uri := parentschema.base_uri) is not None:
             uri = URI(f'{base_uri}#{value}')
@@ -199,7 +199,7 @@ class RecursiveRefKeyword(Keyword):
         "format": "uri-reference"
     }
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
         if value != '#':
             raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
@@ -780,7 +780,7 @@ class PatternKeyword(Keyword):
     __schema__ = {"type": "string", "format": "regex"}
     __types__ = "string"
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
         self.regex = re.compile(value)
 
@@ -928,39 +928,30 @@ class DependentRequiredKeyword(Keyword):
             scope.fail(instance, f"The object is missing dependent properties {missing}")
 
 
+FormatValidator = Callable[[AnyJSONCompatible], None]
+
+
 class FormatKeyword(Keyword):
     __keyword__ = "format"
     __schema__ = {"type": "string"}
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    _validators: Dict[str, FormatValidator] = {}
+
+    @classmethod
+    def register_validators(cls, validators: Mapping[str, FormatValidator]):
+        cls._validators.update(validators)
+
+    def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
-        vocabulary = FormatVocabulary.get(self.vocabulary_uri)
-        self.format_: Optional[Format] = vocabulary.formats.get(value)
-        self.assert_ = self.format_.assert_ if self.format_ else False
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        if not super().can_evaluate(instance):
-            return False
-
-        if not self.format_:
-            return False
-
-        types = tuplify(self.format_.__types__)
-        if instance.type in types:
-            return True
-
-        if instance.type == "number" and "integer" in types:
-            return instance.value == int(instance.value)
-
-        return False
+        self.validator: FormatValidator = self._validators.get(value)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        fmtresult = self.format_.evaluate(instance)
-        if not fmtresult.valid:
-            scope.fail(instance, f'The text does not conform to the {self.json} format: {fmtresult.error}')
-
-        if scope.valid:
-            scope.annotate(instance, "format", self.json.value)
+        scope.annotate(instance, "format", self.json.value)
+        if self.validator is not None:
+            try:
+                self.validator(instance.value)
+            except ValueError as e:
+                scope.fail(instance, f'The instance is invalid against the "{self.json.value}" format: {e}')
 
 
 class TitleKeyword(Keyword):

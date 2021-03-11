@@ -1,6 +1,5 @@
 import submodules
 from jschon.catalogue import Catalogue
-from jschon.formats import *
 from jschon.jsonschema import *
 from jschon.keywords import *
 from jschon.uri import URI
@@ -82,33 +81,11 @@ def initialize():
         )
     )
 
-    FormatVocabulary.register(
+    Vocabulary.register(
         uri=URI("https://json-schema.org/draft/2019-09/vocab/format"),
         kwclasses=(
             FormatKeyword,
-        ),
-        fmtclasses=(
-            DateTimeFormat,
-            DateFormat,
-            TimeFormat,
-            DurationFormat,
-            EmailFormat,
-            IDNEmailFormat,
-            HostnameFormat,
-            IDNHostnameFormat,
-            IPv4Format,
-            IPv6Format,
-            URIFormat,
-            URIReferenceFormat,
-            IRIFormat,
-            IRIReferenceFormat,
-            UUIDFormat,
-            URITemplateFormat,
-            JSONPointerFormat,
-            RelativeJSONPointerFormat,
-            RegexFormat,
-        ),
-        assert_=True,
+        )
     )
 
     Vocabulary.register(
