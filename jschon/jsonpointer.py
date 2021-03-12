@@ -48,12 +48,13 @@ class JSONPointer(Sequence[str]):
     _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
-    def __init__(self, *values: Union[str, Iterable[str], JSONPointer]) -> None:
+    def __new__(cls, *values: Union[str, Iterable[str], JSONPointer]) -> JSONPointer:
         """ Constructor.
 
         :raise JSONPointerError: if a string argument does not conform to the RFC 6901 syntax
         """
-        self._keys: List[str] = []
+        self = object.__new__(cls)
+        self._keys = []
 
         for value in values:
             if isinstance(value, str):
@@ -69,6 +70,8 @@ class JSONPointer(Sequence[str]):
 
             else:
                 raise TypeError("Expecting str, Iterable[str], or JSONPointer")
+        
+        return self
 
     @overload
     def __getitem__(self, index: int) -> str:
