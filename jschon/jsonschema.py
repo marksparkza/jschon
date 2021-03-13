@@ -110,7 +110,7 @@ class JSONSchema(JSON):
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
         # don't call super().__init__
-        self.value: AnyJSONValue
+        self.value: AnyJSONCompatible
         self.type: str
         self.parent: Optional[JSON] = parent
         self.key: Optional[str] = key
@@ -304,7 +304,7 @@ ApplicatorClass = Type[Applicator]
 class ArrayApplicator(Applicator):
     """Sets up an array of subschemas for an applicator keyword."""
 
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON[Array[JSONSchema]]]:
+    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON]:
         if isinstance(value, Sequence) and all(JSONSchema.iscompatible(v) for v in value):
             return JSON(value, parent=self.parent, key=self.key, itemclass=JSONSchema)
 
@@ -312,7 +312,7 @@ class ArrayApplicator(Applicator):
 class PropertyApplicator(Applicator):
     """Sets up property-based subschemas for an applicator keyword."""
 
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON[Object[JSONSchema]]]:
+    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON]:
         if isinstance(value, Mapping) and all(
                 isinstance(k, str) and JSONSchema.iscompatible(v)
                 for k, v in value.items()

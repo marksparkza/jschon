@@ -9,30 +9,15 @@ from jschon.jsonpointer import JSONPointer
 
 __all__ = [
     'JSON',
-    'Null',
-    'Boolean',
-    'Number',
-    'String',
-    'Array',
-    'Object',
-    'AnyJSONValue',
     'AnyJSONCompatible',
     'AnyJSONCompatibleNumber',
 ]
-
-Null = NewType('Null', type(None))
-Boolean = NewType('Boolean', bool)
-Number = NewType('Number', Decimal)
-String = NewType('String', str)
-Array = NewType('Array', List['JSON'])
-Object = NewType('Object', Dict[str, 'JSON'])
-AnyJSONValue = TypeVar('AnyJSONValue', Null, Boolean, Number, String, Array, Object)
 
 AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, Decimal, str, Sequence, Mapping)
 AnyJSONCompatibleNumber = TypeVar('AnyJSONCompatibleNumber', int, float, Decimal)
 
 
-class JSON(Generic[AnyJSONValue], Sequence['JSON'], Mapping[str, 'JSON']):
+class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
     def __init__(
             self,
@@ -42,7 +27,7 @@ class JSON(Generic[AnyJSONValue], Sequence['JSON'], Mapping[str, 'JSON']):
             key: str = None,
             itemclass: Type[JSON] = None,
     ):
-        self.value: AnyJSONValue
+        self.value: AnyJSONCompatible
         self.type: str
         self.parent: Optional[JSON] = parent
         self.key: Optional[str] = key
@@ -170,7 +155,7 @@ class JSON(Generic[AnyJSONValue], Sequence['JSON'], Mapping[str, 'JSON']):
             return self.value < other.value
         return NotImplemented
 
-    def __mod__(self, other: Union[JSON[Number], AnyJSONCompatibleNumber]) -> JSON[Number]:
+    def __mod__(self, other: Union[JSON, AnyJSONCompatibleNumber]) -> JSON:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type == "number":
