@@ -8,7 +8,7 @@ from jschon.uri import URI
 from jschon.utils import load_json
 from tests import metaschema_uri
 
-Catalogue.add_local(
+Catalogue.add_directory(
     base_uri=URI('http://localhost:1234/'),
     base_dir=submodules.rootdir / 'JSON-Schema-Test-Suite' / 'remotes',
 )

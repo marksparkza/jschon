@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import *
 from uuid import uuid4
 
-from jschon.catalogue import Catalogue
 from jschon.exceptions import *
 from jschon.json import *
 from jschon.jsonpointer import JSONPointer
@@ -20,7 +19,6 @@ __all__ = [
     'ArrayApplicator',
     'PropertyApplicator',
     'ApplicatorClass',
-    'Vocabulary',
     'Annotation',
     'Error',
     'Scope',
@@ -58,7 +56,8 @@ class JSONSchema(JSON):
                 pass
 
         if schema is None:
-            doc = Catalogue.load(base_uri)
+            from jschon.catalogue import Catalogue
+            doc = Catalogue.load_json(base_uri)
             schema = JSONSchema(doc, uri=base_uri, **kwargs)
 
         if uri.fragment:
@@ -110,7 +109,7 @@ class JSONSchema(JSON):
         self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
         # don't call super().__init__
-        self.value: AnyJSONCompatible
+        self.value: Union[bool, Mapping[str, AnyJSONCompatible]]
         self.type: str
         self.parent: Optional[JSON] = parent
         self.key: Optional[str] = key
@@ -318,42 +317,6 @@ class PropertyApplicator(Applicator):
                 for k, v in value.items()
         ):
             return JSON(value, parent=self.parent, key=self.key, itemclass=JSONSchema)
-
-
-class Vocabulary:
-    _kwclasses: Dict[URI, List[KeywordClass]] = {}
-    _cache: Dict[URI, Vocabulary] = {}
-
-    @classmethod
-    def register(
-            cls,
-            uri: URI,
-            kwclasses: Iterable[KeywordClass],
-    ) -> None:
-        cls._kwclasses[uri] = []
-        for kwclass in kwclasses:
-            if issubclass(kwclass, Keyword):
-                kwclass.vocabulary_uri = uri
-                cls._kwclasses[uri] += [kwclass]
-
-    @classmethod
-    def get(cls, uri: URI) -> Vocabulary:
-        try:
-            return cls._cache[uri]
-        except KeyError as e:
-            raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
-
-    def __init__(self, uri: URI, required: bool):
-        self.uri: URI = uri
-        self.required: bool = required
-        try:
-            self.kwclasses: Dict[str, KeywordClass] = {
-                kwclass.__keyword__: kwclass for kwclass in self._kwclasses[uri]
-            }
-        except KeyError as e:
-            raise VocabularyError(f"'{uri}' is not a recognized vocabulary URI") from e
-
-        self._cache[uri] = self
 
 
 @dataclass
