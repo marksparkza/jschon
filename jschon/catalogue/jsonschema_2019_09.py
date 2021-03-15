@@ -1,8 +1,12 @@
 import submodules
 from jschon.catalogue import Catalogue
-from jschon.keywords import *
 from jschon.uri import URI
+from jschon.vocabulary.applicator import *
+from jschon.vocabulary.content import *
 from jschon.vocabulary.core import *
+from jschon.vocabulary.format import *
+from jschon.vocabulary.metadata import *
+from jschon.vocabulary.validation import *
 
 
 def initialize():

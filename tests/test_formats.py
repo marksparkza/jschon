@@ -6,7 +6,7 @@ from jschon.exceptions import JSONPointerError
 from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema, Scope
-from jschon.keywords import FormatKeyword
+from jschon.vocabulary.format import FormatKeyword
 from tests.strategies import jsonpointer
 
 

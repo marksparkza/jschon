@@ -6,7 +6,7 @@ from hypothesis import given
 
 from jschon.json import JSON
 from jschon.jsonschema import Scope, JSONSchema
-from jschon.keywords import *
+from jschon.vocabulary.validation import *
 from tests import metaschema_uri
 from tests.strategies import *
 
