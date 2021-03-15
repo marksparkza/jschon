@@ -2,6 +2,7 @@ import ipaddress
 
 from hypothesis import given, strategies as hs
 
+from jschon.catalogue import Catalogue
 from jschon.exceptions import JSONPointerError
 from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
@@ -28,7 +29,7 @@ def jsonpointer_validator(value):
             raise ValueError(str(e))
 
 
-FormatKeyword.register_validators({
+Catalogue.add_format_validators({
     "ipv4": ipv4_validator,
     "ipv6": ipv6_validator,
     "json-pointer": jsonpointer_validator,

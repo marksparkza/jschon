@@ -1,12 +1,13 @@
 import pathlib
 from os import PathLike
-from typing import Dict
+from typing import Dict, Mapping
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass
 from jschon.uri import URI
 from jschon.utils import load_json
+from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
     'Catalogue',
@@ -16,6 +17,7 @@ __all__ = [
 class Catalogue:
     _directories: Dict[URI, PathLike] = {}
     _vocabularies: Dict[URI, Vocabulary] = {}
+    _format_validators: Dict[str, FormatValidator] = {}
 
     @classmethod
     def add_directory(cls, base_uri: URI, base_dir: PathLike) -> None:
@@ -54,9 +56,20 @@ class Catalogue:
             metaschema_uri: URI,
             core_vocabulary_uri: URI,
             *default_vocabulary_uris: URI,
-    ):
+    ) -> None:
         metaschema_doc = cls.load_json(metaschema_uri)
         core_vocabulary = cls.get_vocabulary(core_vocabulary_uri)
         default_vocabularies = [cls.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
         metaschema = Metaschema(metaschema_doc, core_vocabulary, *default_vocabularies)
         metaschema.validate()
+
+    @classmethod
+    def add_format_validators(cls, validators: Mapping[str, FormatValidator]) -> None:
+        cls._format_validators.update(validators)
+
+    @classmethod
+    def get_format_validator(cls, format_attr: str) -> FormatValidator:
+        try:
+            return cls._format_validators[format_attr]
+        except KeyError:
+            raise CatalogueError(f"Unsupported format attribute '{format_attr}'")

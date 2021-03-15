@@ -1,10 +1,12 @@
-from typing import Callable, Dict, Mapping
+from typing import Callable
 
+from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible, JSON
 from jschon.jsonschema import Keyword, JSONSchema, Scope
 
 __all__ = [
     'FormatKeyword',
+    'FormatValidator',
 ]
 
 FormatValidator = Callable[[AnyJSONCompatible], None]
@@ -14,15 +16,14 @@ class FormatKeyword(Keyword):
     __keyword__ = "format"
     __schema__ = {"type": "string"}
 
-    _validators: Dict[str, FormatValidator] = {}
-
-    @classmethod
-    def register_validators(cls, validators: Mapping[str, FormatValidator]):
-        cls._validators.update(validators)
-
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
-        self.validator: FormatValidator = self._validators.get(value)
+
+        from jschon.catalogue import Catalogue
+        try:
+            self.validator: FormatValidator = Catalogue.get_format_validator(value)
+        except CatalogueError:
+            self.validator = None
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         scope.annotate(instance, "format", self.json.value)
