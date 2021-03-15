@@ -122,7 +122,7 @@ class RefKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
-        refschema = JSONSchema.load(uri, metaschema_uri=self.parentschema.metaschema_uri)
+        refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
         refschema.evaluate(instance, scope)
 
 
@@ -140,7 +140,7 @@ class AnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for anchor "{value}"')
 
-        JSONSchema.store(uri, parentschema)
+        Catalogue.add_schema(uri, parentschema)
 
 
 class RecursiveRefKeyword(Keyword):
@@ -157,7 +157,7 @@ class RecursiveRefKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (base_uri := self.parentschema.base_uri) is not None:
-            refschema = JSONSchema.load(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
+            refschema = Catalogue.get_schema(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
         else:
             raise JSONSchemaError(f'No base URI against which to resolve "$recursiveRef"')
 

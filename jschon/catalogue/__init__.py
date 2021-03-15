@@ -1,10 +1,11 @@
 import pathlib
 from os import PathLike
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Any
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible
-from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass
+from jschon.jsonpointer import JSONPointer
+from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass, JSONSchema
 from jschon.uri import URI
 from jschon.utils import load_json
 from jschon.vocabulary.format import FormatValidator
@@ -18,6 +19,7 @@ class Catalogue:
     _directories: Dict[URI, PathLike] = {}
     _vocabularies: Dict[URI, Vocabulary] = {}
     _format_validators: Dict[str, FormatValidator] = {}
+    _schema_cache: Dict[URI, JSONSchema] = {}
 
     @classmethod
     def add_directory(cls, base_uri: URI, base_dir: PathLike) -> None:
@@ -73,3 +75,46 @@ class Catalogue:
             return cls._format_validators[format_attr]
         except KeyError:
             raise CatalogueError(f"Unsupported format attribute '{format_attr}'")
+
+    @classmethod
+    def add_schema(cls, uri: URI, schema: JSONSchema) -> None:
+        cls._schema_cache[uri] = schema
+
+    @classmethod
+    def del_schema(cls, uri: URI) -> None:
+        cls._schema_cache.pop(uri, None)
+
+    @classmethod
+    def get_schema(cls, uri: URI, **kwargs: Any) -> JSONSchema:
+        """Get a (sub)schema identified by uri from the cache, or load it
+        from disk if not already cached.
+
+        Additional kwargs are passed to the JSONSchema constructor for
+        newly created instances.
+        """
+        try:
+            return cls._schema_cache[uri]
+        except KeyError:
+            pass
+
+        schema = None
+        base_uri = uri.copy(fragment=False)
+
+        if uri.fragment is not None:
+            try:
+                schema = cls._schema_cache[base_uri]
+            except KeyError:
+                pass
+
+        if schema is None:
+            doc = cls.load_json(base_uri)
+            schema = JSONSchema(doc, uri=base_uri, **kwargs)
+
+        if uri.fragment:
+            ptr = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
+            schema = ptr.evaluate(schema)
+
+        if not isinstance(schema, JSONSchema):
+            raise CatalogueError(f"The object referenced by {uri} is not a JSON Schema")
+
+        return schema

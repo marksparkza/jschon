@@ -28,62 +28,6 @@ __all__ = [
 
 
 class JSONSchema(JSON):
-    _cache: Dict[URI, JSONSchema] = {}
-
-    @classmethod
-    def load(cls, uri: URI, **kwargs: Any) -> JSONSchema:
-        """Load a (sub)schema identified by uri from the cache, or from the
-        catalogue if not already cached.
-
-        Additional kwargs are passed to the JSONSchema constructor for
-        catalogue-loaded instances.
-        """
-        try:
-            return cls._cache[uri]
-        except KeyError:
-            pass
-
-        schema = None
-        base_uri = uri.copy(fragment=False)
-
-        if uri.fragment is not None:
-            try:
-                schema = cls._cache[base_uri]
-            except KeyError:
-                pass
-
-        if schema is None:
-            from jschon.catalogue import Catalogue
-            doc = Catalogue.load_json(base_uri)
-            schema = JSONSchema(doc, uri=base_uri, **kwargs)
-
-        if uri.fragment:
-            ptr = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
-            schema = ptr.evaluate(schema)
-
-        if not isinstance(schema, JSONSchema):
-            raise JSONSchemaError(f"The object referenced by {uri} is not a JSON Schema")
-
-        return schema
-
-    @classmethod
-    def store(cls, uri: URI, schema: JSONSchema) -> None:
-        """Store the schema identified by uri to the cache."""
-        cls._encache(uri, schema)
-
-    @classmethod
-    def clear(cls) -> None:
-        """Clear the JSONSchema cache."""
-        cls._cache.clear()
-
-    @classmethod
-    def _encache(cls, uri: Optional[URI], schema: JSONSchema) -> None:
-        if uri is not None:
-            cls._cache[uri] = schema
-
-    @classmethod
-    def _decache(cls, uri: Optional[URI]) -> None:
-        cls._cache.pop(uri, None)
 
     @staticmethod
     def iscompatible(value: Any) -> bool:
@@ -99,7 +43,10 @@ class JSONSchema(JSON):
             parent: JSON = None,
             key: str = None,
     ):
-        self._encache(uri, self)
+        from jschon.catalogue import Catalogue
+        if uri is not None:
+            Catalogue.add_schema(uri, self)
+
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
         self.keywords: Dict[str, Keyword] = {}
@@ -210,10 +157,12 @@ class JSONSchema(JSON):
 
     @property
     def metaschema(self) -> Metaschema:
+        from jschon.catalogue import Catalogue
+
         if (uri := self.metaschema_uri) is None:
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
-        if not isinstance(metaschema := JSONSchema.load(uri), Metaschema):
+        if not isinstance(metaschema := Catalogue.get_schema(uri), Metaschema):
             raise JSONSchemaError(f"The schema referenced by {uri} is not a metachema")
 
         return metaschema
@@ -242,10 +191,16 @@ class JSONSchema(JSON):
 
     @uri.setter
     def uri(self, value: Optional[URI]) -> None:
+        from jschon.catalogue import Catalogue
+
         if self._uri != value:
-            self._decache(self._uri)
-            self._encache(value, self)
+            if self._uri is not None:
+                Catalogue.del_schema(self._uri)
+
             self._uri = value
+
+            if self._uri is not None:
+                Catalogue.add_schema(self._uri, self)
 
 
 class Metaschema(JSONSchema):

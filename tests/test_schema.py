@@ -2,6 +2,7 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
+from jschon.catalogue import Catalogue
 from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
@@ -43,7 +44,7 @@ def test_keyword_dependency_resolution(value: list):
         except ValueError:
             pass
 
-    metaschema = JSONSchema.load(metaschema_uri)
+    metaschema = Catalogue.get_schema(metaschema_uri)
     kwclasses = {
         kw: metaschema.kwclasses[kw] for kw in value
     }
@@ -138,7 +139,7 @@ def test_base_uri(ptr: str, base_uri: str):
 def test_uri(ptr: str, uri: str, canonical: bool):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr).evaluate(rootschema)
-    assert schema == JSONSchema.load(URI(uri))
+    assert schema == Catalogue.get_schema(URI(uri))
 
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#recursive-example
