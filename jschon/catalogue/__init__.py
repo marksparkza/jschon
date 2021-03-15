@@ -1,13 +1,12 @@
 import pathlib
 from os import PathLike
-from typing import Dict, Optional
+from typing import Dict
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible
-from jschon.jsonschema import KeywordClass
+from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass
 from jschon.uri import URI
 from jschon.utils import load_json
-from jschon.vocabulary import Vocabulary
 
 __all__ = [
     'Catalogue',
@@ -43,9 +42,21 @@ class Catalogue:
         cls._vocabularies[uri] = Vocabulary(uri, *kwclasses)
 
     @classmethod
-    def get_vocabulary(cls, uri: URI) -> Optional[Vocabulary]:
-        return cls._vocabularies.get(uri)
+    def get_vocabulary(cls, uri: URI) -> Vocabulary:
+        try:
+            return cls._vocabularies[uri]
+        except KeyError:
+            raise CatalogueError(f"Unrecognized vocabulary URI '{uri}'")
 
     @classmethod
-    def create_metaschema(cls, core_vocabulary: URI, *vocabularies: URI):
-        pass
+    def create_metaschema(
+            cls,
+            metaschema_uri: URI,
+            core_vocabulary_uri: URI,
+            *default_vocabulary_uris: URI,
+    ):
+        metaschema_doc = cls.load_json(metaschema_uri)
+        core_vocabulary = cls.get_vocabulary(core_vocabulary_uri)
+        default_vocabularies = [cls.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
+        metaschema = Metaschema(metaschema_doc, core_vocabulary, *default_vocabularies)
+        metaschema.validate()

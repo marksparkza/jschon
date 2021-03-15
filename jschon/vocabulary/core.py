@@ -3,7 +3,7 @@ from typing import Mapping
 from jschon.catalogue import Catalogue
 from jschon.exceptions import JSONSchemaError, URIError
 from jschon.json import JSON
-from jschon.jsonschema import Keyword, JSONSchema, Scope, PropertyApplicator
+from jschon.jsonschema import Keyword, JSONSchema, Scope, PropertyApplicator, Metaschema
 from jschon.uri import URI
 
 __all__ = [
@@ -28,8 +28,11 @@ class SchemaKeyword(Keyword):
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
+        if not isinstance(value, str):
+            raise JSONSchemaError('Invalid "$schema" keyword value')
+
         if parentschema.parent is not None:
-            raise JSONSchemaError('The "$schema" keyword must not appear in a subschema')
+            raise JSONSchemaError('The "$schema" keyword may not appear in a subschema')
 
         try:
             (uri := URI(value)).validate(require_scheme=True, require_normalized=True)
@@ -54,17 +57,25 @@ class VocabularyKeyword(Keyword):
 
     def __init__(self, parentschema: JSONSchema, value: Mapping[str, bool]):
         super().__init__(parentschema, value)
+        if not isinstance(value, Mapping) or \
+                not all(isinstance(k, str) and isinstance(v, bool) for k, v in value.items()):
+            raise JSONSchemaError('Invalid "$vocabulary" keyword value')
+
         if parentschema.parent is not None:
-            raise JSONSchemaError('The "$vocabulary" keyword must not appear in a subschema')
+            raise JSONSchemaError('The "$vocabulary" keyword may not appear in a subschema')
+
+        if not isinstance(parentschema, Metaschema):
+            return
+
+        if (core_vocab_uri := str(parentschema.core_vocabulary.uri)) not in value or \
+                value[core_vocab_uri] is not True:
+            raise JSONSchemaError('The "$vocabulary" keyword must list the core vocabulary with a value of true')
 
         for vocab_uri, vocab_required in value.items():
             try:
                 (vocab_uri := URI(vocab_uri)).validate(require_scheme=True, require_normalized=True)
             except URIError as e:
                 raise JSONSchemaError from e
-
-            if not isinstance(vocab_required, bool):
-                raise JSONSchemaError('"$vocabulary" values must be booleans')
 
             if vocabulary := Catalogue.get_vocabulary(vocab_uri):
                 parentschema.kwclasses.update(vocabulary.kwclasses)
@@ -83,6 +94,9 @@ class IdKeyword(Keyword):
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
+        if not isinstance(value, str):
+            raise JSONSchemaError('Invalid "$id" keyword value')
+
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
             if (base_uri := parentschema.base_uri) is not None:

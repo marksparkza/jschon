@@ -13,6 +13,8 @@ from jschon.utils import tuplify
 
 __all__ = [
     'JSONSchema',
+    'Metaschema',
+    'Vocabulary',
     'Keyword',
     'KeywordClass',
     'Applicator',
@@ -27,11 +29,6 @@ __all__ = [
 
 class JSONSchema(JSON):
     _cache: Dict[URI, JSONSchema] = {}
-    _bootstrap_kwclasses: Tuple[KeywordClass, ...] = ...
-
-    @classmethod
-    def bootstrap(cls, *kwclasses: KeywordClass) -> None:
-        cls._bootstrap_kwclasses = kwclasses
 
     @classmethod
     def load(cls, uri: URI, **kwargs: Any) -> JSONSchema:
@@ -106,7 +103,6 @@ class JSONSchema(JSON):
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
         self.keywords: Dict[str, Keyword] = {}
-        self.kwclasses: Dict[str, KeywordClass] = {}  # used by metaschemas
 
         # don't call super().__init__
         self.value: Union[bool, Mapping[str, AnyJSONCompatible]]
@@ -125,16 +121,13 @@ class JSONSchema(JSON):
             if self.parent is None and self.uri is None:
                 self.uri = URI(f'mem:{uuid4()}')
 
-            for kwclass in self._bootstrap_kwclasses:
-                if (key := kwclass.__keyword__) in value:
-                    kw = kwclass(self, value[key])
-                    self.keywords[key] = kw
-                    self.value[key] = kw.json
+            self.bootstrap(value)
 
             kwclasses = {
                 key: kwclass for key in value
                 if (kwclass := self.metaschema.kwclasses.get(key)) and
-                   kwclass not in self._bootstrap_kwclasses
+                   # skip bootstrapped keywords
+                   key not in self.keywords
             }
 
             for kwclass in self._resolve_keyword_dependencies(kwclasses):
@@ -144,6 +137,19 @@ class JSONSchema(JSON):
 
         else:
             raise TypeError(f"{value=} is not JSONSchema-compatible")
+
+    def bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
+        from jschon.vocabulary.core import IdKeyword, SchemaKeyword, VocabularyKeyword
+        boostrap_kwclasses = {
+            "$id": IdKeyword,
+            "$schema": SchemaKeyword,
+            "$vocabulary": VocabularyKeyword,
+        }
+        for key, kwclass in boostrap_kwclasses.items():
+            if key in value:
+                kw = kwclass(self, value[key])
+                self.keywords[key] = kw
+                self.value[key] = kw.json
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
@@ -203,11 +209,14 @@ class JSONSchema(JSON):
             parent = parent.parent
 
     @property
-    def metaschema(self) -> JSONSchema:
+    def metaschema(self) -> Metaschema:
         if (uri := self.metaschema_uri) is None:
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
-        return JSONSchema.load(uri, metaschema_uri=uri)
+        if not isinstance(metaschema := JSONSchema.load(uri), Metaschema):
+            raise JSONSchemaError(f"The schema referenced by {uri} is not a metachema")
+
+        return metaschema
 
     @property
     def metaschema_uri(self) -> Optional[URI]:
@@ -237,6 +246,37 @@ class JSONSchema(JSON):
             self._decache(self._uri)
             self._encache(value, self)
             self._uri = value
+
+
+class Metaschema(JSONSchema):
+
+    def __init__(
+            self,
+            value: Mapping[str, AnyJSONCompatible],
+            core_vocabulary: Vocabulary,
+            *default_vocabularies: Vocabulary,
+            **kwargs,
+    ):
+        self.core_vocabulary: Vocabulary = core_vocabulary
+        self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
+        self.kwclasses: Dict[str, KeywordClass] = {}
+        super().__init__(value, **kwargs)
+
+    def bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
+        super().bootstrap(value)
+        self.kwclasses.update(self.core_vocabulary.kwclasses)
+        if "$vocabulary" not in value:
+            for vocabulary in self.default_vocabularies:
+                self.kwclasses.update(vocabulary.kwclasses)
+
+
+class Vocabulary:
+
+    def __init__(self, uri: URI, *kwclasses: KeywordClass):
+        self.uri: URI = uri
+        self.kwclasses: Dict[str, KeywordClass] = {
+            kwclass.__keyword__: kwclass for kwclass in kwclasses
+        }
 
 
 class Keyword:

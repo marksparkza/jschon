@@ -1,18 +1,11 @@
 import submodules
 from jschon.catalogue import Catalogue
-from jschon.jsonschema import *
 from jschon.keywords import *
 from jschon.uri import URI
 from jschon.vocabulary.core import *
 
 
 def initialize():
-    JSONSchema.bootstrap(
-        IdKeyword,
-        SchemaKeyword,
-        VocabularyKeyword,
-    )
-
     Catalogue.add_directory(
         base_uri=URI('https://json-schema.org/draft/2019-09/'),
         base_dir=submodules.rootdir / 'json-schema-spec-2019-09',
@@ -99,7 +92,12 @@ def initialize():
         ContentSchemaKeyword,
     )
 
-    # cache and self-validate the metaschema and its vocabularies
-    metaschema_uri = URI("https://json-schema.org/draft/2019-09/schema")
-    metaschema = JSONSchema.load(metaschema_uri, metaschema_uri=metaschema_uri)
-    metaschema.validate()
+    Catalogue.create_metaschema(
+        URI("https://json-schema.org/draft/2019-09/schema"),
+        URI("https://json-schema.org/draft/2019-09/vocab/core"),
+        URI("https://json-schema.org/draft/2019-09/vocab/applicator"),
+        URI("https://json-schema.org/draft/2019-09/vocab/validation"),
+        URI("https://json-schema.org/draft/2019-09/vocab/format"),
+        URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
+        URI("https://json-schema.org/draft/2019-09/vocab/content"),
+    )
