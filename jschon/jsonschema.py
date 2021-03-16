@@ -68,7 +68,7 @@ class JSONSchema(JSON):
             if self.parent is None and self.uri is None:
                 self.uri = URI(f'mem:{uuid4()}')
 
-            self.bootstrap(value)
+            self._bootstrap(value)
 
             kwclasses = {
                 key: kwclass for key in value
@@ -85,7 +85,7 @@ class JSONSchema(JSON):
         else:
             raise TypeError(f"{value=} is not JSONSchema-compatible")
 
-    def bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
+    def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
         from jschon.vocabulary.core import IdKeyword, SchemaKeyword, VocabularyKeyword
         boostrap_kwclasses = {
             "$id": IdKeyword,
@@ -217,8 +217,8 @@ class Metaschema(JSONSchema):
         self.kwclasses: Dict[str, KeywordClass] = {}
         super().__init__(value, **kwargs)
 
-    def bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
-        super().bootstrap(value)
+    def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
+        super()._bootstrap(value)
         self.kwclasses.update(self.core_vocabulary.kwclasses)
         if "$vocabulary" not in value:
             for vocabulary in self.default_vocabularies:
