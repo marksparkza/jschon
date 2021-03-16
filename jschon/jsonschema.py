@@ -239,9 +239,6 @@ class Keyword:
     __types__: Optional[Union[str, Tuple[str, ...]]] = None
     __depends__: Optional[Union[str, Tuple[str, ...]]] = None
 
-    applicators: Tuple[ApplicatorClass, ...] = ()
-    vocabulary_uri: URI
-
     def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
         for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
             if isinstance(self, applicator_cls):
