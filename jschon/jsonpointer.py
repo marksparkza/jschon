@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import re
 import urllib.parse
-from typing import *
+from typing import Sequence, Union, Iterable, overload, Any, Mapping
 
 from jschon.exceptions import JSONPointerError
 
@@ -13,7 +13,7 @@ __all__ = [
 
 
 class JSONPointer(Sequence[str]):
-    """ JSON Pointer :rfc:`6901`
+    """JSON Pointer :rfc:`6901`
 
     A JSON pointer is a string representing a reference to some value within a
     JSON document. It consists of a series of 'reference tokens' prefixed by '/',
@@ -49,7 +49,7 @@ class JSONPointer(Sequence[str]):
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
     def __new__(cls, *values: Union[str, Iterable[str], JSONPointer]) -> JSONPointer:
-        """ Constructor.
+        """Constructor.
 
         :raise JSONPointerError: if a string argument does not conform to the RFC 6901 syntax
         """
@@ -70,7 +70,7 @@ class JSONPointer(Sequence[str]):
 
             else:
                 raise TypeError("Expecting str, Iterable[str], or JSONPointer")
-        
+
         return self
 
     @overload
@@ -82,7 +82,7 @@ class JSONPointer(Sequence[str]):
         ...
 
     def __getitem__(self, index):
-        """ Return self[index] """
+        """ self[index] """
         if isinstance(index, int):
             return self._keys[index]
         if isinstance(index, slice):
@@ -90,35 +90,35 @@ class JSONPointer(Sequence[str]):
         raise TypeError("Expecting int or slice")
 
     def __len__(self) -> int:
-        """ Return len(self) """
+        """ len(self) """
         return len(self._keys)
 
     def __truediv__(self, key: str) -> JSONPointer:
-        """ Return self / key """
+        """ self / key """
         if isinstance(key, str):
             return JSONPointer(self, (key,))
         return NotImplemented
 
     def __eq__(self, other: JSONPointer) -> bool:
-        """ Return self == other """
+        """ self == other """
         if isinstance(other, JSONPointer):
             return self._keys == other._keys
         return NotImplemented
 
     def __hash__(self) -> int:
-        """ Return hash(self) """
+        """ hash(self) """
         return hash(tuple(self._keys))
 
     def __str__(self) -> str:
-        """ Return str(self) """
+        """ str(self) """
         return ''.join([f'/{self.escape(key)}' for key in self._keys])
 
     def __repr__(self) -> str:
-        """ Return repr(self) """
+        """ repr(self) """
         return f"JSONPointer({str(self)!r})"
 
     def evaluate(self, document: Any) -> Any:
-        """ Return the value at the location in the document indicated by self.
+        """Return the value at the location in the document indicated by self.
 
         :raise JSONPointerError: if the location does not exist
         """
