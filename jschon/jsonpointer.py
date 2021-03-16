@@ -149,12 +149,21 @@ class JSONPointer(Sequence[str]):
 
     @classmethod
     def parse_uri_fragment(cls, value: str) -> JSONPointer:
-        if not value.startswith('#'):
-            raise JSONPointerError(f"'{value}' is not a valid URI fragment")
-        return JSONPointer(urllib.parse.unquote(value[1:]))
+        """Return a new JSONPointer constructed from the :rfc:`6901` string
+        obtained by decoding the given percent-encoded URI fragment.
+        
+        The given value must exclude the initial '#' of the fragment;
+        this allows for sensible interoperation with URI objects.
+        """
+        return JSONPointer(urllib.parse.unquote(value))
 
     def uri_fragment(self) -> str:
-        return f'#{urllib.parse.quote(str(self))}'
+        """Return a percent-encoded URI fragment representation of self.
+
+        The returned string excludes the initial '#' of the fragment;
+        this allows for sensible interoperation with URI objects.
+        """
+        return urllib.parse.quote(str(self))
 
     @staticmethod
     def escape(key: str) -> str:

@@ -111,7 +111,7 @@ class Catalogue:
             schema = JSONSchema(doc, uri=base_uri, **kwargs)
 
         if uri.fragment:
-            ptr = JSONPointer.parse_uri_fragment(f'#{uri.fragment}')
+            ptr = JSONPointer.parse_uri_fragment(uri.fragment)
             schema = ptr.evaluate(schema)
 
         if not isinstance(schema, JSONSchema):

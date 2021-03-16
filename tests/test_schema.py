@@ -115,7 +115,7 @@ id_example = {
 ])
 def test_base_uri(ptr: str, base_uri: str):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
-    schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr).evaluate(rootschema)
+    schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema.base_uri == URI(base_uri)
 
 
@@ -138,7 +138,7 @@ def test_base_uri(ptr: str, base_uri: str):
 ])
 def test_uri(ptr: str, uri: str, canonical: bool):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
-    schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr).evaluate(rootschema)
+    schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema == Catalogue.get_schema(URI(uri))
 
 
