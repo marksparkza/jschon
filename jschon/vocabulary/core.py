@@ -41,6 +41,9 @@ class SchemaKeyword(Keyword):
 
         parentschema.metaschema_uri = uri
 
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
+
 
 class VocabularyKeyword(Keyword):
     __keyword__ = "$vocabulary"
@@ -82,6 +85,9 @@ class VocabularyKeyword(Keyword):
             elif vocab_required:
                 raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
 
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
+
 
 class IdKeyword(Keyword):
     __keyword__ = "$id"
@@ -105,6 +111,9 @@ class IdKeyword(Keyword):
                 raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
         parentschema.uri = uri
+
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
 
 
 class RefKeyword(Keyword):
@@ -141,6 +150,9 @@ class AnchorKeyword(Keyword):
             raise JSONSchemaError(f'No base URI for anchor "{value}"')
 
         Catalogue.add_schema(uri, parentschema)
+
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
 
 
 class RecursiveRefKeyword(Keyword):
@@ -184,6 +196,9 @@ class RecursiveAnchorKeyword(Keyword):
         "default": False
     }
 
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
+
 
 class DefsKeyword(Keyword, PropertyApplicator):
     __keyword__ = "$defs"
@@ -193,7 +208,13 @@ class DefsKeyword(Keyword, PropertyApplicator):
         "default": {}
     }
 
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
+
 
 class CommentKeyword(Keyword):
     __keyword__ = "$comment"
     __schema__ = {"type": "string"}
+
+    def can_evaluate(self, instance: JSON) -> bool:
+        return False
