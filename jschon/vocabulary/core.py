@@ -185,14 +185,13 @@ class RecursiveAnchorKeyword(Keyword):
     }
 
 
-class DefsKeyword(Keyword):
+class DefsKeyword(Keyword, PropertyApplicator):
     __keyword__ = "$defs"
     __schema__ = {
         "type": "object",
         "additionalProperties": {"$recursiveRef": "#"},
         "default": {}
     }
-    applicators = PropertyApplicator,
 
 
 class CommentKeyword(Keyword):

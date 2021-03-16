@@ -20,7 +20,6 @@ __all__ = [
     'Applicator',
     'ArrayApplicator',
     'PropertyApplicator',
-    'ApplicatorClass',
     'Annotation',
     'Error',
     'Scope',
@@ -244,13 +243,10 @@ class Keyword:
     vocabulary_uri: URI
 
     def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
-        # there may be several possible ways in which to set up subschemas for
-        # an applicator keyword; we try a series of applicator classes in turn
-        # until one is found that works for the keyword's value, else we fall
-        # through to the default behaviour of simply JSON-ifying the value
-        for applicator in self.applicators:
-            if (kwjson := applicator(parentschema, self.__keyword__)(value)) is not None:
-                break
+        for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
+            if isinstance(self, applicator_cls):
+                if (kwjson := applicator_cls.jsonify(parentschema, self.__keyword__, value)) is not None:
+                    break
         else:
             kwjson = JSON(value, parent=parentschema, key=self.__keyword__)
 
@@ -283,35 +279,31 @@ KeywordClass = Type[Keyword]
 class Applicator:
     """Sets up a subschema for an applicator keyword."""
 
-    def __init__(self, parent: JSONSchema, key: str):
-        self.parent = parent
-        self.key = key
-
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSONSchema]:
+    @staticmethod
+    def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSONSchema]:
         if JSONSchema.iscompatible(value):
-            return JSONSchema(value, parent=self.parent, key=self.key)
+            return JSONSchema(value, parent=parentschema, key=key)
 
 
-ApplicatorClass = Type[Applicator]
-
-
-class ArrayApplicator(Applicator):
+class ArrayApplicator:
     """Sets up an array of subschemas for an applicator keyword."""
 
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON]:
+    @staticmethod
+    def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
         if isinstance(value, Sequence) and all(JSONSchema.iscompatible(v) for v in value):
-            return JSON(value, parent=self.parent, key=self.key, itemclass=JSONSchema)
+            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema)
 
 
-class PropertyApplicator(Applicator):
+class PropertyApplicator:
     """Sets up property-based subschemas for an applicator keyword."""
 
-    def __call__(self, value: AnyJSONCompatible) -> Optional[JSON]:
+    @staticmethod
+    def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
         if isinstance(value, Mapping) and all(
                 isinstance(k, str) and JSONSchema.iscompatible(v)
                 for k, v in value.items()
         ):
-            return JSON(value, parent=self.parent, key=self.key, itemclass=JSONSchema)
+            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema)
 
 
 @dataclass

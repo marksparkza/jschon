@@ -24,15 +24,13 @@ __all__ = [
 ]
 
 
-class AllOfKeyword(Keyword):
+class AllOfKeyword(Keyword, ArrayApplicator):
     __keyword__ = "allOf"
     __schema__ = {
         "type": "array",
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-
-    applicators = ArrayApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_indices = []
@@ -46,15 +44,13 @@ class AllOfKeyword(Keyword):
             scope.fail(instance, f'The instance is invalid against "allOf" subschemas {err_indices}')
 
 
-class AnyOfKeyword(Keyword):
+class AnyOfKeyword(Keyword, ArrayApplicator):
     __keyword__ = "anyOf"
     __schema__ = {
         "type": "array",
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-
-    applicators = ArrayApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         valid = False
@@ -68,15 +64,13 @@ class AnyOfKeyword(Keyword):
             scope.fail(instance, f'The instance must be valid against at least one "anyOf" subschema')
 
 
-class OneOfKeyword(Keyword):
+class OneOfKeyword(Keyword, ArrayApplicator):
     __keyword__ = "oneOf"
     __schema__ = {
         "type": "array",
         "minItems": 1,
         "items": {"$recursiveRef": "#"}
     }
-
-    applicators = ArrayApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         valid_indices = []
@@ -94,11 +88,9 @@ class OneOfKeyword(Keyword):
                                  f'it is valid against {valid_indices} and invalid against {err_indices}')
 
 
-class NotKeyword(Keyword):
+class NotKeyword(Keyword, Applicator):
     __keyword__ = "not"
     __schema__ = {"$recursiveRef": "#"}
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.json.evaluate(instance, scope)
@@ -109,11 +101,9 @@ class NotKeyword(Keyword):
             scope.errors.clear()
 
 
-class IfKeyword(Keyword):
+class IfKeyword(Keyword, Applicator):
     __keyword__ = "if"
     __schema__ = {"$recursiveRef": "#"}
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.json.evaluate(instance, scope)
@@ -121,39 +111,33 @@ class IfKeyword(Keyword):
         scope.keep = True
 
 
-class ThenKeyword(Keyword):
+class ThenKeyword(Keyword, Applicator):
     __keyword__ = "then"
     __schema__ = {"$recursiveRef": "#"}
     __depends__ = "if"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (if_ := scope.sibling("if")) and if_.valid:
             self.json.evaluate(instance, scope)
 
 
-class ElseKeyword(Keyword):
+class ElseKeyword(Keyword, Applicator):
     __keyword__ = "else"
     __schema__ = {"$recursiveRef": "#"}
     __depends__ = "if"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (if_ := scope.sibling("if")) and not if_.valid:
             self.json.evaluate(instance, scope)
 
 
-class DependentSchemasKeyword(Keyword):
+class DependentSchemasKeyword(Keyword, PropertyApplicator):
     __keyword__ = "dependentSchemas"
     __schema__ = {
         "type": "object",
         "additionalProperties": {"$recursiveRef": "#"}
     }
     __types__ = "object"
-
-    applicators = PropertyApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
@@ -174,7 +158,7 @@ class DependentSchemasKeyword(Keyword):
             scope.annotate(instance, "dependentSchemas", annotation)
 
 
-class ItemsKeyword(Keyword):
+class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
     __keyword__ = "items"
     __schema__ = {
         "anyOf": [
@@ -187,8 +171,6 @@ class ItemsKeyword(Keyword):
         ]
     }
     __types__ = "array"
-
-    applicators = Applicator, ArrayApplicator
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) == 0:
@@ -220,13 +202,11 @@ class ItemsKeyword(Keyword):
                 scope.annotate(instance, "items", eval_index)
 
 
-class AdditionalItemsKeyword(Keyword):
+class AdditionalItemsKeyword(Keyword, Applicator):
     __keyword__ = "additionalItems"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
     __depends__ = "items"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (items := scope.sibling("items")) and (items_annotation := items.annotations.get("items")) and \
@@ -240,13 +220,11 @@ class AdditionalItemsKeyword(Keyword):
                 scope.annotate(instance, "additionalItems", annotation)
 
 
-class UnevaluatedItemsKeyword(Keyword):
+class UnevaluatedItemsKeyword(Keyword, Applicator):
     __keyword__ = "unevaluatedItems"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
     __depends__ = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1
@@ -273,12 +251,10 @@ class UnevaluatedItemsKeyword(Keyword):
             scope.annotate(instance, "unevaluatedItems", annotation)
 
 
-class ContainsKeyword(Keyword):
+class ContainsKeyword(Keyword, Applicator):
     __keyword__ = "contains"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "array"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = 0
@@ -295,7 +271,7 @@ class ContainsKeyword(Keyword):
                                  'against the "contains" subschema')
 
 
-class PropertiesKeyword(Keyword):
+class PropertiesKeyword(Keyword, PropertyApplicator):
     __keyword__ = "properties"
     __schema__ = {
         "type": "object",
@@ -303,8 +279,6 @@ class PropertiesKeyword(Keyword):
         "default": {}
     }
     __types__ = "object"
-
-    applicators = PropertyApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
@@ -324,7 +298,7 @@ class PropertiesKeyword(Keyword):
             scope.annotate(instance, "properties", annotation)
 
 
-class PatternPropertiesKeyword(Keyword):
+class PatternPropertiesKeyword(Keyword, PropertyApplicator):
     __keyword__ = "patternProperties"
     __schema__ = {
         "type": "object",
@@ -333,8 +307,6 @@ class PatternPropertiesKeyword(Keyword):
         "default": {}
     }
     __types__ = "object"
-
-    applicators = PropertyApplicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         matched_names = set()
@@ -355,13 +327,11 @@ class PatternPropertiesKeyword(Keyword):
             scope.annotate(instance, "patternProperties", list(matched_names))
 
 
-class AdditionalPropertiesKeyword(Keyword):
+class AdditionalPropertiesKeyword(Keyword, Applicator):
     __keyword__ = "additionalProperties"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
     __depends__ = "properties", "patternProperties"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
@@ -383,15 +353,13 @@ class AdditionalPropertiesKeyword(Keyword):
             scope.annotate(instance, "additionalProperties", annotation)
 
 
-class UnevaluatedPropertiesKeyword(Keyword):
+class UnevaluatedPropertiesKeyword(Keyword, Applicator):
     __keyword__ = "unevaluatedProperties"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
     __depends__ = "properties", "patternProperties", "additionalProperties", \
                   "if", "then", "else", "dependentSchemas", \
                   "allOf", "anyOf", "oneOf", "not"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
@@ -414,12 +382,10 @@ class UnevaluatedPropertiesKeyword(Keyword):
             scope.annotate(instance, "unevaluatedProperties", annotation)
 
 
-class PropertyNamesKeyword(Keyword):
+class PropertyNamesKeyword(Keyword, Applicator):
     __keyword__ = "propertyNames"
     __schema__ = {"$recursiveRef": "#"}
     __types__ = "object"
-
-    applicators = Applicator,
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_names = []
