@@ -333,7 +333,7 @@ class Scope:
         self.annotations: Dict[str, Annotation] = {}
         self.errors: List[Error] = []
         self.assert_: bool = True  # False => parent schema ignores validity
-        self.keep: bool = False  # True => don't discard the scope if it has no results or children
+        self._discard = False
 
     @contextmanager
     def __call__(self, schema: JSONSchema, key: str) -> Scope:
@@ -341,7 +341,7 @@ class Scope:
         try:
             yield child
         finally:
-            if not child.children and not child.annotations and not child.errors and not child.keep:
+            if child._discard:
                 del self.children[key]
 
     @property
@@ -370,6 +370,9 @@ class Scope:
             schema_uri=None,
             message=error,
         )]
+
+    def discard(self) -> None:
+        self._discard = True
 
     @property
     def valid(self) -> bool:

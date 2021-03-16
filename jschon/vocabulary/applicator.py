@@ -108,7 +108,6 @@ class IfKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.json.evaluate(instance, scope)
         scope.assert_ = False
-        scope.keep = True
 
 
 class ThenKeyword(Keyword, Applicator):
@@ -119,6 +118,8 @@ class ThenKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (if_ := scope.sibling("if")) and if_.valid:
             self.json.evaluate(instance, scope)
+        else:
+            scope.discard()
 
 
 class ElseKeyword(Keyword, Applicator):
@@ -129,6 +130,8 @@ class ElseKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (if_ := scope.sibling("if")) and not if_.valid:
             self.json.evaluate(instance, scope)
+        else:
+            scope.discard()
 
 
 class DependentSchemasKeyword(Keyword, PropertyApplicator):
@@ -218,6 +221,8 @@ class AdditionalItemsKeyword(Keyword, Applicator):
 
             if scope.valid:
                 scope.annotate(instance, "additionalItems", annotation)
+        else:
+            scope.discard()
 
 
 class UnevaluatedItemsKeyword(Keyword, Applicator):
@@ -230,16 +235,19 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
         last_evaluated_item = -1
         for items_annotation in scope.parent.collect_annotations(instance, "items"):
             if items_annotation.value is True:
+                scope.discard()
                 return
             if type(items_annotation.value) is int and items_annotation.value > last_evaluated_item:
                 last_evaluated_item = items_annotation.value
 
         for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):
             if additional_items_annotation.value is True:
+                scope.discard()
                 return
 
         for unevaluated_items_annotation in scope.parent.collect_annotations(instance, "unevaluatedItems"):
             if unevaluated_items_annotation.value is True:
+                scope.discard()
                 return
 
         annotation = None
