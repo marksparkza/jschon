@@ -62,7 +62,7 @@ class URI:
         return self.copy(fragment=False).is_absolute()
 
     def resolve(self, base_uri: URI) -> URI:
-        """ Produce a new URI by resolving self against the given base URI. """
+        """Produce a new URI by resolving self against the given base URI."""
         uri = object.__new__(URI)
         uri._uriref = self._uriref.resolve_with(base_uri._uriref)
         return uri
@@ -75,14 +75,19 @@ class URI:
             query=True,
             fragment=True,
     ) -> URI:
-        """ Produce a new URI composed of the specified attributes of self. """
+        """Produce a new URI composed of the specified components of self.
+
+        - True => use existing
+        - False/None => remove
+        - Otherwise => replace
+        """
         uri = object.__new__(URI)
         uri._uriref = self._uriref.copy_with(
-            scheme=rfc3986.misc.UseExisting if scheme else None,
-            authority=rfc3986.misc.UseExisting if authority else None,
-            path=rfc3986.misc.UseExisting if path else None,
-            query=rfc3986.misc.UseExisting if query else None,
-            fragment=rfc3986.misc.UseExisting if fragment else None,
+            scheme=rfc3986.misc.UseExisting if scheme is True else None if scheme is False else scheme,
+            authority=rfc3986.misc.UseExisting if authority is True else None if authority is False else authority,
+            path=rfc3986.misc.UseExisting if path is True else None if path is False else path,
+            query=rfc3986.misc.UseExisting if query is True else None if query is False else query,
+            fragment=rfc3986.misc.UseExisting if fragment is True else None if fragment is False else fragment,
         )
         return uri
 
@@ -93,7 +98,7 @@ class URI:
             allow_fragment: bool = True,
             allow_non_empty_fragment: bool = True,
     ) -> None:
-        """ Validate self.
+        """Validate self.
 
         :raise URIError: if self fails validation
         """
