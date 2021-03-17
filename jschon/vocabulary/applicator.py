@@ -35,7 +35,7 @@ class AllOfKeyword(Keyword, ArrayApplicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_indices = []
         for index, subschema in enumerate(self.json):
-            with scope(self.parentschema, str(index)) as subscope:
+            with scope(str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if not subscope.valid:
                     err_indices += [index]
@@ -55,7 +55,7 @@ class AnyOfKeyword(Keyword, ArrayApplicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         valid = False
         for index, subschema in enumerate(self.json):
-            with scope(self.parentschema, str(index)) as subscope:
+            with scope(str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if subscope.valid:
                     valid = True
@@ -76,7 +76,7 @@ class OneOfKeyword(Keyword, ArrayApplicator):
         valid_indices = []
         err_indices = []
         for index, subschema in enumerate(self.json):
-            with scope(self.parentschema, str(index)) as subscope:
+            with scope(str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if subscope.valid:
                     valid_indices += [index]
@@ -147,7 +147,7 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
         err_names = []
         for name, subschema in self.json.items():
             if name in instance:
-                with scope(self.parentschema, name) as subscope:
+                with scope(name) as subscope:
                     subschema.evaluate(instance, subscope)
                     if subscope.valid:
                         annotation += [name]
@@ -194,7 +194,7 @@ class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
             err_indices = []
             for index, item in enumerate(instance[:len(self.json)]):
                 eval_index = index
-                with scope(self.parentschema, str(index)) as subscope:
+                with scope(str(index)) as subscope:
                     self.json[index].evaluate(item, subscope)
                     if not subscope.valid:
                         err_indices += [index]
@@ -293,7 +293,7 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
         err_names = []
         for name, item in instance.items():
             if name in self.json:
-                with scope(self.parentschema, name) as subscope:
+                with scope(name) as subscope:
                     self.json[name].evaluate(item, subscope)
                     if subscope.valid:
                         annotation += [name]
@@ -322,7 +322,7 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
         for name, item in instance.items():
             for regex, subschema in self.json.items():
                 if re.search(regex, name) is not None:
-                    with scope(self.parentschema, regex) as subscope:
+                    with scope(regex) as subscope:
                         subschema.evaluate(item, subscope)
                         if subscope.valid:
                             matched_names |= {name}

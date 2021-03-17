@@ -138,7 +138,7 @@ class JSONSchema(JSON):
         else:
             for key, keyword in self.keywords.items():
                 if keyword.can_evaluate(instance):
-                    with scope(self, key) as subscope:
+                    with scope(key, self) as subscope:
                         keyword.evaluate(instance, subscope)
 
             if any(child.assert_ and not child.valid for child in scope.children.values()):
@@ -336,8 +336,11 @@ class Scope:
         self._discard = False
 
     @contextmanager
-    def __call__(self, schema: JSONSchema, key: str) -> Scope:
-        self.children[key] = (child := Scope(schema, self.path / key, self))
+    def __call__(self, key: str, schema: JSONSchema = None) -> ContextManager[Scope]:
+        """Yield a subscope of the current scope by descending down the
+        evaluation path by ``key``, into ``schema`` if given, or within
+        the schema of the current scope otherwise."""
+        self.children[key] = (child := Scope(schema or self.schema, self.path / key, self))
         try:
             yield child
         finally:
