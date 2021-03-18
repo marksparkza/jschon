@@ -35,11 +35,19 @@ def test_create_jsonpointer(values: List[Union[str, List[str]]]):
 
 
 @given(jsonpointer, jsonpointer_key)
-def test_extend_jsonpointer(value, newkey):
+def test_extend_jsonpointer_one_key(value, newkey):
     pointer = JSONPointer(value) / newkey
     newtoken = jsonpointer_escape(newkey)
     assert pointer[-1] == newkey
     assert str(pointer) == f'{value}/{newtoken}'
+
+
+@given(jsonpointer, hs.lists(jsonpointer_key))
+def test_extend_jsonpointer_multi_keys(value, newkeys):
+    pointer = (base_ptr := JSONPointer(value)) / newkeys
+    for i in range(len(newkeys)):
+        assert pointer[len(base_ptr) + i] == newkeys[i]
+    assert str(pointer) == value + ''.join(f'/{jsonpointer_escape(key)}' for key in newkeys)
 
 
 @given(json, jsonpointer_key)

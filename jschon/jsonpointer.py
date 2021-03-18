@@ -38,7 +38,7 @@ class JSONPointer(Sequence[str]):
     The ``/`` operator provides a convenient syntax for extending a JSON pointer.
     It produces a new ``JSONPointer`` instance by copying the left-hand argument
     (a ``JSONPointer`` instance) and appending the right-hand argument (an
-    unescaped key).
+    unescaped key, or an iterable of unescaped keys).
 
     Taking an index into a ``JSONPointer`` returns the unescaped key at that
     position. Taking a slice into a ``JSONPointer`` returns a new ``JSONPointer``
@@ -93,10 +93,20 @@ class JSONPointer(Sequence[str]):
         """ len(self) """
         return len(self._keys)
 
-    def __truediv__(self, key: str) -> JSONPointer:
-        """ self / key """
-        if isinstance(key, str):
-            return JSONPointer(self, (key,))
+    @overload
+    def __truediv__(self, suffix: str) -> JSONPointer:
+        ...
+
+    @overload
+    def __truediv__(self, suffix: Iterable[str]) -> JSONPointer:
+        ...
+
+    def __truediv__(self, suffix) -> JSONPointer:
+        """ self / suffix """
+        if isinstance(suffix, str):
+            return JSONPointer(self, (suffix,))
+        if isinstance(suffix, Iterable):
+            return JSONPointer(self, suffix)
         return NotImplemented
 
     def __eq__(self, other: JSONPointer) -> bool:
