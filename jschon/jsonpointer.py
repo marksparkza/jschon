@@ -29,8 +29,7 @@ class JSONPointer(Sequence[str]):
     of arguments, each of which can be one of:
 
     - a string conforming to the :rfc:`6901` syntax
-    - an iterable of unescaped keys
-    - an existing ``JSONPointer`` instance
+    - an iterable of unescaped keys (which can be a ``JSONPointer`` instance)
 
     Two ``JSONPointer`` instances compare equal if their key sequences are
     identical.
@@ -48,7 +47,7 @@ class JSONPointer(Sequence[str]):
     _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
-    def __new__(cls, *values: Union[str, Iterable[str], JSONPointer]) -> JSONPointer:
+    def __new__(cls, *values: Union[str, Iterable[str]]) -> JSONPointer:
         """Constructor.
 
         :raise JSONPointerError: if a string argument does not conform to the RFC 6901 syntax
@@ -62,14 +61,11 @@ class JSONPointer(Sequence[str]):
                     raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
                 self._keys.extend(self.unescape(token) for token in value.split('/')[1:])
 
-            elif isinstance(value, JSONPointer):
-                self._keys.extend(value._keys)
-
             elif isinstance(value, Iterable) and all(isinstance(k, str) for k in value):
                 self._keys.extend(value)
 
             else:
-                raise TypeError("Expecting str, Iterable[str], or JSONPointer")
+                raise TypeError("Expecting str or Iterable[str]")
 
         return self
 
