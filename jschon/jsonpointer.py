@@ -61,6 +61,9 @@ class JSONPointer(Sequence[str]):
                     raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
                 self._keys.extend(self.unescape(token) for token in value.split('/')[1:])
 
+            elif isinstance(value, JSONPointer):
+                self._keys.extend(value._keys)
+
             elif isinstance(value, Iterable) and all(isinstance(k, str) for k in value):
                 self._keys.extend(value)
 
