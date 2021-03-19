@@ -17,6 +17,16 @@ def evaluate(kwclass, kwvalue, instval):
     return scope.valid
 
 
+def isequal(x, y):
+    if type(x) is not type(y) and not {type(x), type(y)} <= {int, float, Decimal}:
+        return False
+    if isinstance(x, list):
+        return len(x) == len(y) and all(isequal(x[i], y[i]) for i in range(len(x)))
+    if isinstance(x, dict):
+        return x.keys() == y.keys() and all(isequal(x[k], y[k]) for k in x)
+    return x == y
+
+
 @given(kwvalue=jsontype | jsontypes, instval=json)
 def test_type(kwvalue, instval):
     result = evaluate(TypeKeyword, kwvalue, instval)
@@ -41,19 +51,13 @@ def test_type(kwvalue, instval):
 @given(kwvalue=jsonarray, instval=json)
 def test_enum(kwvalue, instval):
     result = evaluate(EnumKeyword, kwvalue, instval)
-    assert result == any(
-        instval == kwval for kwval in kwvalue
-        if type(instval) == type(kwval) or {type(instval), type(kwval)} <= {int, float, Decimal}
-    )
+    assert result == any(isequal(instval, kwval) for kwval in kwvalue)
 
 
 @given(kwvalue=json, instval=json)
 def test_const(kwvalue, instval):
     result = evaluate(ConstKeyword, kwvalue, instval)
-    assert result == (
-            instval == kwvalue and
-            (type(instval) == type(kwvalue) or {type(instval), type(kwvalue)} <= {int, float, Decimal})
-    )
+    assert result == isequal(instval, kwvalue)
 
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
@@ -121,15 +125,6 @@ def test_min_items(kwvalue, instval):
 
 @given(kwvalue=jsonboolean, instval=jsonarray)
 def test_unique_items(kwvalue, instval):
-    def isequal(x, y):
-        if type(x) is not type(y) and not {type(x), type(y)} <= {int, float}:
-            return False
-        if isinstance(x, list):
-            return len(x) == len(y) and all(isequal(x[i], y[i]) for i in range(len(x)))
-        if isinstance(x, dict):
-            return x.keys() == y.keys() and all(isequal(x[k], y[k]) for k in x)
-        return x == y
-
     result = evaluate(UniqueItemsKeyword, kwvalue, instval)
     if kwvalue:
         uniquified = []
