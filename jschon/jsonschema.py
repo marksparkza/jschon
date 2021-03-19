@@ -365,7 +365,7 @@ class Scope:
         the schema of the current scope otherwise."""
         path = self.path / key
         schema = schema or self.schema
-        if schema == self.schema:
+        if schema is self.schema:
             relpath = self.relpath / key
         else:
             relpath = JSONPointer((key,))
