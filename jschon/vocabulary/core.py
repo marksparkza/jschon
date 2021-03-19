@@ -149,6 +149,10 @@ class AnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for anchor "{value}"')
 
+        # just add a schema reference to the catalogue, rather than updating
+        # the schema URI itself; this way we keep canonical URIs consistent
+        # for subschemas regardless of anchor usage
+        # parentschema.uri = uri
         Catalogue.add_schema(uri, parentschema)
 
     def can_evaluate(self, instance: JSON) -> bool:

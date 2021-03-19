@@ -1,3 +1,5 @@
+import urllib.parse
+
 import pytest
 from hypothesis import given
 from pytest import param as p
@@ -139,7 +141,17 @@ def test_base_uri(ptr: str, base_uri: str):
 def test_uri(ptr: str, uri: str, canonical: bool):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
-    assert schema == Catalogue.get_schema(URI(uri))
+    assert schema == Catalogue.get_schema(uri := URI(uri))
+    if canonical:
+        # 'canonical' is as per the JSON Schema spec; however, we skip testing of
+        # anchored URIs since we have only one way to calculate a schema's canonical URI
+        if (fragment := uri.fragment) and not fragment.startswith('/'):
+            return
+        if fragment:
+            uri = uri.copy(fragment=urllib.parse.quote(fragment))
+        else:
+            uri = uri.copy(fragment=False)  # remove empty fragment
+        assert schema.canonical_uri == uri
 
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#recursive-example

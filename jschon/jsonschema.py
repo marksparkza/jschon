@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import *
@@ -201,6 +202,25 @@ class JSONSchema(JSON):
             if self._uri is not None:
                 Catalogue.add_schema(self._uri, self)
 
+    @property
+    def canonical_uri(self) -> Optional[URI]:
+        if self._uri is not None:
+            return self._uri
+
+        keys = deque()
+        node = self
+        while node.parent is not None:
+            keys.appendleft(node.key)
+            node = node.parent
+
+            if isinstance(node, JSONSchema) and node._uri is not None:
+                if fragment := node._uri.fragment:
+                    relpath = JSONPointer.parse_uri_fragment(fragment) / keys
+                else:
+                    relpath = JSONPointer(keys)
+
+                return node._uri.copy(fragment=relpath.uri_fragment())
+
 
 class Metaschema(JSONSchema):
 
@@ -307,7 +327,7 @@ class PropertyApplicator:
 class Annotation:
     instance_path: JSONPointer
     evaluation_path: JSONPointer
-    schema_uri: URI
+    absolute_uri: URI
     value: AnyJSONCompatible
 
 
@@ -315,7 +335,7 @@ class Annotation:
 class Error:
     instance_path: JSONPointer
     evaluation_path: JSONPointer
-    schema_uri: URI
+    absolute_uri: URI
     message: str
 
 
@@ -323,11 +343,14 @@ class Scope:
     def __init__(
             self,
             schema: JSONSchema,
+            *,
             path: JSONPointer = None,
+            relpath: JSONPointer = None,
             parent: Scope = None,
     ):
         self.schema: JSONSchema = schema
         self.path: JSONPointer = path or JSONPointer()
+        self.relpath: JSONPointer = relpath or JSONPointer()
         self.parent: Optional[Scope] = parent
         self.children: Dict[str, Scope] = {}
         self.annotations: Dict[str, Annotation] = {}
@@ -340,7 +363,19 @@ class Scope:
         """Yield a subscope of the current scope by descending down the
         evaluation path by ``key``, into ``schema`` if given, or within
         the schema of the current scope otherwise."""
-        self.children[key] = (child := Scope(schema or self.schema, self.path / key, self))
+        path = self.path / key
+        schema = schema or self.schema
+        if schema == self.schema:
+            relpath = self.relpath / key
+        else:
+            relpath = JSONPointer((key,))
+
+        self.children[key] = (child := Scope(
+            schema,
+            path=path,
+            relpath=relpath,
+            parent=self,
+        ))
         try:
             yield child
         finally:
@@ -362,7 +397,7 @@ class Scope:
             self.annotations[key] = Annotation(
                 instance_path=instance.path,
                 evaluation_path=self.path,
-                schema_uri=None,
+                absolute_uri=self.absolute_uri,
                 value=value,
             )
 
@@ -370,7 +405,7 @@ class Scope:
         self.errors += [Error(
             instance_path=instance.path,
             evaluation_path=self.path,
-            schema_uri=None,
+            absolute_uri=self.absolute_uri,
             message=error,
         )]
 
@@ -380,6 +415,15 @@ class Scope:
     @property
     def valid(self) -> bool:
         return not self.errors
+
+    @property
+    def absolute_uri(self) -> Optional[URI]:
+        if (schema_uri := self.schema.canonical_uri) is not None:
+            if fragment := schema_uri.fragment:
+                relpath = JSONPointer.parse_uri_fragment(fragment) / self.relpath
+            else:
+                relpath = self.relpath
+            return schema_uri.copy(fragment=relpath.uri_fragment())
 
     def collect_annotations(self, instance: JSON, key: str = None) -> Iterator[Annotation]:
         """Return an iterator over annotations produced in this subtree
