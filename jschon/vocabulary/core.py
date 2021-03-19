@@ -123,7 +123,11 @@ class RefKeyword(Keyword):
         "format": "uri-reference"
     }
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def __init__(self, parentschema: JSONSchema, value: str):
+        super().__init__(parentschema, value)
+        self.refschema = None
+
+    def resolve(self) -> None:
         uri = URI(self.json.value)
         if not uri.can_absolute():
             if (base_uri := self.parentschema.base_uri) is not None:
@@ -131,8 +135,10 @@ class RefKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
-        refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
-        refschema.evaluate(instance, scope)
+        self.refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        self.refschema.evaluate(instance, scope)
 
 
 class AnchorKeyword(Keyword):

@@ -1,6 +1,6 @@
 import pytest
 
-from jschon.jsonschema import JSONSchema
+from jschon.jsonschema import *
 from tests import metaschema_uri
 
 
@@ -20,6 +20,7 @@ from tests import metaschema_uri
 def test_applicator(example):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri)
     for applicator_key, applicator_val in example.items():
+        assert schema.keywords[applicator_key].applicator_cls is Applicator
         assert isinstance(schema[applicator_key], JSONSchema)
         assert schema[applicator_key].value == applicator_val
 
@@ -33,6 +34,7 @@ def test_applicator(example):
 def test_array_applicator(example):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri)
     for applicator_key, applicator_val in example.items():
+        assert schema.keywords[applicator_key].applicator_cls is ArrayApplicator
         for i, item in enumerate(applicator_val):
             assert isinstance(schema[applicator_key][i], JSONSchema)
             assert schema[applicator_key][i].value == item
@@ -47,6 +49,7 @@ def test_array_applicator(example):
 def test_property_applicator(example):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri)
     for applicator_key, applicator_val in example.items():
+        assert schema.keywords[applicator_key].applicator_cls is PropertyApplicator
         for prop_key, prop_val in applicator_val.items():
             assert isinstance(schema[applicator_key][prop_key], JSONSchema)
             assert schema[applicator_key][prop_key].value == prop_val

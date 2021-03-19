@@ -82,6 +82,9 @@ class JSONSchema(JSON):
                 self.keywords[key] = kw
                 self.value[key] = kw.json
 
+            if self.parent is None:
+                self._resolve_references()
+
         else:
             raise TypeError(f"{value=} is not JSONSchema-compatible")
 
@@ -97,6 +100,20 @@ class JSONSchema(JSON):
                 kw = kwclass(self, value[key])
                 self.keywords[key] = kw
                 self.value[key] = kw.json
+
+    def _resolve_references(self) -> None:
+        if ref_kw := self.keywords.get("$ref"):
+            ref_kw.resolve()
+
+        for kw in self.keywords.values():
+            if kw.applicator_cls is Applicator:
+                kw.json._resolve_references()
+            elif kw.applicator_cls is ArrayApplicator:
+                for schema in kw.json:
+                    schema._resolve_references()
+            elif kw.applicator_cls is PropertyApplicator:
+                for schema in kw.json.values():
+                    schema._resolve_references()
 
     @staticmethod
     def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
@@ -260,9 +277,11 @@ class Keyword:
     __depends__: Optional[Union[str, Tuple[str, ...]]] = None
 
     def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+        self.applicator_cls = None
         for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
             if isinstance(self, applicator_cls):
                 if (kwjson := applicator_cls.jsonify(parentschema, self.__keyword__, value)) is not None:
+                    self.applicator_cls = applicator_cls
                     break
         else:
             kwjson = JSON(value, parent=parentschema, key=self.__keyword__)
