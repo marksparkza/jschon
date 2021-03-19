@@ -2,10 +2,6 @@ class CatalogueError(Exception):
     pass
 
 
-class VocabularyError(Exception):
-    pass
-
-
 class JSONSchemaError(Exception):
     pass
 
