@@ -107,7 +107,7 @@ class IfKeyword(Keyword, Applicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.json.evaluate(instance, scope)
-        scope.assert_ = False
+        scope.noassert()
 
 
 class ThenKeyword(Keyword, Applicator):

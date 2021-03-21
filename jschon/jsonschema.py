@@ -159,7 +159,7 @@ class JSONSchema(JSON):
                     with scope(key, self) as subscope:
                         keyword.evaluate(instance, subscope)
 
-            if any(child.assert_ and not child.valid for child in scope.children.values()):
+            if any(child._assert and not child.valid for child in scope.children.values()):
                 scope.fail(instance, "The instance failed validation against the schema")
 
         return scope
@@ -374,7 +374,7 @@ class Scope:
         self.children: Dict[str, Scope] = {}
         self.annotations: Dict[str, Annotation] = {}
         self.errors: List[Error] = []
-        self.assert_: bool = True  # False => parent schema ignores validity
+        self._assert = True
         self._discard = False
 
     @contextmanager
@@ -428,7 +428,13 @@ class Scope:
             message=error,
         )]
 
+    def noassert(self) -> None:
+        """Indicate that the scope's validity should not affect its
+        assertion result."""
+        self._assert = False
+
     def discard(self) -> None:
+        """Indicate that the scope should be ignored and discarded."""
         self._discard = True
 
     @property
