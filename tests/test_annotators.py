@@ -7,11 +7,11 @@ from jschon.vocabulary.metadata import *
 from tests.strategies import *
 
 
-def evaluate(kwclass, kwvalue):
+def evaluate(kwclass, key, kwvalue):
     schema = JSONSchema(True)
-    kwclass(schema, kwvalue).evaluate(JSON({}), scope := Scope(schema))
+    kwclass(schema, key, kwvalue, ()).evaluate(JSON({}), scope := Scope(schema))
     try:
-        assert scope.annotations[kwclass.__keyword__].value == kwvalue
+        assert scope.annotations[key].value == kwvalue
     except KeyError:
         assert kwvalue is None
     assert scope.valid is True
@@ -19,49 +19,49 @@ def evaluate(kwclass, kwvalue):
 
 @given(jsonstring)
 def test_title(kwvalue):
-    evaluate(TitleKeyword, kwvalue)
+    evaluate(TitleKeyword, "title", kwvalue)
 
 
 @given(jsonstring)
 def test_description(kwvalue):
-    evaluate(DescriptionKeyword, kwvalue)
+    evaluate(DescriptionKeyword, "description", kwvalue)
 
 
 @given(json)
 def test_default(kwvalue):
-    evaluate(DefaultKeyword, kwvalue)
+    evaluate(DefaultKeyword, "default", kwvalue)
 
 
 @given(jsonboolean)
 def test_deprecated(kwvalue):
-    evaluate(DeprecatedKeyword, kwvalue)
+    evaluate(DeprecatedKeyword, "deprecated", kwvalue)
 
 
 @given(jsonboolean)
 def test_read_only(kwvalue):
-    evaluate(ReadOnlyKeyword, kwvalue)
+    evaluate(ReadOnlyKeyword, "readOnly", kwvalue)
 
 
 @given(jsonboolean)
 def test_write_only(kwvalue):
-    evaluate(WriteOnlyKeyword, kwvalue)
+    evaluate(WriteOnlyKeyword, "writeOnly", kwvalue)
 
 
 @given(jsonarray)
 def test_examples(kwvalue):
-    evaluate(ExamplesKeyword, kwvalue)
+    evaluate(ExamplesKeyword, "examples", kwvalue)
 
 
 @given(jsonstring)
 def test_content_media_type(kwvalue):
-    evaluate(ContentMediaTypeKeyword, kwvalue)
+    evaluate(ContentMediaTypeKeyword, "contentMediaType", kwvalue)
 
 
 @given(jsonstring)
 def test_content_encoding(kwvalue):
-    evaluate(ContentEncodingKeyword, kwvalue)
+    evaluate(ContentEncodingKeyword, "contentEncoding", kwvalue)
 
 
 @given(jsonobject)
 def test_content_schema(kwvalue):
-    evaluate(ContentSchemaKeyword, kwvalue)
+    evaluate(ContentSchemaKeyword, "contentSchema", kwvalue)

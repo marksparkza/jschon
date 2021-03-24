@@ -1,7 +1,7 @@
-from typing import Mapping
+from typing import Mapping, Tuple
 
 from jschon.catalogue import Catalogue
-from jschon.exceptions import JSONSchemaError, URIError
+from jschon.exceptions import JSONSchemaError, URIError, CatalogueError
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, JSONSchema, Scope, PropertyApplicator, Metaschema
 from jschon.uri import URI
@@ -20,19 +20,15 @@ __all__ = [
 
 
 class SchemaKeyword(Keyword):
-    __keyword__ = "$schema"
-    __schema__ = {
-        "type": "string",
-        "format": "uri"
-    }
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
-        if not isinstance(value, str):
-            raise JSONSchemaError('Invalid "$schema" keyword value')
-
-        if parentschema.parent is not None:
-            raise JSONSchemaError('The "$schema" keyword may not appear in a subschema')
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
 
         try:
             (uri := URI(value)).validate(require_scheme=True, require_normalized=True)
@@ -46,33 +42,22 @@ class SchemaKeyword(Keyword):
 
 
 class VocabularyKeyword(Keyword):
-    __keyword__ = "$vocabulary"
-    __schema__ = {
-        "type": "object",
-        "propertyNames": {
-            "type": "string",
-            "format": "uri"
-        },
-        "additionalProperties": {
-            "type": "boolean"
-        }
-    }
 
-    def __init__(self, parentschema: JSONSchema, value: Mapping[str, bool]):
-        super().__init__(parentschema, value)
-        if not isinstance(value, Mapping) or \
-                not all(isinstance(k, str) and isinstance(v, bool) for k, v in value.items()):
-            raise JSONSchemaError('Invalid "$vocabulary" keyword value')
-
-        if parentschema.parent is not None:
-            raise JSONSchemaError('The "$vocabulary" keyword may not appear in a subschema')
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: Mapping[str, bool],
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
 
         if not isinstance(parentschema, Metaschema):
             return
 
         if (core_vocab_uri := str(parentschema.core_vocabulary.uri)) not in value or \
                 value[core_vocab_uri] is not True:
-            raise JSONSchemaError('The "$vocabulary" keyword must list the core vocabulary with a value of true')
+            raise JSONSchemaError(f'The "{key}" keyword must list the core vocabulary with a value of true')
 
         for vocab_uri, vocab_required in value.items():
             try:
@@ -80,28 +65,27 @@ class VocabularyKeyword(Keyword):
             except URIError as e:
                 raise JSONSchemaError from e
 
-            if vocabulary := Catalogue.get_vocabulary(vocab_uri):
-                parentschema.kwclasses.update(vocabulary.kwclasses)
-            elif vocab_required:
-                raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
+            try:
+                vocabulary = Catalogue.get_vocabulary(vocab_uri)
+                parentschema.kwdefs.update(vocabulary.kwdefs)
+            except CatalogueError:
+                if vocab_required:
+                    raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False
 
 
 class IdKeyword(Keyword):
-    __keyword__ = "$id"
-    __schema__ = {
-        "type": "string",
-        "format": "uri-reference",
-        "$comment": "Non-empty fragments not allowed.",
-        "pattern": "^[^#]*#?$"
-    }
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
-        if not isinstance(value, str):
-            raise JSONSchemaError('Invalid "$id" keyword value')
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
 
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
@@ -117,14 +101,15 @@ class IdKeyword(Keyword):
 
 
 class RefKeyword(Keyword):
-    __keyword__ = "$ref"
-    __schema__ = {
-        "type": "string",
-        "format": "uri-reference"
-    }
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
         self.refschema = None
 
     def resolve(self) -> None:
@@ -142,14 +127,16 @@ class RefKeyword(Keyword):
 
 
 class AnchorKeyword(Keyword):
-    __keyword__ = "$anchor"
-    __schema__ = {
-        "type": "string",
-        "pattern": "^[A-Za-z][-A-Za-z0-9.:_]*$"
-    }
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
+
         if (base_uri := parentschema.base_uri) is not None:
             uri = URI(f'{base_uri}#{value}')
         else:
@@ -166,16 +153,18 @@ class AnchorKeyword(Keyword):
 
 
 class RecursiveRefKeyword(Keyword):
-    __keyword__ = "$recursiveRef"
-    __schema__ = {
-        "type": "string",
-        "format": "uri-reference"
-    }
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
+
         if value != '#':
-            raise JSONSchemaError('The "$recursiveRef" keyword may only take the value "#"')
+            raise JSONSchemaError(f'"{key}" may only take the value "#"')
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (base_uri := self.parentschema.base_uri) is not None:
@@ -200,31 +189,18 @@ class RecursiveRefKeyword(Keyword):
 
 
 class RecursiveAnchorKeyword(Keyword):
-    __keyword__ = "$recursiveAnchor"
-    __schema__ = {
-        "type": "boolean",
-        "default": False
-    }
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False
 
 
 class DefsKeyword(Keyword, PropertyApplicator):
-    __keyword__ = "$defs"
-    __schema__ = {
-        "type": "object",
-        "additionalProperties": {"$recursiveRef": "#"},
-        "default": {}
-    }
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False
 
 
 class CommentKeyword(Keyword):
-    __keyword__ = "$comment"
-    __schema__ = {"type": "string"}
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False

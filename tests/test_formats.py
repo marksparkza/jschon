@@ -38,7 +38,7 @@ Catalogue.add_format_validators({
 
 def evaluate(format_attr, instval):
     schema = JSONSchema(True)
-    FormatKeyword(schema, format_attr).evaluate(JSON(instval), scope := Scope(schema))
+    FormatKeyword(schema, "format", format_attr, ()).evaluate(JSON(instval), scope := Scope(schema))
     assert scope.annotations["format"].value == format_attr
     return scope.valid
 

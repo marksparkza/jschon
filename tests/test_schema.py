@@ -47,11 +47,11 @@ def test_keyword_dependency_resolution(value: list):
             pass
 
     metaschema = Catalogue.get_schema(metaschema_uri)
-    kwclasses = {
-        kw: metaschema.kwclasses[kw] for kw in value
+    kwdefs = {
+        kw: metaschema.kwdefs[kw] for kw in value
     }
     keywords = [
-        kwclass.__keyword__ for kwclass in JSONSchema._resolve_keyword_dependencies(kwclasses)
+        kwdef.key for kwdef in JSONSchema._resolve_dependencies(kwdefs)
     ]
 
     assert_keyword_order("properties", "additionalProperties")

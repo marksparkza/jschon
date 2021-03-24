@@ -10,14 +10,13 @@ from jschon.exceptions import *
 from jschon.json import *
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
-from jschon.utils import tuplify
 
 __all__ = [
     'JSONSchema',
     'Metaschema',
     'Vocabulary',
+    'KeywordDef',
     'Keyword',
-    'KeywordClass',
     'Applicator',
     'ArrayApplicator',
     'PropertyApplicator',
@@ -70,17 +69,17 @@ class JSONSchema(JSON):
 
             self._bootstrap(value)
 
-            kwclasses = {
-                key: kwclass for key in value
-                if (kwclass := self.metaschema.kwclasses.get(key)) and
-                   # skip bootstrapped keywords
-                   key not in self.keywords
+            kwdefs = {
+                key: kwdef for key in value
+                if ((kwdef := self.metaschema.kwdefs.get(key)) and
+                    # skip bootstrapped keywords
+                    key not in self.keywords)
             }
 
-            for kwclass in self._resolve_keyword_dependencies(kwclasses):
-                kw = kwclass(self, value[(key := kwclass.__keyword__)])
-                self.keywords[key] = kw
-                self.value[key] = kw.json
+            for kwdef in self._resolve_dependencies(kwdefs):
+                kw = kwdef.kwclass(self, kwdef.key, value[kwdef.key], kwdef.instance_types)
+                self.keywords[kwdef.key] = kw
+                self.value[kwdef.key] = kw.json
 
             if self.parent is None:
                 self._resolve_references()
@@ -97,7 +96,7 @@ class JSONSchema(JSON):
         }
         for key, kwclass in boostrap_kwclasses.items():
             if key in value:
-                kw = kwclass(self, value[key])
+                kw = kwclass(self, key, value[key], ())
                 self.keywords[key] = kw
                 self.value[key] = kw.json
 
@@ -116,22 +115,22 @@ class JSONSchema(JSON):
                     schema._resolve_references()
 
     @staticmethod
-    def _resolve_keyword_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
+    def _resolve_dependencies(kwdefs: Dict[str, KeywordDef]) -> Iterator[KeywordDef]:
         dependencies = {
-            kwclass: [depclass for dep in tuplify(kwclass.__depends__)
-                      if (depclass := kwclasses.get(dep))]
-            for kwclass in kwclasses.values()
+            key: [depkey for depkey in kwdef.depends_on
+                  if kwdefs.get(depkey)]
+            for key, kwdef in kwdefs.items()
         }
         while dependencies:
-            for kwclass, depclasses in dependencies.items():
-                if not depclasses:
-                    del dependencies[kwclass]
+            for key, depkeys in dependencies.items():
+                if not depkeys:
+                    del dependencies[key]
                     for deps in dependencies.values():
                         try:
-                            deps.remove(kwclass)
+                            deps.remove(key)
                         except ValueError:
                             pass
-                    yield kwclass
+                    yield kwdefs[key]
                     break
 
     def validate(self) -> None:
@@ -250,54 +249,61 @@ class Metaschema(JSONSchema):
     ):
         self.core_vocabulary: Vocabulary = core_vocabulary
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
-        self.kwclasses: Dict[str, KeywordClass] = {}
+        self.kwdefs: Dict[str, KeywordDef] = {}
         super().__init__(value, **kwargs)
 
     def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
         super()._bootstrap(value)
-        self.kwclasses.update(self.core_vocabulary.kwclasses)
+        self.kwdefs.update(self.core_vocabulary.kwdefs)
         if "$vocabulary" not in value:
             for vocabulary in self.default_vocabularies:
-                self.kwclasses.update(vocabulary.kwclasses)
+                self.kwdefs.update(vocabulary.kwdefs)
 
 
 class Vocabulary:
 
-    def __init__(self, uri: URI, *kwclasses: KeywordClass):
+    def __init__(self, uri: URI, *kwdefs: KeywordDef):
         self.uri: URI = uri
-        self.kwclasses: Dict[str, KeywordClass] = {
-            kwclass.__keyword__: kwclass for kwclass in kwclasses
+        self.kwdefs: Dict[str, KeywordDef] = {
+            kwdef.key: kwdef for kwdef in kwdefs
         }
 
 
-class Keyword:
-    __keyword__: str = ...
-    __schema__: Union[bool, dict] = ...
-    __types__: Optional[Union[str, Tuple[str, ...]]] = None
-    __depends__: Optional[Union[str, Tuple[str, ...]]] = None
+@dataclass
+class KeywordDef:
+    kwclass: Type[Keyword]
+    key: str
+    depends_on: Tuple[str, ...] = ()
+    instance_types: Tuple[str, ...] = ()
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+
+class Keyword:
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: AnyJSONCompatible,
+            instance_types: Tuple[str, ...],
+    ):
         self.applicator_cls = None
         for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
             if isinstance(self, applicator_cls):
-                if (kwjson := applicator_cls.jsonify(parentschema, self.__keyword__, value)) is not None:
+                if (kwjson := applicator_cls.jsonify(parentschema, key, value)) is not None:
                     self.applicator_cls = applicator_cls
                     break
         else:
-            kwjson = JSON(value, parent=parentschema, key=self.__keyword__)
+            kwjson = JSON(value, parent=parentschema, key=key)
 
-        self.json: JSON = kwjson
         self.parentschema: JSONSchema = parentschema
+        self.key: str = key
+        self.json: JSON = kwjson
+        self.instance_types: Tuple[str, ...] = instance_types
 
     def can_evaluate(self, instance: JSON) -> bool:
-        if self.__types__ is None:
+        if not self.instance_types or instance.type in self.instance_types:
             return True
 
-        types = tuplify(self.__types__)
-        if instance.type in types:
-            return True
-
-        if instance.type == "number" and "integer" in types:
+        if instance.type == "number" and "integer" in self.instance_types:
             return instance.value == int(instance.value)
 
         return False
@@ -307,9 +313,6 @@ class Keyword:
 
     def __str__(self) -> str:
         return f'{self.json.path}: {self.json}'
-
-
-KeywordClass = Type[Keyword]
 
 
 class Applicator:

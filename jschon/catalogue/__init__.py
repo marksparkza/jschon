@@ -5,7 +5,7 @@ from typing import Dict, Mapping, Any
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
-from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass, JSONSchema
+from jschon.jsonschema import Metaschema, Vocabulary, KeywordDef, JSONSchema
 from jschon.uri import URI
 from jschon.utils import load_json
 from jschon.vocabulary.format import FormatValidator
@@ -42,8 +42,8 @@ class Catalogue:
         raise CatalogueError(f"File not found for '{uri}'")
 
     @classmethod
-    def create_vocabulary(cls, uri: URI, *kwclasses: KeywordClass) -> None:
-        cls._vocabularies[uri] = Vocabulary(uri, *kwclasses)
+    def create_vocabulary(cls, uri: URI, *kwdefs: KeywordDef) -> None:
+        cls._vocabularies[uri] = Vocabulary(uri, *kwdefs)
 
     @classmethod
     def get_vocabulary(cls, uri: URI) -> Vocabulary:

@@ -11,9 +11,9 @@ from tests import metaschema_uri
 from tests.strategies import *
 
 
-def evaluate(kwclass, kwvalue, instval):
+def evaluate(key, kwclass, kwvalue, instval):
     schema = JSONSchema(True)
-    kwclass(schema, kwvalue).evaluate(JSON(instval), scope := Scope(schema))
+    kwclass(schema, key, kwvalue, ()).evaluate(JSON(instval), scope := Scope(schema))
     return scope.valid
 
 
@@ -29,7 +29,7 @@ def isequal(x, y):
 
 @given(kwvalue=jsontype | jsontypes, instval=json)
 def test_type(kwvalue, instval):
-    result = evaluate(TypeKeyword, kwvalue, instval)
+    result = evaluate("type", TypeKeyword, kwvalue, instval)
     if isinstance(kwvalue, str):
         kwvalue = [kwvalue]
     if instval is None:
@@ -50,19 +50,19 @@ def test_type(kwvalue, instval):
 
 @given(kwvalue=jsonarray, instval=json)
 def test_enum(kwvalue, instval):
-    result = evaluate(EnumKeyword, kwvalue, instval)
+    result = evaluate("enum", EnumKeyword, kwvalue, instval)
     assert result == any(isequal(instval, kwval) for kwval in kwvalue)
 
 
 @given(kwvalue=json, instval=json)
 def test_const(kwvalue, instval):
-    result = evaluate(ConstKeyword, kwvalue, instval)
+    result = evaluate("const", ConstKeyword, kwvalue, instval)
     assert result == isequal(instval, kwvalue)
 
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
 def test_multiple_of(kwvalue, instval):
-    result = evaluate(MultipleOfKeyword, kwvalue, instval)
+    result = evaluate("multipleOf", MultipleOfKeyword, kwvalue, instval)
     try:
         assert result == (Decimal(instval) % Decimal(kwvalue) == 0)
     except InvalidOperation:
@@ -71,61 +71,61 @@ def test_multiple_of(kwvalue, instval):
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_maximum(kwvalue, instval):
-    result = evaluate(MaximumKeyword, kwvalue, instval)
+    result = evaluate("maximum", MaximumKeyword, kwvalue, instval)
     assert result == (instval <= kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_exclusive_maximum(kwvalue, instval):
-    result = evaluate(ExclusiveMaximumKeyword, kwvalue, instval)
+    result = evaluate("exclusiveMaximum", ExclusiveMaximumKeyword, kwvalue, instval)
     assert result == (instval < kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_minimum(kwvalue, instval):
-    result = evaluate(MinimumKeyword, kwvalue, instval)
+    result = evaluate("minimum", MinimumKeyword, kwvalue, instval)
     assert result == (instval >= kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
 def test_exclusive_minimum(kwvalue, instval):
-    result = evaluate(ExclusiveMinimumKeyword, kwvalue, instval)
+    result = evaluate("exclusiveMinimum", ExclusiveMinimumKeyword, kwvalue, instval)
     assert result == (instval > kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonstring)
 def test_max_length(kwvalue, instval):
-    result = evaluate(MaxLengthKeyword, kwvalue, instval)
+    result = evaluate("maxLength", MaxLengthKeyword, kwvalue, instval)
     assert result == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonstring)
 def test_min_length(kwvalue, instval):
-    result = evaluate(MinLengthKeyword, kwvalue, instval)
+    result = evaluate("minLength", MinLengthKeyword, kwvalue, instval)
     assert result == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=hs.just(jsonpointer_regex), instval=hs.from_regex(jsonpointer_regex))
 def test_pattern(kwvalue, instval):
-    result = evaluate(PatternKeyword, kwvalue, instval)
+    result = evaluate("pattern", PatternKeyword, kwvalue, instval)
     assert result == (re.search(kwvalue, instval) is not None)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatarray)
 def test_max_items(kwvalue, instval):
-    result = evaluate(MaxItemsKeyword, kwvalue, instval)
+    result = evaluate("maxItems", MaxItemsKeyword, kwvalue, instval)
     assert result == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatarray)
 def test_min_items(kwvalue, instval):
-    result = evaluate(MinItemsKeyword, kwvalue, instval)
+    result = evaluate("minItems", MinItemsKeyword, kwvalue, instval)
     assert result == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=jsonboolean, instval=jsonarray)
 def test_unique_items(kwvalue, instval):
-    result = evaluate(UniqueItemsKeyword, kwvalue, instval)
+    result = evaluate("uniqueItems", UniqueItemsKeyword, kwvalue, instval)
     if kwvalue:
         uniquified = []
         for item in instval:
@@ -155,26 +155,26 @@ def test_contains(minmax, instval):
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
 def test_max_properties(kwvalue, instval):
-    result = evaluate(MaxPropertiesKeyword, kwvalue, instval)
+    result = evaluate("maxProperties", MaxPropertiesKeyword, kwvalue, instval)
     assert result == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
 def test_min_properties(kwvalue, instval):
-    result = evaluate(MinPropertiesKeyword, kwvalue, instval)
+    result = evaluate("minProperties", MinPropertiesKeyword, kwvalue, instval)
     assert result == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=propnames, instval=jsonproperties)
 def test_required(kwvalue, instval):
-    result = evaluate(RequiredKeyword, kwvalue, instval)
+    result = evaluate("required", RequiredKeyword, kwvalue, instval)
     missing = any(name for name in kwvalue if name not in instval)
     assert result == (not missing)
 
 
 @given(kwvalue=hs.dictionaries(propname, propnames), instval=jsonproperties)
 def test_dependent_required(kwvalue, instval):
-    result = evaluate(DependentRequiredKeyword, kwvalue, instval)
+    result = evaluate("dependentRequired", DependentRequiredKeyword, kwvalue, instval)
     missing = False
     for name, deps in kwvalue.items():
         if name in instval:

@@ -1,5 +1,6 @@
 import decimal
 import re
+from typing import Tuple
 
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, Scope, JSONSchema
@@ -30,18 +31,6 @@ __all__ = [
 
 
 class TypeKeyword(Keyword):
-    __keyword__ = "type"
-    __schema__ = {
-        "anyOf": [
-            {"enum": ["null", "boolean", "number", "integer", "string", "array", "object"]},
-            {
-                "type": "array",
-                "items": {"enum": ["null", "boolean", "number", "integer", "string", "array", "object"]},
-                "minItems": 1,
-                "uniqueItems": True
-            }
-        ]
-    }
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         types = tuplify(self.json.value)
@@ -57,8 +46,6 @@ class TypeKeyword(Keyword):
 
 
 class EnumKeyword(Keyword):
-    __keyword__ = "enum"
-    __schema__ = {"type": "array", "items": True}
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance not in self.json:
@@ -66,8 +53,6 @@ class EnumKeyword(Keyword):
 
 
 class ConstKeyword(Keyword):
-    __keyword__ = "const"
-    __schema__ = True
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance != self.json:
@@ -75,9 +60,6 @@ class ConstKeyword(Keyword):
 
 
 class MultipleOfKeyword(Keyword):
-    __keyword__ = "multipleOf"
-    __schema__ = {"type": "number", "exclusiveMinimum": 0}
-    __types__ = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
@@ -88,9 +70,6 @@ class MultipleOfKeyword(Keyword):
 
 
 class MaximumKeyword(Keyword):
-    __keyword__ = "maximum"
-    __schema__ = {"type": "number"}
-    __types__ = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance > self.json:
@@ -98,9 +77,6 @@ class MaximumKeyword(Keyword):
 
 
 class ExclusiveMaximumKeyword(Keyword):
-    __keyword__ = "exclusiveMaximum"
-    __schema__ = {"type": "number"}
-    __types__ = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance >= self.json:
@@ -108,9 +84,6 @@ class ExclusiveMaximumKeyword(Keyword):
 
 
 class MinimumKeyword(Keyword):
-    __keyword__ = "minimum"
-    __schema__ = {"type": "number"}
-    __types__ = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance < self.json:
@@ -118,9 +91,6 @@ class MinimumKeyword(Keyword):
 
 
 class ExclusiveMinimumKeyword(Keyword):
-    __keyword__ = "exclusiveMinimum"
-    __schema__ = {"type": "number"}
-    __types__ = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance <= self.json:
@@ -128,9 +98,6 @@ class ExclusiveMinimumKeyword(Keyword):
 
 
 class MaxLengthKeyword(Keyword):
-    __keyword__ = "maxLength"
-    __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = "string"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -138,9 +105,6 @@ class MaxLengthKeyword(Keyword):
 
 
 class MinLengthKeyword(Keyword):
-    __keyword__ = "minLength"
-    __schema__ = {"type": "integer", "minimum": 0, "default": 0}
-    __types__ = "string"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -148,12 +112,15 @@ class MinLengthKeyword(Keyword):
 
 
 class PatternKeyword(Keyword):
-    __keyword__ = "pattern"
-    __schema__ = {"type": "string", "format": "regex"}
-    __types__ = "string"
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            instance_types: Tuple[str, ...],
+    ):
+        super().__init__(parentschema, key, value, instance_types)
         self.regex = re.compile(value)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -162,9 +129,6 @@ class PatternKeyword(Keyword):
 
 
 class MaxItemsKeyword(Keyword):
-    __keyword__ = "maxItems"
-    __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -172,9 +136,6 @@ class MaxItemsKeyword(Keyword):
 
 
 class MinItemsKeyword(Keyword):
-    __keyword__ = "minItems"
-    __schema__ = {"type": "integer", "minimum": 0, "default": 0}
-    __types__ = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -182,9 +143,6 @@ class MinItemsKeyword(Keyword):
 
 
 class UniqueItemsKeyword(Keyword):
-    __keyword__ = "uniqueItems"
-    __schema__ = {"type": "boolean", "default": False}
-    __types__ = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if not self.json.value:
@@ -200,10 +158,6 @@ class UniqueItemsKeyword(Keyword):
 
 
 class MaxContainsKeyword(Keyword):
-    __keyword__ = "maxContains"
-    __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = "array"
-    __depends__ = "contains"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling("contains"):
@@ -215,10 +169,6 @@ class MaxContainsKeyword(Keyword):
 
 
 class MinContainsKeyword(Keyword):
-    __keyword__ = "minContains"
-    __schema__ = {"type": "integer", "minimum": 0, "default": 1}
-    __types__ = "array"
-    __depends__ = "contains", "maxContains"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling("contains"):
@@ -240,9 +190,6 @@ class MinContainsKeyword(Keyword):
 
 
 class MaxPropertiesKeyword(Keyword):
-    __keyword__ = "maxProperties"
-    __schema__ = {"type": "integer", "minimum": 0}
-    __types__ = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -250,9 +197,6 @@ class MaxPropertiesKeyword(Keyword):
 
 
 class MinPropertiesKeyword(Keyword):
-    __keyword__ = "minProperties"
-    __schema__ = {"type": "integer", "minimum": 0, "default": 0}
-    __types__ = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -260,14 +204,6 @@ class MinPropertiesKeyword(Keyword):
 
 
 class RequiredKeyword(Keyword):
-    __keyword__ = "required"
-    __schema__ = {
-        "type": "array",
-        "items": {"type": "string"},
-        "uniqueItems": True,
-        "default": []
-    }
-    __types__ = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = [name for name in self.json if name.value not in instance]
@@ -276,17 +212,6 @@ class RequiredKeyword(Keyword):
 
 
 class DependentRequiredKeyword(Keyword):
-    __keyword__ = "dependentRequired"
-    __schema__ = {
-        "type": "object",
-        "additionalProperties": {
-            "type": "array",
-            "items": {"type": "string"},
-            "uniqueItems": True,
-            "default": []
-        }
-    }
-    __types__ = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = {}
