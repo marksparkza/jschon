@@ -66,7 +66,7 @@ def test_multiple_of(kwvalue, instval):
     try:
         assert result == (Decimal(instval) % Decimal(kwvalue) == 0)
     except InvalidOperation:
-        assert result is False
+        pass
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
