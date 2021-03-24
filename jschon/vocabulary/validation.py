@@ -1,6 +1,5 @@
 import decimal
 import re
-from typing import Tuple
 
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, Scope, JSONSchema
@@ -118,9 +117,9 @@ class PatternKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
         self.regex = re.compile(value)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:

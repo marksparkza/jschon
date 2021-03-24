@@ -1,4 +1,4 @@
-from typing import Mapping, Tuple
+from typing import Mapping
 
 from jschon.catalogue import Catalogue
 from jschon.exceptions import JSONSchemaError, URIError, CatalogueError
@@ -26,9 +26,9 @@ class SchemaKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
 
         try:
             (uri := URI(value)).validate(require_scheme=True, require_normalized=True)
@@ -48,9 +48,9 @@ class VocabularyKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: Mapping[str, bool],
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
 
         if not isinstance(parentschema, Metaschema):
             return
@@ -83,9 +83,9 @@ class IdKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
 
         (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
         if not uri.is_absolute():
@@ -107,9 +107,9 @@ class RefKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
         self.refschema = None
 
     def resolve(self) -> None:
@@ -133,9 +133,9 @@ class AnchorKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
 
         if (base_uri := parentschema.base_uri) is not None:
             uri = URI(f'{base_uri}#{value}')
@@ -159,9 +159,9 @@ class RecursiveRefKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
 
         if value != '#':
             raise JSONSchemaError(f'"{key}" may only take the value "#"')

@@ -10,6 +10,7 @@ from jschon.exceptions import *
 from jschon.json import *
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
+from jschon.utils import tuplify
 
 __all__ = [
     'JSONSchema',
@@ -77,7 +78,7 @@ class JSONSchema(JSON):
             }
 
             for kwdef in self._resolve_dependencies(kwdefs):
-                kw = kwdef.kwclass(self, kwdef.key, value[kwdef.key], kwdef.instance_types)
+                kw = kwdef.kwclass(self, kwdef.key, value[kwdef.key], *tuplify(kwdef.instance_types))
                 self.keywords[kwdef.key] = kw
                 self.value[kwdef.key] = kw.json
 
@@ -117,7 +118,7 @@ class JSONSchema(JSON):
     @staticmethod
     def _resolve_dependencies(kwdefs: Dict[str, KeywordDef]) -> Iterator[KeywordDef]:
         dependencies = {
-            key: [depkey for depkey in kwdef.depends_on
+            key: [depkey for depkey in tuplify(kwdef.depends_on)
                   if kwdefs.get(depkey)]
             for key, kwdef in kwdefs.items()
         }
@@ -273,8 +274,8 @@ class Vocabulary:
 class KeywordDef:
     kwclass: Type[Keyword]
     key: str
-    depends_on: Tuple[str, ...] = ()
-    instance_types: Tuple[str, ...] = ()
+    instance_types: Union[str, Tuple[str, ...]] = None
+    depends_on: Union[str, Tuple[str, ...]] = None
 
 
 class Keyword:
@@ -283,7 +284,7 @@ class Keyword:
             parentschema: JSONSchema,
             key: str,
             value: AnyJSONCompatible,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
         self.applicator_cls = None
         for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):

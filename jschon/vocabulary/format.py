@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible, JSON
@@ -19,9 +19,9 @@ class FormatKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            instance_types: Tuple[str, ...],
+            *instance_types: str,
     ):
-        super().__init__(parentschema, key, value, instance_types)
+        super().__init__(parentschema, key, value, *instance_types)
 
         from jschon.catalogue import Catalogue
         try:
