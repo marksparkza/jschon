@@ -82,7 +82,7 @@ class JSONSchema(JSON):
                     self,
                     kwdef.key,
                     value[kwdef.key],
-                    *tuplify(kwdef.instance_types),
+                    *tuplify(kwdef.types),
                     keymap=kwdef.keymap,
                 )
                 self.keywords[kwdef.key] = kw
@@ -124,7 +124,7 @@ class JSONSchema(JSON):
     @staticmethod
     def _resolve_dependencies(kwdefs: Dict[str, KeywordDef]) -> Iterator[KeywordDef]:
         dependencies = {
-            key: [depkey for depkey in tuplify(kwdef.depends_on)
+            key: [depkey for depkey in tuplify(kwdef.depends)
                   if kwdefs.get(depkey)]
             for key, kwdef in kwdefs.items()
         }
@@ -279,8 +279,8 @@ class Vocabulary:
 class KeywordDef:
     kwclass: Type[Keyword]
     key: str
-    instance_types: Union[str, Tuple[str, ...]] = None
-    depends_on: Union[str, Tuple[str, ...]] = None
+    types: Union[str, Tuple[str, ...]] = None
+    depends: Union[str, Tuple[str, ...]] = None
     keymap: Dict[str, str] = None
 
 
@@ -290,7 +290,7 @@ class Keyword:
             parentschema: JSONSchema,
             key: str,
             value: AnyJSONCompatible,
-            *instance_types: str,
+            *types: str,
             keymap: Dict[str, str] = None,
     ):
         self.applicator_cls = None
@@ -305,14 +305,14 @@ class Keyword:
         self.parentschema: JSONSchema = parentschema
         self.key: str = key
         self.json: JSON = kwjson
-        self.instance_types: Tuple[str, ...] = instance_types
+        self.types: Tuple[str, ...] = types
         self.keymap: Dict[str, str] = keymap or {}
 
     def can_evaluate(self, instance: JSON) -> bool:
-        if not self.instance_types or instance.type in self.instance_types:
+        if not self.types or instance.type in self.types:
             return True
 
-        if instance.type == "number" and "integer" in self.instance_types:
+        if instance.type == "number" and "integer" in self.types:
             return instance.value == int(instance.value)
 
         return False
