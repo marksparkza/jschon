@@ -36,3 +36,5 @@ class FormatKeyword(Keyword):
                 self.validator(instance.value)
             except ValueError as e:
                 scope.fail(instance, f'The instance is invalid against the "{self.json.value}" format: {e}')
+        else:
+            scope.noassert()

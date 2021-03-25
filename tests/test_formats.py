@@ -36,10 +36,10 @@ Catalogue.add_format_validators({
 })
 
 
-def evaluate(format_attr, instval):
-    schema = JSONSchema(True)
-    FormatKeyword(schema, "format", format_attr, ()).evaluate(JSON(instval), scope := Scope(schema))
+def evaluate(format_attr, instval, assert_=True):
+    FormatKeyword(schema := JSONSchema(True), "format", format_attr).evaluate(JSON(instval), scope := Scope(schema))
     assert scope.annotations["format"].value == format_attr
+    assert scope._assert is assert_
     return scope.valid
 
 
@@ -94,5 +94,5 @@ def test_jsonpointer_invalid(instval):
 @given(hs.uuids() | hs.text())
 def test_uuid(instval):
     # we've not registered a "uuid" validator, so the test should always pass
-    result = evaluate("uuid", str(instval))
+    result = evaluate("uuid", str(instval), assert_=False)
     assert result is True

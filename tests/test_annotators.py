@@ -24,3 +24,4 @@ def test_annotate(key, value):
     except KeyError:
         assert value is None
     assert scope.valid is True
+    assert scope._assert is False
