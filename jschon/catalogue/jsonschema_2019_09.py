@@ -2,11 +2,10 @@ import submodules
 from jschon.catalogue import Catalogue
 from jschon.jsonschema import KeywordDef
 from jschon.uri import URI
+from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
-from jschon.vocabulary.content import *
 from jschon.vocabulary.core import *
 from jschon.vocabulary.format import *
-from jschon.vocabulary.metadata import *
 from jschon.vocabulary.validation import *
 
 
@@ -85,20 +84,20 @@ def initialize():
 
     Catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
-        KeywordDef(TitleKeyword, "title"),
-        KeywordDef(DescriptionKeyword, "description"),
-        KeywordDef(DefaultKeyword, "default"),
-        KeywordDef(DeprecatedKeyword, "deprecated"),
-        KeywordDef(ReadOnlyKeyword, "readOnly"),
-        KeywordDef(WriteOnlyKeyword, "writeOnly"),
-        KeywordDef(ExamplesKeyword, "examples"),
+        KeywordDef(AnnotationKeyword, "title"),
+        KeywordDef(AnnotationKeyword, "description"),
+        KeywordDef(AnnotationKeyword, "default"),
+        KeywordDef(AnnotationKeyword, "deprecated"),
+        KeywordDef(AnnotationKeyword, "readOnly"),
+        KeywordDef(AnnotationKeyword, "writeOnly"),
+        KeywordDef(AnnotationKeyword, "examples"),
     )
 
     Catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/content"),
-        KeywordDef(ContentMediaTypeKeyword, "contentMediaType"),
-        KeywordDef(ContentEncodingKeyword, "contentEncoding"),
-        KeywordDef(ContentSchemaKeyword, "contentSchema", depends_on="contentMediaType"),
+        KeywordDef(AnnotationKeyword, "contentMediaType"),
+        KeywordDef(AnnotationKeyword, "contentEncoding"),
+        KeywordDef(AnnotationKeyword, "contentSchema", depends_on="contentMediaType"),
     )
 
     Catalogue.create_metaschema(
