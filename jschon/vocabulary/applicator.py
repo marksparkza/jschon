@@ -1,4 +1,5 @@
 import re
+from typing import Any
 
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, Scope, JSONSchema, Applicator, ArrayApplicator, PropertyApplicator
@@ -35,7 +36,7 @@ class AllOfKeyword(Keyword, ArrayApplicator):
                     err_indices += [index]
 
         if err_indices:
-            scope.fail(instance, f'The instance is invalid against "allOf" subschemas {err_indices}')
+            scope.fail(instance, f'The instance is invalid against subschemas {err_indices}')
 
 
 class AnyOfKeyword(Keyword, ArrayApplicator):
@@ -49,7 +50,7 @@ class AnyOfKeyword(Keyword, ArrayApplicator):
                     valid = True
 
         if not valid:
-            scope.fail(instance, f'The instance must be valid against at least one "anyOf" subschema')
+            scope.fail(instance, f'The instance must be valid against at least one subschema')
 
 
 class OneOfKeyword(Keyword, ArrayApplicator):
@@ -66,7 +67,7 @@ class OneOfKeyword(Keyword, ArrayApplicator):
                     err_indices += [index]
 
         if len(valid_indices) != 1:
-            scope.fail(instance, 'The instance must be valid against exactly one "oneOf" subschema;'
+            scope.fail(instance, 'The instance must be valid against exactly one subschema; '
                                  f'it is valid against {valid_indices} and invalid against {err_indices}')
 
 
@@ -76,7 +77,7 @@ class NotKeyword(Keyword, Applicator):
         self.json.evaluate(instance, scope)
 
         if scope.valid:
-            scope.fail(instance, 'The instance must not be valid against the "not" subschema')
+            scope.fail(instance, 'The instance must not be valid against the subschema')
         else:
             scope.errors.clear()
 
@@ -90,8 +91,19 @@ class IfKeyword(Keyword, Applicator):
 
 class ThenKeyword(Keyword, Applicator):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("if", "if")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling("if")) and if_.valid:
+        if (if_ := scope.sibling(self.keymap["if"])) and if_.valid:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -99,8 +111,19 @@ class ThenKeyword(Keyword, Applicator):
 
 class ElseKeyword(Keyword, Applicator):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("if", "if")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling("if")) and not if_.valid:
+        if (if_ := scope.sibling(self.keymap["if"])) and not if_.valid:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -122,9 +145,9 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
 
         if err_names:
             scope.fail(instance, f'Properties {err_names} are invalid against '
-                                 'the corresponding "dependentSchemas" subschemas')
+                                 f'the corresponding "{self.key}" subschemas')
         else:
-            scope.annotate(instance, "dependentSchemas", annotation)
+            scope.annotate(instance, self.key, annotation)
 
 
 class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
@@ -141,7 +164,7 @@ class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
                 self.json.evaluate(item, scope)
 
             if scope.valid:
-                scope.annotate(instance, "items", True)
+                scope.annotate(instance, self.key, True)
 
         elif self.json.type == "array":
             eval_index = None
@@ -156,13 +179,25 @@ class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
             if err_indices:
                 scope.fail(instance, f"Array elements {err_indices} are invalid")
             else:
-                scope.annotate(instance, "items", eval_index)
+                scope.annotate(instance, self.key, eval_index)
 
 
 class AdditionalItemsKeyword(Keyword, Applicator):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("items", "items")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (items := scope.sibling("items")) and (items_annotation := items.annotations.get("items")) and \
+        if (items := scope.sibling(self.keymap["items"])) and \
+                (items_annotation := items.annotations.get(self.keymap["items"])) and \
                 type(items_annotation.value) is int:
             annotation = None
             for index, item in enumerate(instance[items_annotation.value + 1:]):
@@ -170,28 +205,41 @@ class AdditionalItemsKeyword(Keyword, Applicator):
                 self.json.evaluate(item, scope)
 
             if scope.valid:
-                scope.annotate(instance, "additionalItems", annotation)
+                scope.annotate(instance, self.key, annotation)
         else:
             scope.discard()
 
 
 class UnevaluatedItemsKeyword(Keyword, Applicator):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("items", "items")
+        self.keymap.setdefault("additionalItems", "additionalItems")
+        self.keymap.setdefault("unevaluatedItems", "unevaluatedItems")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1
-        for items_annotation in scope.parent.collect_annotations(instance, "items"):
+        for items_annotation in scope.parent.collect_annotations(instance, self.keymap["items"]):
             if items_annotation.value is True:
                 scope.discard()
                 return
             if type(items_annotation.value) is int and items_annotation.value > last_evaluated_item:
                 last_evaluated_item = items_annotation.value
 
-        for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):
+        for additional_items_annotation in scope.parent.collect_annotations(instance, self.keymap["additionalItems"]):
             if additional_items_annotation.value is True:
                 scope.discard()
                 return
 
-        for unevaluated_items_annotation in scope.parent.collect_annotations(instance, "unevaluatedItems"):
+        for unevaluated_items_annotation in scope.parent.collect_annotations(instance, self.keymap["unevaluatedItems"]):
             if unevaluated_items_annotation.value is True:
                 scope.discard()
                 return
@@ -202,7 +250,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
             self.json.evaluate(item, scope)
 
         if scope.valid:
-            scope.annotate(instance, "unevaluatedItems", annotation)
+            scope.annotate(instance, self.key, annotation)
 
 
 class ContainsKeyword(Keyword, Applicator):
@@ -216,10 +264,10 @@ class ContainsKeyword(Keyword, Applicator):
                 scope.errors.clear()
 
         if annotation > 0:
-            scope.annotate(instance, "contains", annotation)
+            scope.annotate(instance, self.key, annotation)
         else:
             scope.fail(instance, 'The array does not contain an element that is valid '
-                                 'against the "contains" subschema')
+                                 f'against the "{self.key}" subschema')
 
 
 class PropertiesKeyword(Keyword, PropertyApplicator):
@@ -239,7 +287,7 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
         if err_names:
             scope.fail(instance, f"Properties {err_names} are invalid")
         else:
-            scope.annotate(instance, "properties", annotation)
+            scope.annotate(instance, self.key, annotation)
 
 
 class PatternPropertiesKeyword(Keyword, PropertyApplicator):
@@ -260,19 +308,31 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
         if err_names:
             scope.fail(instance, f"Properties {err_names} are invalid")
         else:
-            scope.annotate(instance, "patternProperties", list(matched_names))
+            scope.annotate(instance, self.key, list(matched_names))
 
 
 class AdditionalPropertiesKeyword(Keyword, Applicator):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("properties", "properties")
+        self.keymap.setdefault("patternProperties", "patternProperties")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
-        if (properties := scope.sibling("properties")) and \
-                (properties_annotation := properties.annotations.get("properties")):
+        if (properties := scope.sibling(self.keymap["properties"])) and \
+                (properties_annotation := properties.annotations.get(self.keymap["properties"])):
             evaluated_names |= set(properties_annotation.value)
 
-        if (pattern_properties := scope.sibling("patternProperties")) and \
-                (pattern_properties_annotation := pattern_properties.annotations.get("patternProperties")):
+        if (pattern_properties := scope.sibling(self.keymap["patternProperties"])) and \
+                (pattern_properties_annotation := pattern_properties.annotations.get(self.keymap["patternProperties"])):
             evaluated_names |= set(pattern_properties_annotation.value)
 
         annotation = []
@@ -282,20 +342,34 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
                     annotation += [name]
 
         if scope.valid:
-            scope.annotate(instance, "additionalProperties", annotation)
+            scope.annotate(instance, self.key, annotation)
 
 
 class UnevaluatedPropertiesKeyword(Keyword, Applicator):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("properties", "properties")
+        self.keymap.setdefault("patternProperties", "patternProperties")
+        self.keymap.setdefault("additionalProperties", "additionalProperties")
+        self.keymap.setdefault("unevaluatedProperties", "unevaluatedProperties")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
-        for properties_annotation in scope.parent.collect_annotations(instance, "properties"):
+        for properties_annotation in scope.parent.collect_annotations(instance, self.keymap["properties"]):
             evaluated_names |= set(properties_annotation.value)
-        for pattern_properties_annotation in scope.parent.collect_annotations(instance, "patternProperties"):
+        for pattern_properties_annotation in scope.parent.collect_annotations(instance, self.keymap["patternProperties"]):
             evaluated_names |= set(pattern_properties_annotation.value)
-        for additional_properties_annotation in scope.parent.collect_annotations(instance, "additionalProperties"):
+        for additional_properties_annotation in scope.parent.collect_annotations(instance, self.keymap["additionalProperties"]):
             evaluated_names |= set(additional_properties_annotation.value)
-        for unevaluated_properties_annotation in scope.parent.collect_annotations(instance, "unevaluatedProperties"):
+        for unevaluated_properties_annotation in scope.parent.collect_annotations(instance, self.keymap["unevaluatedProperties"]):
             evaluated_names |= set(unevaluated_properties_annotation.value)
 
         annotation = []
@@ -305,7 +379,7 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
                     annotation += [name]
 
         if scope.valid:
-            scope.annotate(instance, "unevaluatedProperties", annotation)
+            scope.annotate(instance, self.key, annotation)
 
 
 class PropertyNamesKeyword(Keyword, Applicator):

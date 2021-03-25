@@ -13,7 +13,7 @@ from tests.strategies import *
 
 def evaluate(key, kwclass, kwvalue, instval):
     schema = JSONSchema(True)
-    kwclass(schema, key, kwvalue, ()).evaluate(JSON(instval), scope := Scope(schema))
+    kwclass(schema, key, kwvalue).evaluate(JSON(instval), scope := Scope(schema))
     return scope.valid
 
 

@@ -22,8 +22,8 @@ def initialize():
         KeywordDef(IdKeyword, "$id"),
         KeywordDef(RefKeyword, "$ref"),
         KeywordDef(AnchorKeyword, "$anchor"),
-        KeywordDef(RecursiveRefKeyword, "$recursiveRef"),
-        KeywordDef(RecursiveAnchorKeyword, "$recursiveAnchor"),
+        KeywordDef(DynamicRefKeyword, "$recursiveRef", keymap={"$dynamicAnchor": "$recursiveAnchor"}),
+        KeywordDef(DynamicAnchorKeyword, "$recursiveAnchor"),
         KeywordDef(DefsKeyword, "$defs"),
         KeywordDef(CommentKeyword, "$comment"),
     )

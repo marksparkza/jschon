@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, Any
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible, JSON
@@ -19,9 +19,10 @@ class FormatKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            *instance_types: str,
+            *args: Any,
+            **kwargs: Any,
     ):
-        super().__init__(parentschema, key, value, *instance_types)
+        super().__init__(parentschema, key, value, *args, **kwargs)
 
         from jschon.catalogue import Catalogue
         try:
@@ -30,7 +31,7 @@ class FormatKeyword(Keyword):
             self.validator = None
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        scope.annotate(instance, "format", self.json.value)
+        scope.annotate(instance, self.key, self.json.value)
         if self.validator is not None:
             try:
                 self.validator(instance.value)

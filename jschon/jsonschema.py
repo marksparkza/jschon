@@ -78,7 +78,13 @@ class JSONSchema(JSON):
             }
 
             for kwdef in self._resolve_dependencies(kwdefs):
-                kw = kwdef.kwclass(self, kwdef.key, value[kwdef.key], *tuplify(kwdef.instance_types))
+                kw = kwdef.kwclass(
+                    self,
+                    kwdef.key,
+                    value[kwdef.key],
+                    *tuplify(kwdef.instance_types),
+                    keymap=kwdef.keymap,
+                )
                 self.keywords[kwdef.key] = kw
                 self.value[kwdef.key] = kw.json
 
@@ -97,7 +103,7 @@ class JSONSchema(JSON):
         }
         for key, kwclass in boostrap_kwclasses.items():
             if key in value:
-                kw = kwclass(self, key, value[key], ())
+                kw = kwclass(self, key, value[key])
                 self.keywords[key] = kw
                 self.value[key] = kw.json
 
@@ -276,6 +282,7 @@ class KeywordDef:
     key: str
     instance_types: Union[str, Tuple[str, ...]] = None
     depends_on: Union[str, Tuple[str, ...]] = None
+    keymap: Dict[str, str] = None
 
 
 class Keyword:
@@ -285,6 +292,7 @@ class Keyword:
             key: str,
             value: AnyJSONCompatible,
             *instance_types: str,
+            keymap: Dict[str, str] = None,
     ):
         self.applicator_cls = None
         for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
@@ -299,6 +307,7 @@ class Keyword:
         self.key: str = key
         self.json: JSON = kwjson
         self.instance_types: Tuple[str, ...] = instance_types
+        self.keymap: Dict[str, str] = keymap or {}
 
     def can_evaluate(self, instance: JSON) -> bool:
         if not self.instance_types or instance.type in self.instance_types:

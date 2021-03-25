@@ -1,5 +1,6 @@
 import decimal
 import re
+from typing import Any
 
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, Scope, JSONSchema
@@ -117,9 +118,10 @@ class PatternKeyword(Keyword):
             parentschema: JSONSchema,
             key: str,
             value: str,
-            *instance_types: str,
+            *args: Any,
+            **kwargs: Any,
     ):
-        super().__init__(parentschema, key, value, *instance_types)
+        super().__init__(parentschema, key, value, *args, **kwargs)
         self.regex = re.compile(value)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -158,34 +160,57 @@ class UniqueItemsKeyword(Keyword):
 
 class MaxContainsKeyword(Keyword):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("contains", "contains")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if contains := scope.sibling("contains"):
-            if (contains_annotation := contains.annotations.get("contains")) and \
+        if contains := scope.sibling(contains_key := self.keymap["contains"]):
+            if (contains_annotation := contains.annotations.get(contains_key)) and \
                     contains_annotation.value > self.json:
                 scope.fail(instance,
                            'The array has too many elements matching the '
-                           f'"contains" subschema (maximum {self.json})')
+                           f'"{contains_key}" subschema (maximum {self.json})')
 
 
 class MinContainsKeyword(Keyword):
 
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("contains", "contains")
+        self.keymap.setdefault("maxContains", "maxContains")
+
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if contains := scope.sibling("contains"):
+        if contains := scope.sibling(contains_key := self.keymap["contains"]):
             contains_count = contains_annotation.value \
-                if (contains_annotation := contains.annotations.get("contains")) \
+                if (contains_annotation := contains.annotations.get(contains_key)) \
                 else 0
 
             valid = contains_count >= self.json
 
             if valid and not contains.valid:
-                max_contains = scope.sibling("maxContains")
+                max_contains = scope.sibling(self.keymap["maxContains"])
                 if not max_contains or max_contains.valid:
                     contains.errors.clear()
 
             if not valid:
                 scope.fail(instance,
                            'The array has too few elements matching the '
-                           f'"contains" subschema (minimum {self.json})')
+                           f'"{contains_key}" subschema (minimum {self.json})')
 
 
 class MaxPropertiesKeyword(Keyword):
