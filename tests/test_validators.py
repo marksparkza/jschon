@@ -7,7 +7,7 @@ from hypothesis import given
 from jschon.json import JSON
 from jschon.jsonschema import Scope, JSONSchema
 from jschon.vocabulary.validation import *
-from tests import metaschema_uri
+from tests import metaschema_uri_2019_09
 from tests.strategies import *
 
 
@@ -148,7 +148,7 @@ def test_contains(minmax, instval):
         "contains": {"type": "boolean"},
         "minContains": min_contains,
         "maxContains": max_contains,
-    }, metaschema_uri=metaschema_uri)
+    }, metaschema_uri=metaschema_uri_2019_09)
     scope = schema.evaluate(JSON(instval))
     assert scope.valid == (min_contains <= contains_count <= max_contains)
 

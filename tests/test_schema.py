@@ -9,7 +9,7 @@ from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
-from tests import metaschema_uri, example_schema, example_valid, example_invalid
+from tests import metaschema_uri_2019_09, example_schema, example_valid, example_invalid
 from tests.strategies import *
 
 schema_tests = (
@@ -26,14 +26,14 @@ json2 = JSON(example_invalid)
 
 @pytest.mark.parametrize('example, json1_valid, json2_valid', schema_tests)
 def test_schema_examples(example, json1_valid, json2_valid):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2019_09)
     schema.validate()
     assert schema.value == example
     assert schema.type == "boolean" if isinstance(example, bool) else "object"
     assert schema.parent is None
     assert schema.key is None
     assert not schema.path
-    assert schema.metaschema_uri == metaschema_uri
+    assert schema.metaschema_uri == metaschema_uri_2019_09
     assert schema.evaluate(json1).valid is json1_valid
     assert schema.evaluate(json2).valid is json2_valid
 
@@ -46,7 +46,7 @@ def test_keyword_dependency_resolution(value: list):
         except ValueError:
             pass
 
-    metaschema = Catalogue.get_schema(metaschema_uri)
+    metaschema = Catalogue.get_schema(metaschema_uri_2019_09)
     kwdefs = {
         kw: metaschema.kwdefs[kw] for kw in value
     }
@@ -116,7 +116,7 @@ id_example = {
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f'),
 ])
 def test_base_uri(ptr: str, base_uri: str):
-    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
+    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2019_09)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema.base_uri == URI(base_uri)
 
@@ -139,7 +139,7 @@ def test_base_uri(ptr: str, base_uri: str):
     ('#/$defs/C', 'https://example.com/root.json#/$defs/C', False),
 ])
 def test_uri(ptr: str, uri: str, canonical: bool):
-    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri)
+    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2019_09)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema == Catalogue.get_schema(uri := URI(uri))
     if canonical:

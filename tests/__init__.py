@@ -1,9 +1,11 @@
-from jschon.catalogue import jsonschema_2019_09
+from jschon.catalogue import jsonschema_2019_09, jsonschema_2020_12
 from jschon.uri import URI
 
 jsonschema_2019_09.initialize()
+jsonschema_2020_12.initialize()
 
-metaschema_uri = URI("https://json-schema.org/draft/2019-09/schema")
+metaschema_uri_2019_09 = URI("https://json-schema.org/draft/2019-09/schema")
+metaschema_uri_2020_12 = URI("https://json-schema.org/draft/2020-12/schema")
 
 example_schema = {
     "$id": "recursiveRef8_main.json",

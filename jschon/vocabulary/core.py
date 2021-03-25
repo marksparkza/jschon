@@ -168,10 +168,6 @@ class DynamicRefKeyword(Keyword):
             **kwargs: Any,
     ):
         super().__init__(parentschema, key, value, *args, **kwargs)
-
-        if value != '#':
-            raise JSONSchemaError(f'"{key}" may only take the value "#"')
-
         self.keymap.setdefault("$dynamicAnchor", "$dynamicAnchor")
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:

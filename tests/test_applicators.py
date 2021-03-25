@@ -1,7 +1,7 @@
 import pytest
 
 from jschon.jsonschema import *
-from tests import metaschema_uri
+from tests import metaschema_uri_2019_09
 
 
 @pytest.mark.parametrize('example', [
@@ -18,7 +18,7 @@ from tests import metaschema_uri
     {"propertyNames": {"pattern": "^x"}},
 ])
 def test_applicator(example):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2019_09)
     for applicator_key, applicator_val in example.items():
         assert schema.keywords[applicator_key].applicator_cls is Applicator
         assert isinstance(schema[applicator_key], JSONSchema)
@@ -32,7 +32,7 @@ def test_applicator(example):
      "items": [{"const": 1}, {"const": 2}, {"const": 3}]},
 ])
 def test_array_applicator(example):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2019_09)
     for applicator_key, applicator_val in example.items():
         assert schema.keywords[applicator_key].applicator_cls is ArrayApplicator
         for i, item in enumerate(applicator_val):
@@ -47,7 +47,7 @@ def test_array_applicator(example):
      "patternProperties": {r"^x": {"type": "string"}}},
 ])
 def test_property_applicator(example):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri)
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2019_09)
     for applicator_key, applicator_val in example.items():
         assert schema.keywords[applicator_key].applicator_cls is PropertyApplicator
         for prop_key, prop_val in applicator_val.items():
