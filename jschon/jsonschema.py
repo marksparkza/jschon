@@ -252,12 +252,11 @@ class Metaschema(JSONSchema):
             value: Mapping[str, AnyJSONCompatible],
             core_vocabulary: Vocabulary,
             *default_vocabularies: Vocabulary,
-            **kwargs,
     ):
         self.core_vocabulary: Vocabulary = core_vocabulary
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
         self.kwdefs: Dict[str, KeywordDef] = {}
-        super().__init__(value, **kwargs)
+        super().__init__(value)
 
     def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
         super()._bootstrap(value)
