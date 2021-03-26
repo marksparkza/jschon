@@ -164,7 +164,7 @@ class MaxContainsKeyword(Keyword):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: int,
             *args: Any,
             **kwargs: Any,
     ):
@@ -186,7 +186,7 @@ class MinContainsKeyword(Keyword):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: int,
             *args: Any,
             **kwargs: Any,
     ):

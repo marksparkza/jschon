@@ -1,7 +1,7 @@
 import re
-from typing import Any
+from typing import Any, Union, Mapping
 
-from jschon.json import JSON
+from jschon.json import JSON, AnyJSONCompatible
 from jschon.jsonschema import Keyword, Scope, JSONSchema, Applicator, ArrayApplicator, PropertyApplicator
 
 __all__ = [
@@ -97,7 +97,7 @@ class ThenKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
@@ -117,7 +117,7 @@ class ElseKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
@@ -178,7 +178,7 @@ class ItemsKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
@@ -242,7 +242,7 @@ class LegacyAdditionalItemsKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
@@ -270,7 +270,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
@@ -371,7 +371,7 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
@@ -405,7 +405,7 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
             self,
             parentschema: JSONSchema,
             key: str,
-            value: str,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *args: Any,
             **kwargs: Any,
     ):
