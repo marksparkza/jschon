@@ -1,5 +1,6 @@
 from decimal import Decimal
 from typing import Optional
+
 import pytest
 from hypothesis import given
 

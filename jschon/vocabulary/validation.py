@@ -1,6 +1,5 @@
 import decimal
 import re
-from typing import Any
 
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, Scope, JSONSchema
@@ -31,6 +30,7 @@ __all__ = [
 
 
 class TypeKeyword(Keyword):
+    key = "type"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         types = tuplify(self.json.value)
@@ -46,6 +46,7 @@ class TypeKeyword(Keyword):
 
 
 class EnumKeyword(Keyword):
+    key = "enum"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance not in self.json:
@@ -53,6 +54,7 @@ class EnumKeyword(Keyword):
 
 
 class ConstKeyword(Keyword):
+    key = "const"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance != self.json:
@@ -60,6 +62,8 @@ class ConstKeyword(Keyword):
 
 
 class MultipleOfKeyword(Keyword):
+    key = "multipleOf"
+    types = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
@@ -70,6 +74,8 @@ class MultipleOfKeyword(Keyword):
 
 
 class MaximumKeyword(Keyword):
+    key = "maximum"
+    types = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance > self.json:
@@ -77,6 +83,8 @@ class MaximumKeyword(Keyword):
 
 
 class ExclusiveMaximumKeyword(Keyword):
+    key = "exclusiveMaximum"
+    types = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance >= self.json:
@@ -84,6 +92,8 @@ class ExclusiveMaximumKeyword(Keyword):
 
 
 class MinimumKeyword(Keyword):
+    key = "minimum"
+    types = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance < self.json:
@@ -91,6 +101,8 @@ class MinimumKeyword(Keyword):
 
 
 class ExclusiveMinimumKeyword(Keyword):
+    key = "exclusiveMinimum"
+    types = "number"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance <= self.json:
@@ -98,6 +110,8 @@ class ExclusiveMinimumKeyword(Keyword):
 
 
 class MaxLengthKeyword(Keyword):
+    key = "maxLength"
+    types = "string"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -105,6 +119,8 @@ class MaxLengthKeyword(Keyword):
 
 
 class MinLengthKeyword(Keyword):
+    key = "minLength"
+    types = "string"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -112,16 +128,11 @@ class MinLengthKeyword(Keyword):
 
 
 class PatternKeyword(Keyword):
+    key = "pattern"
+    types = "string"
 
-    def __init__(
-            self,
-            parentschema: JSONSchema,
-            key: str,
-            value: str,
-            *args: Any,
-            **kwargs: Any,
-    ):
-        super().__init__(parentschema, key, value, *args, **kwargs)
+    def __init__(self, parentschema: JSONSchema, value: str):
+        super().__init__(parentschema, value)
         self.regex = re.compile(value)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -130,6 +141,8 @@ class PatternKeyword(Keyword):
 
 
 class MaxItemsKeyword(Keyword):
+    key = "maxItems"
+    types = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -137,6 +150,8 @@ class MaxItemsKeyword(Keyword):
 
 
 class MinItemsKeyword(Keyword):
+    key = "minItems"
+    types = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -144,6 +159,8 @@ class MinItemsKeyword(Keyword):
 
 
 class UniqueItemsKeyword(Keyword):
+    key = "uniqueItems"
+    types = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if not self.json.value:
@@ -159,61 +176,46 @@ class UniqueItemsKeyword(Keyword):
 
 
 class MaxContainsKeyword(Keyword):
-
-    def __init__(
-            self,
-            parentschema: JSONSchema,
-            key: str,
-            value: int,
-            *args: Any,
-            **kwargs: Any,
-    ):
-        super().__init__(parentschema, key, value, *args, **kwargs)
-        self.keymap.setdefault("contains", "contains")
+    key = "maxContains"
+    types = "array"
+    depends = "contains"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if contains := scope.sibling(contains_key := self.keymap["contains"]):
-            if (contains_annotation := contains.annotations.get(contains_key)) and \
+        if contains := scope.sibling("contains"):
+            if (contains_annotation := contains.annotations.get("contains")) and \
                     len(contains_annotation.value) > self.json:
                 scope.fail(instance,
                            'The array has too many elements matching the '
-                           f'"{contains_key}" subschema (maximum {self.json})')
+                           f'"contains" subschema (maximum {self.json})')
 
 
 class MinContainsKeyword(Keyword):
-
-    def __init__(
-            self,
-            parentschema: JSONSchema,
-            key: str,
-            value: int,
-            *args: Any,
-            **kwargs: Any,
-    ):
-        super().__init__(parentschema, key, value, *args, **kwargs)
-        self.keymap.setdefault("contains", "contains")
-        self.keymap.setdefault("maxContains", "maxContains")
+    key = "minContains"
+    types = "array"
+    depends = "contains", "maxContains"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if contains := scope.sibling(contains_key := self.keymap["contains"]):
+        if contains := scope.sibling("contains"):
             contains_count = len(contains_annotation.value) \
-                if (contains_annotation := contains.annotations.get(contains_key)) \
+                if (contains_annotation := contains.annotations.get("contains")) \
                 else 0
 
             valid = contains_count >= self.json
 
             if valid and not contains.valid:
-                max_contains = scope.sibling(self.keymap["maxContains"])
+                max_contains = scope.sibling("maxContains")
                 if not max_contains or max_contains.valid:
                     contains.errors.clear()
 
             if not valid:
                 scope.fail(instance,
                            'The array has too few elements matching the '
-                           f'"{contains_key}" subschema (minimum {self.json})')
+                           f'"contains" subschema (minimum {self.json})')
 
 
 class MaxPropertiesKeyword(Keyword):
+    key = "maxProperties"
+    types = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -221,6 +223,8 @@ class MaxPropertiesKeyword(Keyword):
 
 
 class MinPropertiesKeyword(Keyword):
+    key = "minProperties"
+    types = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -228,6 +232,8 @@ class MinPropertiesKeyword(Keyword):
 
 
 class RequiredKeyword(Keyword):
+    key = "required"
+    types = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = [name for name in self.json if name.value not in instance]
@@ -236,6 +242,8 @@ class RequiredKeyword(Keyword):
 
 
 class DependentRequiredKeyword(Keyword):
+    key = "dependentRequired"
+    types = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = {}

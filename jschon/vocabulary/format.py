@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Callable
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible, JSON
@@ -13,16 +13,10 @@ FormatValidator = Callable[[AnyJSONCompatible], None]
 
 
 class FormatKeyword(Keyword):
+    key = "format"
 
-    def __init__(
-            self,
-            parentschema: JSONSchema,
-            key: str,
-            value: str,
-            *args: Any,
-            **kwargs: Any,
-    ):
-        super().__init__(parentschema, key, value, *args, **kwargs)
+    def __init__(self, parentschema: JSONSchema, value: str):
+        super().__init__(parentschema, value)
 
         from jschon.catalogue import Catalogue
         try:
