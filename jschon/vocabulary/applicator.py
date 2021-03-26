@@ -310,17 +310,16 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
 class ContainsKeyword(Keyword, Applicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        annotation = 0
+        annotation = []
         for index, item in enumerate(instance):
             if self.json.evaluate(item, scope).valid:
-                annotation += 1
+                annotation += [index]
             else:
                 scope.errors.clear()
 
-        if annotation > 0:
-            scope.annotate(instance, self.key, annotation)
-        else:
-            scope.fail(instance, 'The array does not contain an element that is valid '
+        scope.annotate(instance, self.key, annotation)
+        if not annotation:
+            scope.fail(instance, 'The array does not contain any element that is valid '
                                  f'against the "{self.key}" subschema')
 
 
