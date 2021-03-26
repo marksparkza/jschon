@@ -13,8 +13,10 @@ __all__ = [
     'ThenKeyword',
     'ElseKeyword',
     'DependentSchemasKeyword',
+    'PrefixItemsKeyword',
     'ItemsKeyword',
-    'AdditionalItemsKeyword',
+    'LegacyItemsKeyword',
+    'LegacyAdditionalItemsKeyword',
     'UnevaluatedItemsKeyword',
     'ContainsKeyword',
     'PropertiesKeyword',
@@ -150,7 +152,59 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
             scope.annotate(instance, self.key, annotation)
 
 
-class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
+class PrefixItemsKeyword(Keyword, ArrayApplicator):
+
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        eval_index = None
+        err_indices = []
+        for index, item in enumerate(instance[:len(self.json)]):
+            eval_index = index
+            with scope(str(index)) as subscope:
+                self.json[index].evaluate(item, subscope)
+                if not subscope.valid:
+                    err_indices += [index]
+
+        if err_indices:
+            scope.fail(instance, f"Array elements {err_indices} are invalid")
+        elif eval_index is not None:
+            if eval_index == len(instance) - 1:
+                eval_index = True
+            scope.annotate(instance, self.key, eval_index)
+
+
+class ItemsKeyword(Keyword, Applicator):
+
+    def __init__(
+            self,
+            parentschema: JSONSchema,
+            key: str,
+            value: str,
+            *args: Any,
+            **kwargs: Any,
+    ):
+        super().__init__(parentschema, key, value, *args, **kwargs)
+        self.keymap.setdefault("prefixItems", "prefixItems")
+
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        if (prefix_items := scope.sibling(self.keymap["prefixItems"])) and \
+                (prefix_items_annotation := prefix_items.annotations.get(self.keymap["prefixItems"])):
+            if prefix_items_annotation.value is True:
+                return
+            else:
+                start_index = prefix_items_annotation.value + 1
+        else:
+            start_index = 0
+
+        annotation = None
+        for index, item in enumerate(instance[start_index:]):
+            annotation = True
+            self.json.evaluate(item, scope)
+
+        if annotation is True and scope.valid:
+            scope.annotate(instance, self.key, annotation)
+
+
+class LegacyItemsKeyword(Keyword, Applicator, ArrayApplicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) == 0:
@@ -182,7 +236,7 @@ class ItemsKeyword(Keyword, Applicator, ArrayApplicator):
                 scope.annotate(instance, self.key, eval_index)
 
 
-class AdditionalItemsKeyword(Keyword, Applicator):
+class LegacyAdditionalItemsKeyword(Keyword, Applicator):
 
     def __init__(
             self,
