@@ -12,12 +12,7 @@ setup(
         'rfc3986',
     ],
     extras_require={
-        'test': [
-            'pytest',
-            'coverage',
-            'hypothesis',
-            'pytest-benchmark',
-        ],
+        'test': ['tox'],
     },
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
@@ -25,5 +20,6 @@ setup(
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
 )
