@@ -58,7 +58,7 @@ class URI:
     def is_absolute(self) -> bool:
         return self._uriref.is_absolute()
 
-    def can_absolute(self) -> bool:
+    def has_absolute_base(self) -> bool:
         return self.copy(fragment=False).is_absolute()
 
     def resolve(self, base_uri: URI) -> URI:

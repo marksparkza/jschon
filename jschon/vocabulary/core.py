@@ -94,7 +94,7 @@ class RefKeyword(Keyword):
 
     def resolve(self) -> None:
         uri = URI(self.json.value)
-        if not uri.can_absolute():
+        if not uri.has_absolute_base():
             if (base_uri := self.parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
@@ -130,21 +130,30 @@ class AnchorKeyword(Keyword):
 class DynamicRefKeyword(Keyword):
     key = "$dynamicRef"
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (base_uri := self.parentschema.base_uri) is not None:
-            refschema = Catalogue.get_schema(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
-        else:
-            raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{self.json.value}"')
+    def __init__(self, parentschema: JSONSchema, value: str):
+        super().__init__(parentschema, value)
+        self.refschema = None
 
-        if (dynamic_anchor := refschema.get("$dynamicAnchor")) and \
-                dynamic_anchor.value is True:
+    def resolve(self) -> None:
+        uri = URI(self.json.value)
+        if not uri.has_absolute_base():
+            if (base_uri := self.parentschema.base_uri) is not None:
+                uri = uri.resolve(base_uri)
+            else:
+                raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
+
+        self.refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        refschema = self.refschema
+        if dynamic_anchor := refschema.get("$dynamicAnchor"):
             base_scope = scope.root
             for key in scope.path:
                 if isinstance(base_schema := base_scope.schema, JSONSchema):
                     if base_schema is refschema:
                         break
                     if (base_anchor := base_schema.get("$dynamicAnchor")) and \
-                            base_anchor.value is True:
+                            base_anchor.value == dynamic_anchor.value:
                         refschema = base_schema
                         break
                 base_scope = base_scope.children[key]
@@ -154,6 +163,16 @@ class DynamicRefKeyword(Keyword):
 
 class DynamicAnchorKeyword(Keyword):
     key = "$dynamicAnchor"
+
+    def __init__(self, parentschema: JSONSchema, value: str):
+        super().__init__(parentschema, value)
+
+        if (base_uri := parentschema.base_uri) is not None:
+            uri = URI(f'{base_uri}#{value}')
+        else:
+            raise JSONSchemaError(f'No base URI for "$dynamicAnchor" value "{value}"')
+
+        Catalogue.add_schema(uri, parentschema)
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False

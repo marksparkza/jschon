@@ -156,7 +156,7 @@ def test_uri(ptr: str, uri: str, canonical: bool):
 
 # https://json-schema.org/draft/2019-09/json-schema-core.html#recursive-example
 # tree schema, extensible
-tree = {
+tree_2019_09 = {
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "https://example.com/tree",
     "$recursiveAnchor": True,
@@ -173,7 +173,7 @@ tree = {
 }
 
 # strict-tree schema, guards against misspelled properties
-strict_tree = {
+strict_tree_2019_09 = {
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "https://example.com/strict-tree",
     "$recursiveAnchor": True,
@@ -182,14 +182,55 @@ strict_tree = {
 }
 
 # instance with misspelled field
-tree_instance = {
+tree_instance_2019_09 = {
     "children": [{"daat": 1}]
 }
 
 
-def test_recursive_schema_extension():
-    tree_schema = JSONSchema(tree)
-    strict_tree_schema = JSONSchema(strict_tree)
-    tree_json = JSON(tree_instance)
+def test_recursive_schema_extension_2019_09():
+    tree_schema = JSONSchema(tree_2019_09)
+    strict_tree_schema = JSONSchema(strict_tree_2019_09)
+    tree_json = JSON(tree_instance_2019_09)
+    assert tree_schema.evaluate(tree_json).valid is True
+    assert strict_tree_schema.evaluate(tree_json).valid is False
+
+
+# https://json-schema.org/draft/2020-12/json-schema-core.html#recursive-example
+# tree schema, extensible
+tree_2020_12 = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/tree",
+    "$dynamicAnchor": "node",
+    "type": "object",
+    "properties": {
+        "data": True,
+        "children": {
+            "type": "array",
+            "items": {
+                "$dynamicRef": "#node"
+            }
+        }
+    }
+}
+
+# strict-tree schema, guards against misspelled properties
+strict_tree_2020_12 = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/strict-tree",
+    "$dynamicAnchor": "node",
+    "$ref": "tree",
+    "unevaluatedProperties": False
+}
+
+# instance with misspelled field
+tree_instance_2020_12 = {
+    "children": [{"daat": 1}]
+}
+
+
+def test_recursive_schema_extension_2020_12():
+    tree_schema = JSONSchema(tree_2020_12)
+    strict_tree_schema = JSONSchema(strict_tree_2020_12)
+    tree_json = JSON(tree_instance_2020_12)
     assert tree_schema.evaluate(tree_json).valid is True
     assert strict_tree_schema.evaluate(tree_json).valid is False

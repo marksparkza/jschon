@@ -102,11 +102,10 @@ class JSONSchema(JSON):
                 self.value[key] = kw.json
 
     def _resolve_references(self) -> None:
-        if ref_kw := self.keywords.get("$ref"):
-            ref_kw.resolve()
-
         for kw in self.keywords.values():
-            if kw.applicator_cls is Applicator:
+            if hasattr(kw, 'resolve'):
+                kw.resolve()
+            elif kw.applicator_cls is Applicator:
                 kw.json._resolve_references()
             elif kw.applicator_cls is ArrayApplicator:
                 for schema in kw.json:
