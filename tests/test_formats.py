@@ -1,5 +1,6 @@
 import ipaddress
 
+import pytest
 from hypothesis import given, strategies as hs
 
 from jschon.catalogue import Catalogue
@@ -9,6 +10,17 @@ from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.vocabulary.format import FormatKeyword
 from tests.strategies import jsonpointer
+
+
+@pytest.fixture(scope='module', autouse=True)
+def setup_validators():
+    Catalogue.add_format_validators({
+        "ipv4": ipv4_validator,
+        "ipv6": ipv6_validator,
+        "json-pointer": jsonpointer_validator,
+    })
+    yield
+    Catalogue._format_validators.clear()
 
 
 def ipv4_validator(value):
@@ -27,13 +39,6 @@ def jsonpointer_validator(value):
             JSONPointer(value)
         except JSONPointerError as e:
             raise ValueError(str(e))
-
-
-Catalogue.add_format_validators({
-    "ipv4": ipv4_validator,
-    "ipv6": ipv6_validator,
-    "json-pointer": jsonpointer_validator,
-})
 
 
 def evaluate(format_attr, instval, assert_=True):
