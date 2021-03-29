@@ -19,12 +19,16 @@ class RecursiveRefKeyword_2019_09(Keyword):
         if value != '#':
             raise JSONSchemaError(f'"$recursiveRef" may only take the value "#"')
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        self.refschema = None
+
+    def resolve(self) -> None:
         if (base_uri := self.parentschema.base_uri) is not None:
-            refschema = Catalogue.get_schema(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
+            self.refschema = Catalogue.get_schema(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
         else:
             raise JSONSchemaError(f'No base URI against which to resolve "$recursiveRef"')
 
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        refschema = self.refschema
         if (recursive_anchor := refschema.get("$recursiveAnchor")) and \
                 recursive_anchor.value is True:
             base_scope = scope.root
