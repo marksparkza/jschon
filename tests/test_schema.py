@@ -9,7 +9,7 @@ from jschon.json import JSON
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
-from tests import metaschema_uri_2019_09, example_schema, example_valid, example_invalid
+from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 from tests.strategies import *
 
 schema_tests = (
@@ -26,66 +26,112 @@ json2 = JSON(example_invalid)
 
 @pytest.mark.parametrize('example, json1_valid, json2_valid', schema_tests)
 def test_schema_examples(example, json1_valid, json2_valid):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2019_09)
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
     schema.validate()
     assert schema.value == example
     assert schema.type == "boolean" if isinstance(example, bool) else "object"
     assert schema.parent is None
     assert schema.key is None
     assert not schema.path
-    assert schema.metaschema_uri == metaschema_uri_2019_09
+    assert schema.metaschema_uri == metaschema_uri_2020_12
     assert schema.evaluate(json1).valid is json1_valid
     assert schema.evaluate(json2).valid is json2_valid
 
 
-@given(interdependent_keywords)
-def test_keyword_dependency_resolution(value: list):
-    def assert_keyword_order(dependency, dependent):
+def assert_keyword_order(keyword_list, keyword_pairs):
+    for (dependency, dependent) in keyword_pairs:
         try:
-            assert keywords.index(dependency) < keywords.index(dependent)
+            assert keyword_list.index(dependency) < keyword_list.index(dependent)
         except ValueError:
             pass
 
+
+@given(interdependent_keywords)
+def test_keyword_dependency_resolution_2019_09(value: list):
     metaschema = Catalogue.get_schema(metaschema_uri_2019_09)
     kwclasses = {
-        kw: metaschema.kwclasses[kw] for kw in value
+        key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
     keywords = [
         kwclass.key for kwclass in JSONSchema._resolve_dependencies(kwclasses)
     ]
+    assert_keyword_order(keywords, [
+        ("properties", "additionalProperties"),
+        ("properties", "unevaluatedProperties"),
+        ("patternProperties", "additionalProperties"),
+        ("patternProperties", "unevaluatedProperties"),
+        ("additionalProperties", "unevaluatedProperties"),
+        ("items", "additionalItems"),
+        ("items", "unevaluatedItems"),
+        ("additionalItems", "unevaluatedItems"),
+        ("contains", "maxContains"),
+        ("contains", "minContains"),
+        ("maxContains", "minContains"),
+        ("if", "then"),
+        ("if", "else"),
+        ("if", "unevaluatedItems"),
+        ("then", "unevaluatedItems"),
+        ("else", "unevaluatedItems"),
+        ("allOf", "unevaluatedItems"),
+        ("anyOf", "unevaluatedItems"),
+        ("oneOf", "unevaluatedItems"),
+        ("not", "unevaluatedItems"),
+        ("if", "unevaluatedProperties"),
+        ("then", "unevaluatedProperties"),
+        ("else", "unevaluatedProperties"),
+        ("dependentSchemas", "unevaluatedProperties"),
+        ("allOf", "unevaluatedProperties"),
+        ("anyOf", "unevaluatedProperties"),
+        ("oneOf", "unevaluatedProperties"),
+        ("not", "unevaluatedProperties"),
+        ("contentMediaType", "contentSchema"),
+    ])
 
-    assert_keyword_order("properties", "additionalProperties")
-    assert_keyword_order("properties", "unevaluatedProperties")
-    assert_keyword_order("patternProperties", "additionalProperties")
-    assert_keyword_order("patternProperties", "unevaluatedProperties")
-    assert_keyword_order("additionalProperties", "unevaluatedProperties")
-    assert_keyword_order("items", "additionalItems")
-    assert_keyword_order("items", "unevaluatedItems")
-    assert_keyword_order("additionalItems", "unevaluatedItems")
-    assert_keyword_order("contains", "maxContains")
-    assert_keyword_order("contains", "minContains")
-    assert_keyword_order("maxContains", "minContains")
-    assert_keyword_order("if", "then")
-    assert_keyword_order("if", "else")
-    assert_keyword_order("if", "unevaluatedItems")
-    assert_keyword_order("then", "unevaluatedItems")
-    assert_keyword_order("else", "unevaluatedItems")
-    assert_keyword_order("allOf", "unevaluatedItems")
-    assert_keyword_order("anyOf", "unevaluatedItems")
-    assert_keyword_order("oneOf", "unevaluatedItems")
-    assert_keyword_order("not", "unevaluatedItems")
-    assert_keyword_order("if", "unevaluatedProperties")
-    assert_keyword_order("then", "unevaluatedProperties")
-    assert_keyword_order("else", "unevaluatedProperties")
-    assert_keyword_order("dependentSchemas", "unevaluatedProperties")
-    assert_keyword_order("allOf", "unevaluatedProperties")
-    assert_keyword_order("anyOf", "unevaluatedProperties")
-    assert_keyword_order("oneOf", "unevaluatedProperties")
-    assert_keyword_order("not", "unevaluatedProperties")
-    assert_keyword_order("contentMediaType", "contentSchema")
+
+@given(interdependent_keywords)
+def test_keyword_dependency_resolution_2020_12(value: list):
+    metaschema = Catalogue.get_schema(metaschema_uri_2020_12)
+    kwclasses = {
+        key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
+    }
+    keywords = [
+        kwclass.key for kwclass in JSONSchema._resolve_dependencies(kwclasses)
+    ]
+    assert_keyword_order(keywords, [
+        ("properties", "additionalProperties"),
+        ("properties", "unevaluatedProperties"),
+        ("patternProperties", "additionalProperties"),
+        ("patternProperties", "unevaluatedProperties"),
+        ("additionalProperties", "unevaluatedProperties"),
+        ("prefixItems", "items"),
+        ("prefixItems", "unevaluatedItems"),
+        ("items", "unevaluatedItems"),
+        ("contains", "unevaluatedItems"),
+        ("contains", "maxContains"),
+        ("contains", "minContains"),
+        ("maxContains", "minContains"),
+        ("if", "then"),
+        ("if", "else"),
+        ("if", "unevaluatedItems"),
+        ("then", "unevaluatedItems"),
+        ("else", "unevaluatedItems"),
+        ("allOf", "unevaluatedItems"),
+        ("anyOf", "unevaluatedItems"),
+        ("oneOf", "unevaluatedItems"),
+        ("not", "unevaluatedItems"),
+        ("if", "unevaluatedProperties"),
+        ("then", "unevaluatedProperties"),
+        ("else", "unevaluatedProperties"),
+        ("dependentSchemas", "unevaluatedProperties"),
+        ("allOf", "unevaluatedProperties"),
+        ("anyOf", "unevaluatedProperties"),
+        ("oneOf", "unevaluatedProperties"),
+        ("not", "unevaluatedProperties"),
+        ("contentMediaType", "contentSchema"),
+    ])
 
 
-# https://json-schema.org/draft/2019-09/json-schema-core.html#idExamples
+# https://json-schema.org/draft/2020-12/json-schema-core.html#idExamples
 id_example = {
     "$id": "https://example.com/root.json",
     "$defs": {
@@ -116,7 +162,7 @@ id_example = {
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f'),
 ])
 def test_base_uri(ptr: str, base_uri: str):
-    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2019_09)
+    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema.base_uri == URI(base_uri)
 
@@ -139,7 +185,7 @@ def test_base_uri(ptr: str, base_uri: str):
     ('#/$defs/C', 'https://example.com/root.json#/$defs/C', False),
 ])
 def test_uri(ptr: str, uri: str, canonical: bool):
-    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2019_09)
+    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema == Catalogue.get_schema(uri := URI(uri))
     if canonical:

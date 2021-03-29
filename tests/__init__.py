@@ -8,14 +8,14 @@ metaschema_uri_2019_09 = URI("https://json-schema.org/draft/2019-09/schema")
 metaschema_uri_2020_12 = URI("https://json-schema.org/draft/2020-12/schema")
 
 example_schema = {
-    "$id": "recursiveRef8_main.json",
+    "$id": "dynamicRef8_main.json",
     "$defs": {
         "inner": {
-            "$id": "recursiveRef8_inner.json",
-            "$recursiveAnchor": True,
+            "$id": "dynamicRef8_inner.json",
+            "$dynamicAnchor": "foo",
             "title": "inner",
             "additionalProperties": {
-                "$recursiveRef": "#"
+                "$dynamicRef": "#foo"
             }
         }
     },
@@ -26,16 +26,16 @@ example_schema = {
     },
     "then": {
         "title": "any type of node",
-        "$id": "recursiveRef8_anyLeafNode.json",
-        "$recursiveAnchor": True,
-        "$ref": "recursiveRef8_main.json#/$defs/inner"
+        "$id": "dynamicRef8_anyLeafNode.json",
+        "$dynamicAnchor": "foo",
+        "$ref": "dynamicRef8_main.json#/$defs/inner"
     },
     "else": {
         "title": "integer node",
-        "$id": "recursiveRef8_integerNode.json",
-        "$recursiveAnchor": True,
+        "$id": "dynamicRef8_integerNode.json",
+        "$dynamicAnchor": "foo",
         "type": ["object", "integer"],
-        "$ref": "recursiveRef8_main.json#/$defs/inner"
+        "$ref": "dynamicRef8_main.json#/$defs/inner"
     }
 }
 example_valid = {"alpha": 1.1}

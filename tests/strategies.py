@@ -65,6 +65,7 @@ interdependent_keywords = hs.lists(hs.sampled_from([
     "patternProperties",
     "additionalProperties",
     "unevaluatedProperties",
+    "prefixItems",
     "items",
     "additionalItems",
     "unevaluatedItems",
