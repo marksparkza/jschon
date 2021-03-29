@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import *
+from typing import Any, Mapping, Union, Optional, Dict, List, Iterator, Tuple, Type, Sequence, ContextManager
 from uuid import uuid4
 
-from jschon.exceptions import *
-from jschon.json import *
+from jschon.exceptions import JSONSchemaError
+from jschon.json import JSON, AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
 from jschon.utils import tuplify

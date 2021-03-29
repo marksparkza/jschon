@@ -1,6 +1,6 @@
 import json
 from decimal import Decimal
-from typing import *
+from typing import Any, Tuple, Iterable
 
 __all__ = [
     'tuplify',

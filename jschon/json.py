@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from collections import deque
 from decimal import Decimal
-from typing import *
+from typing import Sequence, Mapping, TypeVar, Type, Optional, Iterator, Union
 
 from jschon.jsonpointer import JSONPointer
 
