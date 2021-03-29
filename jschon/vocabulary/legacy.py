@@ -8,6 +8,7 @@ __all__ = [
     'RecursiveAnchorKeyword_2019_09',
     'ItemsKeyword_2019_09',
     'AdditionalItemsKeyword_2019_09',
+    'UnevaluatedItemsKeyword_2019_09',
 ]
 
 
@@ -104,3 +105,36 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
                 scope.annotate(instance, "additionalItems", annotation)
         else:
             scope.discard()
+
+
+class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
+    key = "unevaluatedItems"
+    types = "array"
+    depends = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not"
+
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        last_evaluated_item = -1
+        for items_annotation in scope.parent.collect_annotations(instance, "items"):
+            if items_annotation.value is True:
+                scope.discard()
+                return
+            if type(items_annotation.value) is int and items_annotation.value > last_evaluated_item:
+                last_evaluated_item = items_annotation.value
+
+        for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):
+            if additional_items_annotation.value is True:
+                scope.discard()
+                return
+
+        for unevaluated_items_annotation in scope.parent.collect_annotations(instance, "unevaluatedItems"):
+            if unevaluated_items_annotation.value is True:
+                scope.discard()
+                return
+
+        annotation = None
+        for index, item in enumerate(instance[last_evaluated_item + 1:]):
+            annotation = True
+            self.json.evaluate(item, scope)
+
+        if scope.valid:
+            scope.annotate(instance, self.key, annotation)

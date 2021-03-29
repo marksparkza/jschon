@@ -40,7 +40,7 @@ def initialize():
         DependentSchemasKeyword,
         ItemsKeyword_2019_09,
         AdditionalItemsKeyword_2019_09,
-        UnevaluatedItemsKeyword,
+        UnevaluatedItemsKeyword_2019_09,
         ContainsKeyword,
         PropertiesKeyword,
         PatternPropertiesKeyword,

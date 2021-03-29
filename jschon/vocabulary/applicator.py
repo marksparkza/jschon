@@ -187,19 +187,19 @@ class ItemsKeyword(Keyword, Applicator):
 class UnevaluatedItemsKeyword(Keyword, Applicator):
     key = "unevaluatedItems"
     types = "array"
-    depends = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not"
+    depends = "prefixItems", "items", "contains", "if", "then", "else", "allOf", "anyOf", "oneOf", "not"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1
-        for items_annotation in scope.parent.collect_annotations(instance, "items"):
-            if items_annotation.value is True:
+        for prefix_items_annotation in scope.parent.collect_annotations(instance, "prefixItems"):
+            if prefix_items_annotation.value is True:
                 scope.discard()
                 return
-            if type(items_annotation.value) is int and items_annotation.value > last_evaluated_item:
-                last_evaluated_item = items_annotation.value
+            if prefix_items_annotation.value > last_evaluated_item:
+                last_evaluated_item = prefix_items_annotation.value
 
-        for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):
-            if additional_items_annotation.value is True:
+        for items_annotation in scope.parent.collect_annotations(instance, "items"):
+            if items_annotation.value is True:
                 scope.discard()
                 return
 
@@ -208,10 +208,15 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
                 scope.discard()
                 return
 
+        contains_indices = set()
+        for contains_annotation in scope.parent.collect_annotations(instance, "contains"):
+            contains_indices |= set(contains_annotation.value)
+
         annotation = None
         for index, item in enumerate(instance[last_evaluated_item + 1:]):
-            annotation = True
-            self.json.evaluate(item, scope)
+            if index not in contains_indices:
+                annotation = True
+                self.json.evaluate(item, scope)
 
         if scope.valid:
             scope.annotate(instance, self.key, annotation)
