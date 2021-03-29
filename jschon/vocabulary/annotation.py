@@ -52,12 +52,21 @@ class ExamplesKeyword(AnnotationKeyword):
 
 class ContentMediaTypeKeyword(AnnotationKeyword):
     key = "contentMediaType"
+    types = "string"
 
 
 class ContentEncodingKeyword(AnnotationKeyword):
     key = "contentEncoding"
+    types = "string"
 
 
 class ContentSchemaKeyword(AnnotationKeyword):
     key = "contentSchema"
+    types = "string"
     depends = "contentMediaType"
+
+    def evaluate(self, instance: JSON, scope: Scope) -> None:
+        if scope.sibling("contentMediaType"):
+            super().evaluate(instance, scope)
+        else:
+            scope.discard()
