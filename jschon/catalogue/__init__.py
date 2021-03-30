@@ -12,7 +12,10 @@ from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
     'Catalogue',
+    'catalogue_dir',
 ]
+
+catalogue_dir = pathlib.Path(__file__).parent
 
 
 class Catalogue:

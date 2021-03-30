@@ -1,5 +1,4 @@
-import submodules
-from jschon.catalogue import Catalogue
+from jschon.catalogue import Catalogue, catalogue_dir
 from jschon.uri import URI
 from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
@@ -11,7 +10,7 @@ from jschon.vocabulary.validation import *
 def initialize():
     Catalogue.add_directory(
         base_uri=URI('https://json-schema.org/draft/2020-12/'),
-        base_dir=submodules.rootdir / 'json-schema-spec-2020-12',
+        base_dir=catalogue_dir / 'json-schema-spec-2020-12',
     )
 
     Catalogue.create_vocabulary(
