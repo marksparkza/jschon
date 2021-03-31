@@ -1,7 +1,7 @@
 from typing import Mapping
 
 from jschon.catalogue import Catalogue
-from jschon.exceptions import JSONSchemaError, URIError, CatalogueError
+from jschon.exceptions import JSONSchemaError, URIError, CatalogueError, JSONPointerError
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, JSONSchema, Scope, PropertyApplicator, Metaschema
 from jschon.uri import URI
@@ -152,10 +152,24 @@ class DynamicRefKeyword(Keyword):
                 if isinstance(base_schema := base_scope.schema, JSONSchema):
                     if base_schema is refschema:
                         break
-                    if (base_anchor := base_schema.get("$dynamicAnchor")) and \
-                            base_anchor.value == dynamic_anchor.value:
-                        refschema = base_schema
-                        break
+                    # Does this schema resource define an identical anchor?
+                    sought_uri = URI(f"#{dynamic_anchor.value}").resolve(
+                        base_schema.base_uri
+                    )
+                    try:
+                        resolved_schema = Catalogue.get_schema(
+                            sought_uri,
+                            metaschema_uri=base_schema.metaschema_uri,
+                        )
+                    except JSONPointerError:
+                        # The anchor couldn't be found, so Catalogue tried (and
+                        # failed) to use it as a JSONPointer.
+                        pass
+                    else:
+                        # Was the anchor created with $dynamicAnchor?
+                        if resolved_schema.get("$dynamicAnchor") == dynamic_anchor:
+                            refschema = resolved_schema
+                            break
                 base_scope = base_scope.children[key]
 
         refschema.evaluate(instance, scope)
