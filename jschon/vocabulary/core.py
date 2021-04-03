@@ -132,7 +132,15 @@ class DynamicRefKeyword(Keyword):
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
+
+        # this is not required by the spec, but it doesn't make sense
+        # for a $dynamicRef *not* to end in a plain-name fragment
+        if (fragment := URI(value).fragment) is None or '/' in fragment:
+            raise JSONSchemaError('The value for "$dynamicRef" must end in a plain-name fragment')
+
+        self.fragment = fragment
         self.refschema = None
+        self.dynamic = False
 
     def resolve(self) -> None:
         uri = URI(self.json.value)
@@ -143,19 +151,32 @@ class DynamicRefKeyword(Keyword):
                 raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
 
         self.refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+        if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.value == self.fragment:
+            self.dynamic = True
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         refschema = self.refschema
-        if dynamic_anchor := refschema.get("$dynamicAnchor"):
+
+        if self.dynamic:
             base_scope = scope.root
+            checked_uris = set()
+
             for key in scope.path:
-                if isinstance(base_schema := base_scope.schema, JSONSchema):
-                    if base_schema is refschema:
-                        break
-                    if (base_anchor := base_schema.get("$dynamicAnchor")) and \
-                            base_anchor.value == dynamic_anchor.value:
-                        refschema = base_schema
-                        break
+                if (base_schema := base_scope.schema) is refschema:
+                    break
+
+                if (base_uri := base_schema.base_uri) is not None and base_uri not in checked_uris:
+                    checked_uris |= {base_uri}
+                    target_uri = URI(f"#{self.fragment}").resolve(base_uri)
+                    try:
+                        found_schema = Catalogue.get_schema(target_uri)
+                        if (dynamic_anchor := found_schema.get("$dynamicAnchor")) and \
+                                dynamic_anchor.value == self.fragment:
+                            refschema = found_schema
+                            break
+                    except CatalogueError:
+                        pass
+
                 base_scope = base_scope.children[key]
 
         refschema.evaluate(instance, scope)

@@ -2,7 +2,7 @@ import pathlib
 from os import PathLike
 from typing import Dict, Mapping, Any
 
-from jschon.exceptions import CatalogueError
+from jschon.exceptions import CatalogueError, JSONPointerError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass, JSONSchema
@@ -114,8 +114,11 @@ class Catalogue:
             schema = JSONSchema(doc, uri=base_uri, **kwargs)
 
         if uri.fragment:
-            ptr = JSONPointer.parse_uri_fragment(uri.fragment)
-            schema = ptr.evaluate(schema)
+            try:
+                ptr = JSONPointer.parse_uri_fragment(uri.fragment)
+                schema = ptr.evaluate(schema)
+            except JSONPointerError as e:
+                raise CatalogueError(f"Schema not found for {uri}") from e
 
         if not isinstance(schema, JSONSchema):
             raise CatalogueError(f"The object referenced by {uri} is not a JSON Schema")
