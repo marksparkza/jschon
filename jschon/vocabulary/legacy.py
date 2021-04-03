@@ -34,13 +34,12 @@ class RecursiveRefKeyword_2019_09(Keyword):
                 recursive_anchor.value is True:
             base_scope = scope.root
             for key in scope.path:
-                if isinstance(base_schema := base_scope.schema, JSONSchema):
-                    if base_schema is refschema:
-                        break
-                    if (base_anchor := base_schema.get("$recursiveAnchor")) and \
-                            base_anchor.value is True:
-                        refschema = base_schema
-                        break
+                if (base_schema := base_scope.schema) is refschema:
+                    break
+                if (base_anchor := base_schema.get("$recursiveAnchor")) and \
+                        base_anchor.value is True:
+                    refschema = base_schema
+                    break
                 base_scope = base_scope.children[key]
 
         refschema.evaluate(instance, scope)
