@@ -1,7 +1,12 @@
 # Jschon
 
-Welcome to Jschon, a [JSON Schema](https://json-schema.org) implementation
-for Python!
+Welcome to Jschon, a JSON Schema implementation for Python!
+
+## Features
+
+* Full support for drafts 2019-09 and 2020-12 of the [JSON Schema](https://json-schema.org) specification.
+* RFC 6901-conformant [JSON Pointer](https://tools.ietf.org/html/rfc6901) implementation.
+* JSON data model.
 
 ## Installation
 
