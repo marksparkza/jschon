@@ -19,3 +19,5 @@ jobs:
         run: pip install .[test]
       - name: Run the tests
         run: tox -e py
+      - name: Upload coverage
+        uses: codecov/codecov-action@v1
