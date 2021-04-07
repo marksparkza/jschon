@@ -1,6 +1,9 @@
 # Jschon
 
-[![tests](https://github.com/marksparkza/jschon/actions/workflows/tests.yml/badge.svg)](https://github.com/marksparkza/jschon/actions/workflows/tests.yml)
+[![Test Status](https://github.com/marksparkza/jschon/actions/workflows/tests.yml/badge.svg)](https://github.com/marksparkza/jschon/actions/workflows/tests.yml)
+[![Code Coverage](https://codecov.io/gh/marksparkza/jschon/branch/main/graph/badge.svg)](https://codecov.io/gh/marksparkza/jschon)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/jschon)](https://pypi.org/project/jschon)
+[![PyPI](https://img.shields.io/pypi/v/jschon)](https://pypi.org/project/jschon)
 
 Welcome to Jschon, a JSON Schema implementation for Python!
 
