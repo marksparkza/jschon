@@ -11,6 +11,8 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
