@@ -1,5 +1,7 @@
 # Jschon
 
+[![tests](https://github.com/marksparkza/jschon/actions/workflows/tests.yml/badge.svg)](https://github.com/marksparkza/jschon/actions/workflows/tests.yml)
+
 Welcome to Jschon, a JSON Schema implementation for Python!
 
 ## Features
