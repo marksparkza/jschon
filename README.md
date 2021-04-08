@@ -66,3 +66,7 @@ tree_instance = JSON({
 print(tree_schema.evaluate(tree_instance).valid)  # True
 print(strict_tree_schema.evaluate(tree_instance).valid)  # False
 ```
+
+## Contributing
+
+See the [guidelines for contributing](CONTRIBUTING.md).
