@@ -1,0 +1,9 @@
+[run]
+source = jschon
+branch = True
+
+[report]
+exclude_lines =
+    pragma: no cover
+    # ignore @overload-decorated definitions:
+    ^\s+\.\.\.$
