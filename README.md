@@ -9,9 +9,11 @@ Welcome to Jschon, a JSON Schema implementation for Python!
 
 ## Features
 
-* Full support for drafts 2019-09 and 2020-12 of the [JSON Schema](https://json-schema.org) specification.
-* RFC 6901-conformant [JSON Pointer](https://tools.ietf.org/html/rfc6901) implementation.
-* JSON data model.
+* JSON data model
+* [JSON Schema](https://json-schema.org) implementation, supporting specification drafts
+  2019-09 and 2020-12
+* [RFC 6901](https://tools.ietf.org/html/rfc6901) conformant JSON Pointer implementation
+* URI class (wraps rfc3986.URIReference)
 
 ## Installation
 
