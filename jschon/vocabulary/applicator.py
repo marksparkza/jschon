@@ -213,7 +213,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
             contains_indices |= set(contains_annotation.value)
 
         annotation = None
-        for index, item in enumerate(instance[last_evaluated_item + 1:]):
+        for index, item in enumerate(instance[(start := last_evaluated_item + 1):], start):
             if index not in contains_indices:
                 annotation = True
                 self.json.evaluate(item, scope)
