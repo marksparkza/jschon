@@ -10,7 +10,8 @@
 
 ### Features
 
-* JSON data model
+* JSON class implementing the JSON data model
 * JSON Pointer implementation
 * JSON Schema implementation, supporting drafts 2019-09 and 2020-12 of the specification
+* Catalogue for managing (meta)schemas, vocabularies and format validators
 * URI class (wraps rfc3986.URIReference)
