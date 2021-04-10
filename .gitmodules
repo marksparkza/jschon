@@ -1,6 +1,6 @@
 [submodule "JSON-Schema-Test-Suite"]
 	path = tests/JSON-Schema-Test-Suite
-	url = https://github.com/json-schema-org/JSON-Schema-Test-Suite
+	url = https://github.com/marksparkza/JSON-Schema-Test-Suite
 [submodule "json-schema-spec-2019-09"]
 	path = jschon/catalogue/json-schema-spec-2019-09
 	url = https://github.com/json-schema-org/json-schema-spec
