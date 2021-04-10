@@ -7,7 +7,7 @@ and testing._
 ## Submodules
 
 The project uses git _submodules_ to incorporate the
-[JSON-Schema-Test-Suite](https://github.com/json-schema-org/JSON-Schema-Test-Suite),
+[JSON-Schema-Test-Suite](https://github.com/marksparkza/JSON-Schema-Test-Suite),
 as well as supported branches of
 [json-schema-spec](https://github.com/json-schema-org/json-schema-spec)
 (which provides the metaschema and vocabulary definition files).
