@@ -7,7 +7,7 @@ README = (HERE / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='jschon',
-    version='0.1.1',
+    version='0.1.2',
     description='A pythonic, extensible JSON Schema implementation.',
     long_description=README,
     long_description_content_type='text/markdown',
