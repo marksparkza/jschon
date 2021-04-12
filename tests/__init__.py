@@ -1,5 +1,5 @@
+from jschon import URI
 from jschon.catalogue import jsonschema_2019_09, jsonschema_2020_12
-from jschon.uri import URI
 
 jsonschema_2019_09.initialize()
 jsonschema_2020_12.initialize()

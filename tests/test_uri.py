@@ -3,7 +3,7 @@ import urllib.parse
 import pytest
 from hypothesis import given, provisional as hp
 
-from jschon.uri import URI
+from jschon import URI
 
 
 @given(hp.urls())

@@ -3,11 +3,8 @@ import ipaddress
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon.catalogue import Catalogue
-from jschon.exceptions import JSONPointerError
-from jschon.json import JSON
-from jschon.jsonpointer import JSONPointer
-from jschon.jsonschema import JSONSchema, Scope
+from jschon import Catalogue, JSON, JSONSchema, JSONPointer, JSONPointerError
+from jschon.jsonschema import Scope
 from jschon.vocabulary.format import FormatKeyword
 from tests.strategies import jsonpointer
 

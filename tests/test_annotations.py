@@ -1,7 +1,6 @@
 import pytest
 
-from jschon.json import JSON
-from jschon.jsonschema import JSONSchema
+from jschon import JSON, JSONSchema
 from tests import metaschema_uri_2020_12
 
 
@@ -34,7 +33,7 @@ def test_content_schema():
     }
     result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
     assert result.children["contentSchema"].annotations["contentSchema"].value == example["contentSchema"]
-    
+
     del example["contentMediaType"]
     result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
     assert "contentSchema" not in result.children

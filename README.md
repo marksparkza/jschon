@@ -26,9 +26,8 @@ For a demonstration, let's implement
 [this example](https://json-schema.org/draft/2020-12/json-schema-core.html#recursive-example):
 
 ```python
+from jschon import JSON, JSONSchema
 from jschon.catalogue import jsonschema_2020_12
-from jschon.json import JSON
-from jschon.jsonschema import JSONSchema
 
 # initialize the JSON Schema 2020-12 metaschema and vocabularies
 jsonschema_2020_12.initialize()

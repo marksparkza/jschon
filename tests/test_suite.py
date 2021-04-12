@@ -2,10 +2,7 @@ import pathlib
 
 import pytest
 
-from jschon.catalogue import Catalogue
-from jschon.json import JSON
-from jschon.jsonschema import JSONSchema
-from jschon.uri import URI
+from jschon import Catalogue, JSON, JSONSchema, URI
 from jschon.utils import load_json
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 

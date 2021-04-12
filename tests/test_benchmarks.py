@@ -4,8 +4,7 @@ from decimal import Decimal
 import pytest
 from pytest import param as p
 
-from jschon.json import JSON
-from jschon.jsonschema import JSONSchema
+from jschon import JSON, JSONSchema
 from tests import metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 
 

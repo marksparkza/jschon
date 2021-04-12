@@ -4,11 +4,7 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
-from jschon.catalogue import Catalogue
-from jschon.json import JSON
-from jschon.jsonpointer import JSONPointer
-from jschon.jsonschema import JSONSchema
-from jschon.uri import URI
+from jschon import Catalogue, JSON, JSONPointer, JSONSchema, URI
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 from tests.strategies import *
 

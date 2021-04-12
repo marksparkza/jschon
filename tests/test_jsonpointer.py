@@ -3,9 +3,7 @@ from typing import Union, List
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon.exceptions import JSONPointerError
-from jschon.json import JSON
-from jschon.jsonpointer import JSONPointer
+from jschon import JSON, JSONPointer, JSONPointerError
 from tests.strategies import jsonpointer, jsonpointer_key, json
 
 

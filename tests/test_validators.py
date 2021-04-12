@@ -4,8 +4,8 @@ from decimal import Decimal, InvalidOperation
 import hypothesis.strategies as hs
 from hypothesis import given
 
-from jschon.json import JSON
-from jschon.jsonschema import Scope, JSONSchema
+from jschon import JSON, JSONSchema
+from jschon.jsonschema import Scope
 from jschon.vocabulary.validation import *
 from tests import metaschema_uri_2019_09
 from tests.strategies import *

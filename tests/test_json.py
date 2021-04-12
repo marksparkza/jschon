@@ -4,8 +4,8 @@ from typing import Optional
 import pytest
 from hypothesis import given
 
-from jschon.json import *
-from jschon.jsonpointer import JSONPointer
+from jschon import JSON, JSONPointer
+from jschon.json import AnyJSONCompatible
 from tests.strategies import json
 from tests.test_jsonpointer import jsonpointer_escape
 
