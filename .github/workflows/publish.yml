@@ -1,0 +1,23 @@
+name: publish
+on:
+  release:
+    types: [created]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: pip install -U pip setuptools build twine
+      - name: Build and publish
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TEST_TOKEN }}
+        run: |
+          python -m build
+          twine upload --repository testpypi dist/*
