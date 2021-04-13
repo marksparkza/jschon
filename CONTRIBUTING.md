@@ -1,4 +1,4 @@
-# Contributing to Jschon
+# Contributing
 
 _These guidelines will be expanded as the project matures; for now, the intention
 is simply to assist contributors with setting up a local environment for development
@@ -6,13 +6,13 @@ and testing._
 
 ## Submodules
 
-The project uses git _submodules_ to incorporate the
+The project uses git submodules to incorporate the
 [JSON-Schema-Test-Suite](https://github.com/marksparkza/JSON-Schema-Test-Suite),
 as well as supported branches of
 [json-schema-spec](https://github.com/json-schema-org/json-schema-spec)
 (which provides the metaschema and vocabulary definition files).
 
-Run the following command in your local copy of the Jschon repository
+Run the following command in your local copy of the jschon repository
 to check out all of the submodules' files:
 
     git submodule update --init --recursive
@@ -39,7 +39,7 @@ You can later run a comparison against this baseline with:
     pytest tests/test_benchmarks.py --benchmark-compare
 
 See the [pytest-benchmark documenation](https://pytest-benchmark.readthedocs.io/en/latest/usage.html#commandline-options)
-for other `--benchmark-*` command line options. The Jschon project's `.gitignore`
+for other `--benchmark-*` command line options. The jschon project's `.gitignore`
 excludes benchmarking output from source control, so feel free to experiment!
 
 ## Running the tests
@@ -58,7 +58,7 @@ Schema Test Suite:
     --testsuite-formats             Include format tests
 
 So, for example, you can run the full 2020-12 test suite, including optional and format
-tests (which Jschon does not currently support), by typing:
+tests (which jschon does not currently support), by typing:
 
     pytest tests/test_suite.py --testsuite-version=2020-12 --testsuite-optionals --testsuite-formats
 
