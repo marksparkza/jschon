@@ -67,7 +67,7 @@ class MultipleOfKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
-            if instance % self.json != 0:
+            if instance.value % self.json.value != 0:
                 scope.fail(instance, f"The value must be a multiple of {self.json}")
         except decimal.InvalidOperation:
             scope.fail(instance, f"Invalid operation: {instance} % {self.json}")

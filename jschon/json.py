@@ -12,11 +12,9 @@ from jschon.utils import json_loadf, json_loads
 __all__ = [
     'JSON',
     'AnyJSONCompatible',
-    'AnyJSONCompatibleNumber',
 ]
 
 AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, Decimal, str, Sequence, Mapping)
-AnyJSONCompatibleNumber = TypeVar('AnyJSONCompatibleNumber', int, float, Decimal)
 
 
 class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
@@ -165,11 +163,4 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             other = JSON(other)
         if self.type == other.type:
             return self.value < other.value
-        return NotImplemented
-
-    def __mod__(self, other: Union[JSON, AnyJSONCompatibleNumber]) -> JSON:
-        if not isinstance(other, JSON):
-            other = JSON(other)
-        if self.type == other.type == "number":
-            return JSON(self.value % other.value)
         return NotImplemented
