@@ -7,7 +7,7 @@ from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass, JSONSchema
 from jschon.uri import URI
-from jschon.utils import load_json
+from jschon.utils import json_loadf
 from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
@@ -38,9 +38,9 @@ class Catalogue:
             if uristr.startswith(str(base_uri)):
                 filepath = pathlib.Path(base_dir) / uristr[len(base_uri):]
                 try:
-                    return load_json(filepath)
+                    return json_loadf(filepath)
                 except FileNotFoundError:
-                    return load_json(filepath.with_suffix('.json'))
+                    return json_loadf(filepath.with_suffix('.json'))
 
         raise CatalogueError(f"File not found for '{uri}'")
 

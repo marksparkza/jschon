@@ -3,9 +3,11 @@ from __future__ import annotations
 import json
 from collections import deque
 from decimal import Decimal
-from typing import Sequence, Mapping, TypeVar, Type, Optional, Iterator, Union
+from os import PathLike
+from typing import Sequence, Mapping, TypeVar, Type, Optional, Iterator, Union, Any
 
 from jschon.jsonpointer import JSONPointer
+from jschon.utils import json_loadf, json_loads
 
 __all__ = [
     'JSON',
@@ -18,6 +20,16 @@ AnyJSONCompatibleNumber = TypeVar('AnyJSONCompatibleNumber', int, float, Decimal
 
 
 class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
+
+    @classmethod
+    def loadf(cls, path: Union[str, PathLike], **kwargs: Any) -> JSON:
+        """Deserialize a JSON file to a ``JSON`` instance."""
+        return cls(json_loadf(path), **kwargs)
+
+    @classmethod
+    def loads(cls, value: str, **kwargs: Any) -> JSON:
+        """Deserialize a JSON string to a ``JSON`` instance."""
+        return cls(json_loads(value), **kwargs)
 
     def __init__(
             self,
@@ -46,7 +58,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
         elif isinstance(value, float):
             self.type = "number"
-            self.value = Decimal(value)
+            self.value = Decimal(f'{value}')
 
         elif isinstance(value, str):
             self.type = "string"

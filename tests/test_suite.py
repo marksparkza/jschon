@@ -3,7 +3,7 @@ import pathlib
 import pytest
 
 from jschon import Catalogue, JSON, JSONSchema, URI
-from jschon.utils import load_json
+from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 
 testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
@@ -40,7 +40,7 @@ def pytest_generate_tests(metafunc):
                 testfile_paths += sorted((dir_ / 'optional' / 'format').glob('*.json'))
 
         for testfile_path in testfile_paths:
-            testcases = load_json(testfile_path)
+            testcases = json_loadf(testfile_path)
             for testcase in testcases:
                 for test in testcase['tests']:
                     argvalues.append(pytest.param(metaschema_uri, testcase['schema'], test['data'], test['valid']))

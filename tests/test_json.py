@@ -1,3 +1,5 @@
+import json as jsonlib
+import tempfile
 from decimal import Decimal
 from typing import Optional
 
@@ -6,7 +8,7 @@ from hypothesis import given
 
 from jschon import JSON, JSONPointer
 from jschon.json import AnyJSONCompatible
-from tests.strategies import json
+from tests.strategies import json, json_nodecimal
 from tests.test_jsonpointer import jsonpointer_escape
 
 
@@ -17,7 +19,7 @@ def assert_json_node(
         key: Optional[str],
         ptr: str,
 ):
-    assert inst.value == (Decimal(val) if isinstance(val, float) else val)
+    assert inst.value == (Decimal(f'{val}') if isinstance(val, float) else val)
     assert inst.parent == parent
     assert inst.key == key
     assert inst.path == JSONPointer(ptr)
@@ -65,4 +67,21 @@ def assert_json_node(
 @given(json)
 def test_create_json(value):
     instance = JSON(value)
+    assert_json_node(instance, value, None, None, '')
+
+
+@given(json_nodecimal)
+def test_load_json_from_string(value):
+    s = jsonlib.dumps(value)
+    instance = JSON.loads(s)
+    assert_json_node(instance, value, None, None, '')
+
+
+@given(json_nodecimal)
+def test_load_json_from_file(value):
+    s = jsonlib.dumps(value)
+    with tempfile.NamedTemporaryFile() as f:
+        f.write(s.encode())
+        f.flush()
+        instance = JSON.loadf(f.name)
     assert_json_node(instance, value, None, None, '')

@@ -1,27 +1,5 @@
 import hypothesis.strategies as hs
 
-__all__ = [
-    'jsontype',
-    'jsontypes',
-    'jsonnull',
-    'jsonboolean',
-    'jsonnumber',
-    'jsoninteger',
-    'jsonstring',
-    'json',
-    'jsonarray',
-    'jsonflatarray',
-    'jsonobject',
-    'jsonflatobject',
-    'propname',
-    'propnames',
-    'jsonproperties',
-    'jsonpointer_regex',
-    'jsonpointer',
-    'jsonpointer_key',
-    'interdependent_keywords',
-]
-
 jsontype = hs.sampled_from([
     "null",
     "boolean",
@@ -38,12 +16,20 @@ jsonboolean = hs.booleans()
 jsonnumber = hs.integers() | \
              hs.floats(allow_nan=False, allow_infinity=False) | \
              hs.decimals(allow_nan=False, allow_infinity=False)
+jsonnumber_nodecimal = hs.integers() | \
+                       hs.floats(allow_nan=False, allow_infinity=False)
 jsoninteger = hs.integers()
 jsonstring = hs.text()
 jsonleaf = jsonnull | jsonboolean | jsonnumber | jsonstring
+jsonleaf_nodecimal = jsonnull | jsonboolean | jsonnumber_nodecimal | jsonstring
 
 json = hs.recursive(
     base=jsonleaf,
+    extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
+    max_leaves=10,
+)
+json_nodecimal = hs.recursive(
+    base=jsonleaf_nodecimal,
     extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
     max_leaves=10,
 )
