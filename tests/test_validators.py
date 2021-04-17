@@ -62,9 +62,12 @@ def test_const(kwvalue, instval):
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
 def test_multiple_of(kwvalue, instval):
+    def decimalize(val):
+        return Decimal(f'{val}')
+
     result = evaluate(MultipleOfKeyword, kwvalue, instval)
     try:
-        assert result == (Decimal(instval) % Decimal(kwvalue) == 0)
+        assert result == (decimalize(instval) % decimalize(kwvalue) == 0)
     except InvalidOperation:
         pass
 
