@@ -20,8 +20,8 @@ Welcome to jschon, a JSON Schema implementation for Python!
 
 ## Usage
 * [JSON](#json)
-* [JSON Pointer](#jsonpointer)
-* [JSON Schema](#jsonschema)
+* [JSONPointer](#jsonpointer)
+* [JSONSchema](#jsonschema)
 
 ### A quick demo
 For a demonstration, let's implement this
@@ -77,53 +77,52 @@ print(strict_tree_schema.evaluate(tree_instance).valid)  # False
 ```
 
 ### JSON
-All of the following code snippets may be copy-pasted into a Python console.
-The expected values of expressions are shown in the adjacent comments.
-
-Begin by importing the `JSON` class:
+The following code snippets may be copy-pasted into a Python console;
+expected values of expressions are shown in the adjacent comments.
+We begin by importing the `JSON` class:
 ```py
 from jschon import JSON
 ```
 A `JSON` instance may be constructed from any JSON-compatible Python object.
 Let's take a look at a few simple examples, printing the JSON type of each:
 ```py
-JSON(None).type                          # 'null'
+JSON(None).type                           # 'null'
 ```
 ```py
-JSON(True).type                          # 'boolean'
+JSON(True).type                           # 'boolean'
 ```
 ```py
-JSON(3.14159).type                       # 'number'
+JSON(3.14159).type                        # 'number'
 ```
 ```py
-JSON("Hello, World!").type               # 'string'
+JSON("Hello, World!").type                # 'string'
 ```
 ```py
-JSON((1, 2, 3)).type                     # 'array'
+JSON((1, 2, 3)).type                      # 'array'
 ```
 ```py
-JSON({"foo": True, "bar": False}).type   # 'object'
+JSON({"foo": True, "bar": False}).type    # 'object'
 ```
 Instances with the JSON types "array" and "object" are constructed recursively.
-Let's create an array and an object:
+Here we create an array and an object:
 ```py
 arr = JSON([1, 2, 3])
 obj = JSON({"foo": True, "bar": False})
 ```
 Nested `JSON` instances may be accessed using square-bracket notation:
 ```py
-arr[1]                                   # JSON(2)
+arr[1]                                    # JSON(2)
 ```
 ```py
-obj["foo"]                               # JSON(True)
+obj["foo"]                                # JSON(True)
 ```
 `JSON` implements the `Sequence` and `Mapping` interfaces for instances with
 the JSON types "array" and "object", respectively:
 ```py
-[item for item in arr]                   # [JSON(1), JSON(2), JSON(3)]
+[item for item in arr]                    # [JSON(1), JSON(2), JSON(3)]
 ```
 ```py
-{key: val for key, val in obj.items()}   # {'foo': JSON(True), 'bar': JSON(False)}
+{key: val for key, val in obj.items()}    # {'foo': JSON(True), 'bar': JSON(False)}
 ```
 `JSON` instances have several attributes, in addition to the `type` attribute
 seen above. These can be useful when working with complex JSON structures.
@@ -140,66 +139,81 @@ document = JSON({
     ]
 })
 ```
-A leaf node's `value` is the value from which it was constructed (except in the case
-of floating point values - more on that later...):
+A leaf node's `value` is the value from which it was constructed:
 ```py
-document["1a"]["2a"].value               # 'foo'
+document["1a"]["2a"].value                # 'foo'
 ```
 The `parent` attribute gives the containing instance:
 ```py
-document["1a"]["2b"].parent              # JSON({'2a': 'foo', '2b': 'bar'})
+document["1a"]["2b"].parent               # JSON({'2a': 'foo', '2b': 'bar'})
 ```
 The `path` property returns a `JSONPointer` instance representing the path to the
-node from the root of the document:
+node from the document root:
 ```py
-document["1b"][1]["3b"].path             # JSONPointer('/1b/1/3b')
+document["1b"][0]["3a"].path              # JSONPointer('/1b/0/3a')
 ```
 The `key` is the index of the node within its parent:
 ```py
-document["1b"][0]["3a"].key              # '3a'
+document["1b"][1]["3b"].key               # '3b'
 ```
 Notice that, although an array item's sequential index is an integer, its `key`
 attribute is a string. This makes it interoperable with `JSONPointer`:
 ```py
-document["1b"][1].key                    # '1'
+document["1b"][1].key                     # '1'
 ```
 The `value` of an "object" node is a `dict[str, JSON]`:
 ```py
-document["1a"].value                     # {'2a': JSON('foo'), '2b': JSON('bar')}
+document["1a"].value                      # {'2a': JSON('foo'), '2b': JSON('bar')}
 ```
 The `value` of an "array" node is a `list[JSON]`:
 ```py
-document["1b"].value                     # [JSON({'3a': 'baz'}), JSON({'3b': 'qux'})]
+document["1b"].value                      # [JSON({'3a': 'baz'}), JSON({'3b': 'qux'})]
 ```
 Equality testing strictly follows the JSON data model. So, whereas the following two
 Python lists compare equal:
 ```py
-[False, True] == [0, 1]                  # True
+[False, True] == [0, 1]                   # True
 ```
 The `JSON` equivalents are not equal, because the arrays' items have different
 JSON types:
 ```py
-JSON([False, True]) == JSON([0, 1])      # False
+JSON([False, True]) == JSON([0, 1])       # False
 ```
-`JSON` instances may be compared with _any_ Python object. Internally, the non-`JSON`
+`JSON` also implements the `<`, `<=`, `>=`, `>` and `!=` comparison operators, which
+may be used wherever it makes sense for the types of the given operands:
+```py
+JSON(3) < JSON(3.01)                      # True
+```
+A `JSON` instance may be compared with _any_ Python object. Internally, the non-`JSON`
 object is cast to its `JSON` equivalent before performing the comparison. Notice that
 tuples and lists are considered structurally equivalent:
 ```py
-{"x": ("foo", "bar")} == JSON({"x": ["foo", "bar"]})   # True
+(7, 11) == JSON([7, 11])                  # True
 ```
-The `JSON` class also implements the `<`, `<=`, `>=`, `>` and `!=` comparison operators,
-and these may be used wherever it makes (Pythonic) sense for the given operands:
+Jschon is not a JSON encoder/decoder. However, the `JSON` class supports both
+serialization and deserialization of JSON documents, via the Python standard library's
+`json` module.
+
+Serializing a `JSON` instance is simply a matter of getting its string representation;
+for example:
 ```py
-JSON(3) < JSON(3.01)                     # True
+str(JSON({'xyz': (None, False, True)}))   # '{"xyz": [null, false, true]}'
 ```
-As with the `==` operator, one of the operands may be an arbirary Python object:
+`JSON` instances can be deserialized from JSON files and JSON strings using the
+`loadf` and `loads` class methods, respectively:
 ```py
-JSON("hello") > "world"                  # False
+JSON.loadf('/path/to/file.json')          # JSON(...)
 ```
-The string representation of a `JSON` instance is what you would expect: a correctly
-encoded JSON document! For example:
 ```py
-str(JSON({'foo': (None, False, True)}))  # '{"foo": [null, false, true]}'
+JSON.loads('{"1": "spam", "2": "eggs"}')  # JSON({'1': 'spam', '2': 'eggs'})
+```
+Finally, a word on floating point numbers:
+
+To ensure reliable operation of the JSON Schema "multipleOf" keyword, `float` values
+are converted to `decimal.Decimal` by the `JSON` constructor, and floats are parsed as
+`decimal.Decimal` during deserialization:
+```py
+JSON(5.1).value                           # Decimal('5.1')
 ```
 
 ### JSONPointer
