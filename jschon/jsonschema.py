@@ -134,13 +134,8 @@ class JSONSchema(JSON):
                     break
 
     def validate(self) -> JSONSchema:
-        if not (scope := self.metaschema.evaluate(JSON(self.value))).valid:
-            messages = ''
-            for error in scope.collect_errors():
-                messages += f"\ninstance path={error.instance_path};" \
-                            f" evaluation path={error.evaluation_path};" \
-                            f" error={error.message=}"
-            raise JSONSchemaError(f"The schema is invalid against its metaschema:{messages}")
+        if not self.metaschema.evaluate(JSON(self.value)):
+            raise JSONSchemaError(f"The schema is invalid against its metaschema")
 
         return self
 

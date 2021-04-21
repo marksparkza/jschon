@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from jschon import Catalogue, JSON, JSONSchema, URI, JSONEvaluation
+from jschon import Catalogue, JSON, JSONSchema, URI, JSONEvaluator
 from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 
@@ -52,5 +52,6 @@ def pytest_generate_tests(metafunc):
 def test_validate(metaschema_uri, schema, data, valid):
     json_schema = JSONSchema(schema, metaschema_uri=metaschema_uri)
     json_data = JSON(data)
-    json_evaluation = JSONEvaluation(json_data, json_schema)
-    assert json_evaluation.flag['valid'] is valid
+    json_evaluator = JSONEvaluator(json_schema, json_data)
+    result = json_evaluator.evaluate_instance()
+    assert result['valid'] is valid
