@@ -141,7 +141,7 @@ class JSONSchema(JSON):
                             f" evaluation path={error.evaluation_path};" \
                             f" error={error.message=}"
             raise JSONSchemaError(f"The schema is invalid against its metaschema:{messages}")
-        
+
         return self
 
     def evaluate(self, instance: JSON, scope: Scope = None) -> Scope:
@@ -445,12 +445,13 @@ class Scope:
                 relpath = self.relpath
             return schema_uri.copy(fragment=relpath.uri_fragment())
 
-    def collect_annotations(self, instance: JSON, key: str = None) -> Iterator[Annotation]:
-        """Return an iterator over annotations produced in this subtree
-        for the given instance, optionally filtered by keyword."""
+    def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[Annotation]:
+        """Return an iterator over annotations produced in this subtree,
+        optionally filtered by instance and/or keyword."""
         if self.valid:
             for annotation_key, annotation in self.annotations.items():
-                if (key is None or key == annotation_key) and annotation.instance_path == instance.path:
+                if (key is None or key == annotation_key) and \
+                        (instance is None or instance.path == annotation.instance_path):
                     yield annotation
             for child in self.children.values():
                 yield from child.collect_annotations(instance, key)

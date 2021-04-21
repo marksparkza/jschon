@@ -44,7 +44,7 @@ class JSONEvaluation:
             }
             if self._basic["valid"]:
                 self._basic["annotations"] = []
-                for annotation in self.scope.collect_annotations(self.instance):
+                for annotation in self.scope.collect_annotations():
                     self._basic["annotations"] += [{
                         "instanceLocation": str(annotation.instance_path),
                         "keywordLocation": str(annotation.evaluation_path),
