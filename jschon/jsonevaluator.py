@@ -21,17 +21,16 @@ class JSONEvaluator:
     """JSONEvaluator provides a high-level interface to schema
     validation and instance evaluation, with output formatting."""
 
-    def __init__(self, schema: JSONSchema, instance: JSON):
+    def __init__(self, schema: JSONSchema):
         self.schema: JSONSchema = schema
-        self.instance: JSON = instance
 
     def validate_schema(self, output_format=OutputFormat.FLAG) -> Dict[str, Any]:
         scope = self.schema.metaschema.evaluate(JSON(self.schema.value))
         fn = eval(f'self.{output_format.value}')
         return fn(scope)
 
-    def evaluate_instance(self, output_format=OutputFormat.FLAG) -> Dict[str, Any]:
-        scope = self.schema.evaluate(self.instance)
+    def evaluate_instance(self, instance: JSON, output_format=OutputFormat.FLAG) -> Dict[str, Any]:
+        scope = self.schema.evaluate(instance)
         fn = eval(f'self.{output_format.value}')
         return fn(scope)
 

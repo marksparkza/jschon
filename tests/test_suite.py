@@ -52,6 +52,6 @@ def pytest_generate_tests(metafunc):
 def test_validate(metaschema_uri, schema, data, valid):
     json_schema = JSONSchema(schema, metaschema_uri=metaschema_uri)
     json_data = JSON(data)
-    json_evaluator = JSONEvaluator(json_schema, json_data)
-    result = json_evaluator.evaluate_instance()
+    json_evaluator = JSONEvaluator(json_schema)
+    result = json_evaluator.evaluate_instance(json_data)
     assert result['valid'] is valid
