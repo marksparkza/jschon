@@ -36,7 +36,7 @@ def test_schema_examples(example, json1_valid, json2_valid):
 
 @pytest.mark.parametrize('example', [
     {"type": "foo"},
-    {"properties": {"bar": None}},
+    {"properties": {"bar": {"multipleOf": -3}}},
     {"allOf": [{"anyOf": []}]},
 ])
 def test_invalid_schema(example):
