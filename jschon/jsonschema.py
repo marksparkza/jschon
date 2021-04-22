@@ -443,7 +443,7 @@ class Scope:
     def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[Annotation]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
-        if self.valid:
+        if not self._discard and self.valid:
             for annotation_key, annotation in self.annotations.items():
                 if (key is None or key == annotation_key) and \
                         (instance is None or instance.path == annotation.instance_path):
@@ -453,7 +453,7 @@ class Scope:
 
     def collect_errors(self) -> Iterator[Error]:
         """Return an iterator over errors produced in this subtree."""
-        if not self.valid:
+        if self._assert and not self._discard and not self.valid:
             yield from self.errors
             for child in self.children.values():
                 yield from child.collect_errors()

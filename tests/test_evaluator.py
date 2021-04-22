@@ -148,30 +148,6 @@ output_2_2 = {
         },
         {
             "instanceLocation": "",
-            "keywordLocation": "/if",
-            "absoluteKeywordLocation": "http://example.com#/if",
-            "error": "The instance failed validation against the schema"  # XXX: should "if" errors be included?
-        },
-        {
-            "instanceLocation": "",
-            "keywordLocation": "/if/prefixItems",
-            "absoluteKeywordLocation": "http://example.com#/if/prefixItems",
-            "error": "Array elements [0] are invalid"
-        },
-        {
-            "instanceLocation": "/0",
-            "keywordLocation": "/if/prefixItems/0",
-            "absoluteKeywordLocation": "http://example.com#/if/prefixItems/0",
-            "error": "The instance failed validation against the schema"
-        },
-        {
-            "instanceLocation": "/0",
-            "keywordLocation": "/if/prefixItems/0/const",
-            "absoluteKeywordLocation": "http://example.com#/if/prefixItems/0/const",
-            "error": "The value must be equal to 1"
-        },
-        {
-            "instanceLocation": "",
             "keywordLocation": "/else",
             "absoluteKeywordLocation": "http://example.com#/else",
             "error": "The instance failed validation against the schema"
