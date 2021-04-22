@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
-from jschon import Catalogue, JSON, JSONPointer, JSONSchema, URI
+from jschon import Catalogue, JSON, JSONPointer, JSONSchema, URI, JSONSchemaError
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 from tests.strategies import *
 
@@ -32,6 +32,17 @@ def test_schema_examples(example, json1_valid, json2_valid):
     assert schema.metaschema_uri == metaschema_uri_2020_12
     assert schema.evaluate(json1).valid is json1_valid
     assert schema.evaluate(json2).valid is json2_valid
+
+
+@pytest.mark.parametrize('example', [
+    {"type": "foo"},
+    {"properties": {"bar": None}},
+    {"allOf": [{"anyOf": []}]},
+])
+def test_invalid_schema(example):
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+    with pytest.raises(JSONSchemaError):
+        schema.validate()
 
 
 def assert_keyword_order(keyword_list, keyword_pairs):

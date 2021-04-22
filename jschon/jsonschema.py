@@ -134,7 +134,7 @@ class JSONSchema(JSON):
                     break
 
     def validate(self) -> JSONSchema:
-        if not self.metaschema.evaluate(JSON(self.value)):
+        if not self.metaschema.evaluate(JSON(self.value)).valid:
             raise JSONSchemaError(f"The schema is invalid against its metaschema")
 
         return self
