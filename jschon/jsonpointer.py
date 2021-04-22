@@ -171,8 +171,21 @@ class JSONPointer(Sequence[str]):
 
         The returned string excludes the initial '#' of the fragment;
         this allows for sensible interoperation with URI objects.
+
+        By default, ``urllib.parse.quote`` percent-encodes all characters
+        (apart from '/') defined by the ``reserved`` production, described
+        in :rfc:`3986`. However, since the ``fragment`` production allows
+        characters in the ``sub-delims`` set, we include them in the ``safe``
+        arg.
+
+        pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
+        fragment      = *( pchar / "/" / "?" )
+        reserved      = gen-delims / sub-delims
+        gen-delims    = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+        sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
+                      / "*" / "+" / "," / ";" / "="
         """
-        return urllib.parse.quote(str(self))
+        return urllib.parse.quote(str(self), safe="/!$&'()*+,;=")
 
     @staticmethod
     def escape(key: str) -> str:

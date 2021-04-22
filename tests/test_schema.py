@@ -200,10 +200,16 @@ def test_uri(ptr: str, uri: str, canonical: bool):
         # anchored URIs since we have only one way to calculate a schema's canonical URI
         if (fragment := uri.fragment) and not fragment.startswith('/'):
             return
+
         if fragment:
-            uri = uri.copy(fragment=urllib.parse.quote(fragment))
+            # allow chars in the RFC3986 'sub-delims' set in the 'safe' arg,
+            # since these are allowed by the 'fragment' definition; in particular,
+            # this means we don't percent encode '$'
+            uri = uri.copy(fragment=urllib.parse.quote(fragment, safe="/!$&'()*+,;="))
         else:
-            uri = uri.copy(fragment=False)  # remove empty fragment
+            # remove empty fragment
+            uri = uri.copy(fragment=False)
+
         assert schema.canonical_uri == uri
 
 
