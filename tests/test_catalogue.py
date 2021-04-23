@@ -35,6 +35,12 @@ def test_add_directory_and_load_json(base_uri, setup_tmpdir):
     Catalogue.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
     json_doc = Catalogue.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
     assert json_doc == json_example
+    # incorrect base URI
+    with pytest.raises(CatalogueError):
+        Catalogue.load_json(URI(f'http://example.net/{subdir_name}/{jsonfile_name}'))
+    # incorrect file name
+    with pytest.raises(CatalogueError):
+        Catalogue.load_json(URI(f'{base_uri}{subdir_name}/baz'))
 
 
 @pytest.mark.parametrize('base_uri', [
