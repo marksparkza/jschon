@@ -2,7 +2,7 @@ import pathlib
 from os import PathLike
 from typing import Dict, Mapping, Any
 
-from jschon.exceptions import CatalogueError, JSONPointerError
+from jschon.exceptions import CatalogueError, JSONPointerError, URIError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass, JSONSchema
@@ -26,6 +26,20 @@ class Catalogue:
 
     @classmethod
     def add_directory(cls, base_uri: URI, base_dir: PathLike) -> None:
+        """Register a base URI-directory mapping.
+        
+        This enables JSON objects identified by URIs with a given base URI
+        to be loaded from files within a corresponding directory hierarchy,
+        as described under ``load_json``.
+        """
+        try:
+            base_uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
+        except URIError as e:
+            raise CatalogueError from e
+
+        if not base_uri.path or not base_uri.path.endswith('/'):
+            raise CatalogueError("base_uri must end with '/'")
+
         if not pathlib.Path(base_dir).is_dir():
             raise CatalogueError(f"'{base_dir}' is not a directory")
 
@@ -33,14 +47,40 @@ class Catalogue:
 
     @classmethod
     def load_json(cls, uri: URI) -> AnyJSONCompatible:
+        """Load a JSON-compatible object from the file corresponding to ``uri``.
+        
+        The file path is determined by selecting the most specific matching
+        base URI registered with ``add_directory`` and 'resolving' the URI
+        against the corresponding base directory.
+        """
+        try:
+            uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
+        except URIError as e:
+            raise CatalogueError from e
+
         uristr = str(uri)
+        candidates = []
         for base_uri, base_dir in cls._directories.items():
-            if uristr.startswith(str(base_uri)):
-                filepath = pathlib.Path(base_dir) / uristr[len(base_uri):]
-                try:
-                    return json_loadf(filepath)
-                except FileNotFoundError:
-                    return json_loadf(filepath.with_suffix('.json'))
+            if uristr.startswith(base_uristr := str(base_uri)):
+                candidates += [(base_uristr, base_dir)]
+
+        if candidates:
+            # if there is more than one candidate base URI, we consider
+            # only the longest one to be a match: it represents a mount
+            # of a directory at a sub-path of a parent candidate, and
+            # we shouldn't fall back to trying to find the file in the
+            # parent's directory hierarchy
+            candidates.sort(key=lambda c: len(c[0]), reverse=True)
+            base_uristr, base_dir = candidates[0]
+            filepath = pathlib.Path(base_dir) / uristr[len(base_uristr):]
+            try:
+                return json_loadf(filepath)
+            except FileNotFoundError:
+                pass
+            try:
+                return json_loadf(filepath.with_suffix('.json'))
+            except FileNotFoundError:
+                pass
 
         raise CatalogueError(f"File not found for '{uri}'")
 
