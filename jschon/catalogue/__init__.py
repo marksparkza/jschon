@@ -59,11 +59,11 @@ class Catalogue:
             raise CatalogueError from e
 
         uristr = str(uri)
-        candidates = []
-        for base_uri, base_dir in cls._directories.items():
-            if uristr.startswith(base_uristr := str(base_uri)):
-                candidates += [(base_uristr, base_dir)]
-
+        candidates = [
+            (base_uristr, base_dir)
+            for base_uri, base_dir in cls._directories.items()
+            if uristr.startswith(base_uristr := str(base_uri))
+        ]
         if candidates:
             # if there is more than one candidate base URI, we consider
             # only the longest one to be a match: it represents a mount
