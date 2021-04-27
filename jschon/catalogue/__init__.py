@@ -2,6 +2,7 @@ import pathlib
 from os import PathLike
 from typing import Dict, Mapping, Any
 
+from jschon.catalogue import _2019_09, _2020_12
 from jschon.exceptions import CatalogueError, JSONPointerError, URIError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
@@ -12,21 +13,43 @@ from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
     'Catalogue',
-    'catalogue_dir',
 ]
-
-catalogue_dir = pathlib.Path(__file__).parent
 
 
 class Catalogue:
-    _directories: Dict[URI, PathLike] = {}
-    _vocabularies: Dict[URI, Vocabulary] = {}
-    _format_validators: Dict[str, FormatValidator] = {}
-    _schema_cache: Dict[URI, JSONSchema] = {}
+    """The catalogue is the largest organizational unit in jschon.
 
-    @classmethod
-    def add_directory(cls, base_uri: URI, base_dir: PathLike) -> None:
-        """Register a base URI-directory mapping.
+    A catalogue is an in-memory schema cache, usually initialized with a
+    collection of metaschemas and associated vocabularies, and any number of
+    format validation functions. It may be configured with base URI-to-directory
+    mappings, so that JSON files (including the metaschema definition files)
+    may be loaded from disk.
+    """
+    _version_initializers = {
+        '2019-09': _2019_09.initialize,
+        '2020-12': _2020_12.initialize,
+    }
+
+    def __init__(self, *versions: str):
+        """Create a new catalogue, optionally initialized with the metaschema
+        of one or more supported versions of the JSON Schema specification.
+        
+        Supported versions: '2019-09', '2020-12'
+        """
+        self._directories: Dict[URI, PathLike] = {}
+        self._vocabularies: Dict[URI, Vocabulary] = {}
+        self._format_validators: Dict[str, FormatValidator] = {}
+        self._schema_cache: Dict[URI, JSONSchema] = {}
+        try:
+            initializers = [self._version_initializers[version] for version in versions]
+        except KeyError as e:
+            raise CatalogueError(f'Unrecognized version "{e.args[0]}"')
+
+        for initializer in initializers:
+            initializer(self)
+
+    def add_directory(self, base_uri: URI, base_dir: PathLike) -> None:
+        """Register a base URI-to-directory mapping.
         
         This enables JSON objects identified by URIs with a given base URI
         to be loaded from files within a corresponding directory hierarchy,
@@ -43,11 +66,10 @@ class Catalogue:
         if not pathlib.Path(base_dir).is_dir():
             raise CatalogueError(f"'{base_dir}' is not a directory")
 
-        cls._directories[base_uri] = base_dir
+        self._directories[base_uri] = base_dir
 
-    @classmethod
-    def load_json(cls, uri: URI) -> AnyJSONCompatible:
-        """Load a JSON-compatible object from the file corresponding to ``uri``.
+    def load_json(self, uri: URI) -> AnyJSONCompatible:
+        """Load a JSON-compatible object from the file corresponding to uri.
         
         The file path is determined by selecting the most specific matching
         base URI registered with ``add_directory`` and 'resolving' the URI
@@ -61,7 +83,7 @@ class Catalogue:
         uristr = str(uri)
         candidates = [
             (base_uristr, base_dir)
-            for base_uri, base_dir in cls._directories.items()
+            for base_uri, base_dir in self._directories.items()
             if uristr.startswith(base_uristr := str(base_uri))
         ]
         if candidates:
@@ -84,51 +106,47 @@ class Catalogue:
 
         raise CatalogueError(f"File not found for '{uri}'")
 
-    @classmethod
-    def create_vocabulary(cls, uri: URI, *kwclasses: KeywordClass) -> None:
-        cls._vocabularies[uri] = Vocabulary(uri, *kwclasses)
+    def create_vocabulary(self, uri: URI, *kwclasses: KeywordClass) -> None:
+        self._vocabularies[uri] = Vocabulary(uri, *kwclasses)
 
-    @classmethod
-    def get_vocabulary(cls, uri: URI) -> Vocabulary:
+    def get_vocabulary(self, uri: URI) -> Vocabulary:
         try:
-            return cls._vocabularies[uri]
+            return self._vocabularies[uri]
         except KeyError:
             raise CatalogueError(f"Unrecognized vocabulary URI '{uri}'")
 
-    @classmethod
     def create_metaschema(
-            cls,
+            self,
             metaschema_uri: URI,
             core_vocabulary_uri: URI,
             *default_vocabulary_uris: URI,
     ) -> None:
-        metaschema_doc = cls.load_json(metaschema_uri)
-        core_vocabulary = cls.get_vocabulary(core_vocabulary_uri)
-        default_vocabularies = [cls.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
-        metaschema = Metaschema(metaschema_doc, core_vocabulary, *default_vocabularies)
+        metaschema_doc = self.load_json(metaschema_uri)
+        core_vocabulary = self.get_vocabulary(core_vocabulary_uri)
+        default_vocabularies = [self.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
+        metaschema = Metaschema(self, metaschema_doc, core_vocabulary, *default_vocabularies)
         metaschema.validate()
 
-    @classmethod
-    def add_format_validators(cls, validators: Mapping[str, FormatValidator]) -> None:
-        cls._format_validators.update(validators)
+    def add_format_validators(self, validators: Mapping[str, FormatValidator]) -> None:
+        self._format_validators.update(validators)
 
-    @classmethod
-    def get_format_validator(cls, format_attr: str) -> FormatValidator:
+    def get_format_validator(self, format_attr: str) -> FormatValidator:
         try:
-            return cls._format_validators[format_attr]
+            return self._format_validators[format_attr]
         except KeyError:
             raise CatalogueError(f"Unsupported format attribute '{format_attr}'")
 
-    @classmethod
-    def add_schema(cls, uri: URI, schema: JSONSchema) -> None:
-        cls._schema_cache[uri] = schema
+    def create_schema(self, *args: Any, **kwargs: Any) -> JSONSchema:
+        kwargs['catalogue'] = self
+        return JSONSchema(*args, **kwargs)
 
-    @classmethod
-    def del_schema(cls, uri: URI) -> None:
-        cls._schema_cache.pop(uri, None)
+    def add_schema(self, uri: URI, schema: JSONSchema) -> None:
+        self._schema_cache[uri] = schema
 
-    @classmethod
-    def get_schema(cls, uri: URI, **kwargs: Any) -> JSONSchema:
+    def del_schema(self, uri: URI) -> None:
+        self._schema_cache.pop(uri, None)
+
+    def get_schema(self, uri: URI, **kwargs: Any) -> JSONSchema:
         """Get a (sub)schema identified by uri from the cache, or load it
         from disk if not already cached.
 
@@ -136,7 +154,7 @@ class Catalogue:
         newly created instances.
         """
         try:
-            return cls._schema_cache[uri]
+            return self._schema_cache[uri]
         except KeyError:
             pass
 
@@ -145,13 +163,13 @@ class Catalogue:
 
         if uri.fragment is not None:
             try:
-                schema = cls._schema_cache[base_uri]
+                schema = self._schema_cache[base_uri]
             except KeyError:
                 pass
 
         if schema is None:
-            doc = cls.load_json(base_uri)
-            schema = JSONSchema(doc, uri=base_uri, **kwargs)
+            doc = self.load_json(base_uri)
+            schema = self.create_schema(doc, uri=base_uri, **kwargs)
 
         if uri.fragment:
             try:

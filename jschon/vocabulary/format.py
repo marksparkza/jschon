@@ -18,9 +18,8 @@ class FormatKeyword(Keyword):
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
 
-        from jschon.catalogue import Catalogue
         try:
-            self.validator: FormatValidator = Catalogue.get_format_validator(value)
+            self.validator: FormatValidator = parentschema.catalogue.get_format_validator(value)
         except CatalogueError:
             self.validator = None
 

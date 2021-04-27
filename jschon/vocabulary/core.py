@@ -1,6 +1,5 @@
 from typing import Mapping
 
-from jschon.catalogue import Catalogue
 from jschon.exceptions import JSONSchemaError, URIError, CatalogueError
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, JSONSchema, Scope, PropertyApplicator, Metaschema
@@ -56,7 +55,7 @@ class VocabularyKeyword(Keyword):
                 raise JSONSchemaError from e
 
             try:
-                vocabulary = Catalogue.get_vocabulary(vocab_uri)
+                vocabulary = parentschema.catalogue.get_vocabulary(vocab_uri)
                 parentschema.kwclasses.update(vocabulary.kwclasses)
             except CatalogueError:
                 if vocab_required:
@@ -100,7 +99,7 @@ class RefKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
-        self.refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+        self.refschema = self.parentschema.catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.refschema.evaluate(instance, scope)
@@ -117,11 +116,7 @@ class AnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for "$anchor" value "{value}"')
 
-        # just add a schema reference to the catalogue, rather than updating
-        # the schema URI itself; this way we keep canonical URIs consistent
-        # for subschemas regardless of anchor usage
-        # parentschema.uri = uri
-        Catalogue.add_schema(uri, parentschema)
+        parentschema.catalogue.add_schema(uri, parentschema)
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False
@@ -150,7 +145,7 @@ class DynamicRefKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
 
-        self.refschema = Catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+        self.refschema = self.parentschema.catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
         if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.value == self.fragment:
             self.dynamic = True
 
@@ -169,7 +164,7 @@ class DynamicRefKeyword(Keyword):
                     checked_uris |= {base_uri}
                     target_uri = URI(f"#{self.fragment}").resolve(base_uri)
                     try:
-                        found_schema = Catalogue.get_schema(target_uri)
+                        found_schema = self.parentschema.catalogue.get_schema(target_uri)
                         if (dynamic_anchor := found_schema.get("$dynamicAnchor")) and \
                                 dynamic_anchor.value == self.fragment:
                             refschema = found_schema
@@ -193,7 +188,7 @@ class DynamicAnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for "$dynamicAnchor" value "{value}"')
 
-        Catalogue.add_schema(uri, parentschema)
+        parentschema.catalogue.add_schema(uri, parentschema)
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False

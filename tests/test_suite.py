@@ -2,16 +2,19 @@ import pathlib
 
 import pytest
 
-from jschon import Catalogue, JSON, JSONSchema, URI, JSONEvaluator
+from jschon import JSON, JSONSchema, URI, JSONEvaluator
 from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 
 testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
-Catalogue.add_directory(
-    base_uri=URI('http://localhost:1234/'),
-    base_dir=testsuite_dir / 'remotes',
-)
+
+@pytest.fixture(scope='module', autouse=True)
+def add_remotes(catalogue):
+    catalogue.add_directory(
+        base_uri=URI('http://localhost:1234/'),
+        base_dir=testsuite_dir / 'remotes',
+    )
 
 
 def pytest_generate_tests(metafunc):
@@ -49,8 +52,8 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize(argnames, argvalues, ids=testids)
 
 
-def test_validate(metaschema_uri, schema, data, valid):
-    json_schema = JSONSchema(schema, metaschema_uri=metaschema_uri)
+def test_validate(metaschema_uri, schema, data, valid, catalogue):
+    json_schema = JSONSchema(schema, metaschema_uri=metaschema_uri, catalogue=catalogue)
     json_data = JSON(data)
     json_evaluator = JSONEvaluator(json_schema)
     result = json_evaluator.evaluate_instance(json_data)

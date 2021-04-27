@@ -1,4 +1,5 @@
-from jschon.catalogue import Catalogue, catalogue_dir
+import pathlib
+
 from jschon.uri import URI
 from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
@@ -8,13 +9,13 @@ from jschon.vocabulary.legacy import *
 from jschon.vocabulary.validation import *
 
 
-def initialize():
-    Catalogue.add_directory(
-        base_uri=URI('https://json-schema.org/draft/2019-09/'),
-        base_dir=catalogue_dir / 'json-schema-spec-2019-09',
+def initialize(catalogue):
+    catalogue.add_directory(
+        URI('https://json-schema.org/draft/2019-09/'),
+        pathlib.Path(__file__).parent / 'json-schema-spec-2019-09',
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
@@ -27,7 +28,7 @@ def initialize():
         CommentKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
@@ -48,7 +49,7 @@ def initialize():
         PropertyNamesKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
@@ -72,12 +73,12 @@ def initialize():
         DependentRequiredKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/format"),
         FormatKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
@@ -88,14 +89,14 @@ def initialize():
         ExamplesKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
         ContentSchemaKeyword,
     )
 
-    Catalogue.create_metaschema(
+    catalogue.create_metaschema(
         URI("https://json-schema.org/draft/2019-09/schema"),
         URI("https://json-schema.org/draft/2019-09/vocab/core"),
         URI("https://json-schema.org/draft/2019-09/vocab/applicator"),

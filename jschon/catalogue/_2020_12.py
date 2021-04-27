@@ -1,4 +1,5 @@
-from jschon.catalogue import Catalogue, catalogue_dir
+import pathlib
+
 from jschon.uri import URI
 from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
@@ -7,13 +8,13 @@ from jschon.vocabulary.format import *
 from jschon.vocabulary.validation import *
 
 
-def initialize():
-    Catalogue.add_directory(
-        base_uri=URI('https://json-schema.org/draft/2020-12/'),
-        base_dir=catalogue_dir / 'json-schema-spec-2020-12',
+def initialize(catalogue):
+    catalogue.add_directory(
+        URI('https://json-schema.org/draft/2020-12/'),
+        pathlib.Path(__file__).parent / 'json-schema-spec-2020-12',
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
@@ -26,7 +27,7 @@ def initialize():
         CommentKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
@@ -45,13 +46,13 @@ def initialize():
         PropertyNamesKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
         UnevaluatedItemsKeyword,
         UnevaluatedPropertiesKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
@@ -75,12 +76,12 @@ def initialize():
         DependentRequiredKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
         FormatKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
@@ -91,14 +92,14 @@ def initialize():
         ExamplesKeyword,
     )
 
-    Catalogue.create_vocabulary(
+    catalogue.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
         ContentSchemaKeyword,
     )
 
-    Catalogue.create_metaschema(
+    catalogue.create_metaschema(
         URI("https://json-schema.org/draft/2020-12/schema"),
         URI("https://json-schema.org/draft/2020-12/vocab/core"),
         URI("https://json-schema.org/draft/2020-12/vocab/applicator"),

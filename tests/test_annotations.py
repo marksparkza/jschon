@@ -1,6 +1,6 @@
 import pytest
 
-from jschon import JSON, JSONSchema
+from jschon import JSON
 from tests import metaschema_uri_2020_12
 
 
@@ -15,8 +15,8 @@ from tests import metaschema_uri_2020_12
     ("contentMediaType", "application/json"),
     ("contentEncoding", "base64"),
 ])
-def test_annotate(key, value):
-    result = JSONSchema({key: value}, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
+def test_annotate(key, value, catalogue):
+    result = catalogue.create_schema({key: value}, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
     assert result.valid is True
     assert result.children[key].valid is True
     assert result.children[key]._assert is False
@@ -26,14 +26,14 @@ def test_annotate(key, value):
         assert value is None
 
 
-def test_content_schema():
+def test_content_schema(catalogue):
     example = {
         "contentMediaType": "application/json",
         "contentSchema": {"required": ["foo"], "properties": {"foo": {"type": "string"}}},
     }
-    result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
+    result = catalogue.create_schema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
     assert result.children["contentSchema"].annotations["contentSchema"].value == example["contentSchema"]
 
     del example["contentMediaType"]
-    result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
+    result = catalogue.create_schema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
     assert "contentSchema" not in result.children

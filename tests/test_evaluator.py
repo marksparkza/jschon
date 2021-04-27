@@ -1,7 +1,7 @@
 import pytest
 from pytest import param as p
 
-from jschon import JSON, JSONSchema, JSONEvaluator, OutputFormat
+from jschon import JSON, JSONEvaluator, OutputFormat
 from tests import metaschema_uri_2020_12
 
 schema_valid = {
@@ -56,8 +56,8 @@ schema_invalid_errors = [
     (schema_valid, True),
     (schema_invalid, False),
 ])
-def test_validate_schema_flag(example, valid):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+def test_validate_schema_flag(example, valid, catalogue):
+    schema = catalogue.create_schema(example, metaschema_uri=metaschema_uri_2020_12)
     evaluator = JSONEvaluator(schema)
     result = evaluator.validate_schema()
     assert result == {
@@ -73,8 +73,8 @@ def test_validate_schema_flag(example, valid):
     (schema_valid, True, None),
     (schema_invalid, False, schema_invalid_errors),
 ])
-def test_validate_schema_basic(example, valid, errors):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+def test_validate_schema_basic(example, valid, errors, catalogue):
+    schema = catalogue.create_schema(example, metaschema_uri=metaschema_uri_2020_12)
     evaluator = JSONEvaluator(schema)
     result = evaluator.validate_schema(OutputFormat.BASIC)
     assert result['valid'] is valid
@@ -188,8 +188,8 @@ instance_tests = (
 
 
 @pytest.mark.parametrize('example, valid, output', instance_tests)
-def test_evaluate_instance_flag(example, valid, output):
-    schema = JSONSchema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
+def test_evaluate_instance_flag(example, valid, output, catalogue):
+    schema = catalogue.create_schema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
     evaluator = JSONEvaluator(schema)
     result = evaluator.evaluate_instance(JSON(example))
     assert result == {
@@ -202,8 +202,8 @@ def test_evaluate_instance_flag(example, valid, output):
 
 
 @pytest.mark.parametrize('example, valid, output', instance_tests)
-def test_evaluate_instance_basic(example, valid, output):
-    schema = JSONSchema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
+def test_evaluate_instance_basic(example, valid, output, catalogue):
+    schema = catalogue.create_schema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
     evaluator = JSONEvaluator(schema)
     result = evaluator.evaluate_instance(JSON(example), OutputFormat.BASIC)
     assert result['valid'] is valid

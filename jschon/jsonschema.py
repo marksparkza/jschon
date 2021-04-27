@@ -38,6 +38,7 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *,
+            catalogue,
             uri: URI = None,
             metaschema_uri: URI = None,
             parent: JSON = None,
@@ -45,8 +46,9 @@ class JSONSchema(JSON):
     ):
         from jschon.catalogue import Catalogue
         if uri is not None:
-            Catalogue.add_schema(uri, self)
+            catalogue.add_schema(uri, self)
 
+        self.catalogue: Catalogue = catalogue
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
         self.keywords: Dict[str, Keyword] = {}
@@ -170,12 +172,10 @@ class JSONSchema(JSON):
 
     @property
     def metaschema(self) -> Metaschema:
-        from jschon.catalogue import Catalogue
-
         if (uri := self.metaschema_uri) is None:
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
-        if not isinstance(metaschema := Catalogue.get_schema(uri), Metaschema):
+        if not isinstance(metaschema := self.catalogue.get_schema(uri), Metaschema):
             raise JSONSchemaError(f"The schema referenced by {uri} is not a metachema")
 
         return metaschema
@@ -204,16 +204,14 @@ class JSONSchema(JSON):
 
     @uri.setter
     def uri(self, value: Optional[URI]) -> None:
-        from jschon.catalogue import Catalogue
-
         if self._uri != value:
             if self._uri is not None:
-                Catalogue.del_schema(self._uri)
+                self.catalogue.del_schema(self._uri)
 
             self._uri = value
 
             if self._uri is not None:
-                Catalogue.add_schema(self._uri, self)
+                self.catalogue.add_schema(self._uri, self)
 
     @property
     def canonical_uri(self) -> Optional[URI]:
@@ -239,6 +237,7 @@ class Metaschema(JSONSchema):
 
     def __init__(
             self,
+            catalogue,
             value: Mapping[str, AnyJSONCompatible],
             core_vocabulary: Vocabulary,
             *default_vocabularies: Vocabulary,
@@ -246,7 +245,7 @@ class Metaschema(JSONSchema):
         self.core_vocabulary: Vocabulary = core_vocabulary
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
         self.kwclasses: Dict[str, KeywordClass] = {}
-        super().__init__(value)
+        super().__init__(value, catalogue=catalogue)
 
     def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
         super()._bootstrap(value)
@@ -308,7 +307,7 @@ class Applicator:
     @staticmethod
     def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSONSchema]:
         if JSONSchema.iscompatible(value):
-            return JSONSchema(value, parent=parentschema, key=key)
+            return JSONSchema(value, parent=parentschema, key=key, catalogue=parentschema.catalogue)
 
 
 class ArrayApplicator:
@@ -317,7 +316,7 @@ class ArrayApplicator:
     @staticmethod
     def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
         if isinstance(value, Sequence) and all(JSONSchema.iscompatible(v) for v in value):
-            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema)
+            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema, catalogue=parentschema.catalogue)
 
 
 class PropertyApplicator:
@@ -329,7 +328,7 @@ class PropertyApplicator:
                 isinstance(k, str) and JSONSchema.iscompatible(v)
                 for k, v in value.items()
         ):
-            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema)
+            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema, catalogue=parentschema.catalogue)
 
 
 @dataclass

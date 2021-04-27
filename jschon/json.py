@@ -36,6 +36,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             parent: JSON = None,
             key: str = None,
             itemclass: Type[JSON] = None,
+            **itemkwargs: Any,
     ):
         self.value: AnyJSONCompatible
         self.type: str
@@ -69,7 +70,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             for i, v in enumerate(value):
                 if isinstance(v, JSON):
                     v = v.value
-                self.value += [itemclass(v, parent=self, key=str(i))]
+                self.value += [itemclass(v, parent=self, key=str(i), **itemkwargs)]
 
         elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
             self.type = "object"
@@ -78,7 +79,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             for k, v in value.items():
                 if isinstance(v, JSON):
                     v = v.value
-                self.value[k] = itemclass(v, parent=self, key=k)
+                self.value[k] = itemclass(v, parent=self, key=k, **itemkwargs)
 
         else:
             raise TypeError(f"{value=} is not JSON-compatible")

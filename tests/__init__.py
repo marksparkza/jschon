@@ -1,8 +1,4 @@
 from jschon import URI
-from jschon.catalogue import jsonschema_2019_09, jsonschema_2020_12
-
-jsonschema_2019_09.initialize()
-jsonschema_2020_12.initialize()
 
 metaschema_uri_2019_09 = URI("https://json-schema.org/draft/2019-09/schema")
 metaschema_uri_2020_12 = URI("https://json-schema.org/draft/2020-12/schema")

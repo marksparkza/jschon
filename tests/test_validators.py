@@ -1,18 +1,17 @@
 import re
 from decimal import Decimal, InvalidOperation
 
-import hypothesis.strategies as hs
 from hypothesis import given
 
-from jschon import JSON, JSONSchema
+from jschon import JSON
 from jschon.jsonschema import Scope
 from jschon.vocabulary.validation import *
 from tests import metaschema_uri_2019_09
 from tests.strategies import *
 
 
-def evaluate(kwclass, kwvalue, instval):
-    schema = JSONSchema(True)
+def evaluate(kwclass, kwvalue, instval, catalogue):
+    schema = catalogue.create_schema(True)
     kwclass(schema, kwvalue).evaluate(JSON(instval), scope := Scope(schema))
     return scope.valid
 
@@ -28,8 +27,8 @@ def isequal(x, y):
 
 
 @given(kwvalue=jsontype | jsontypes, instval=json)
-def test_type(kwvalue, instval):
-    result = evaluate(TypeKeyword, kwvalue, instval)
+def test_type(kwvalue, instval, catalogue):
+    result = evaluate(TypeKeyword, kwvalue, instval, catalogue)
     if isinstance(kwvalue, str):
         kwvalue = [kwvalue]
     if instval is None:
@@ -49,25 +48,25 @@ def test_type(kwvalue, instval):
 
 
 @given(kwvalue=jsonarray, instval=json)
-def test_enum(kwvalue, instval):
-    result = evaluate(EnumKeyword, kwvalue, instval)
+def test_enum(kwvalue, instval, catalogue):
+    result = evaluate(EnumKeyword, kwvalue, instval, catalogue)
     assert result == any(isequal(instval, kwval) for kwval in kwvalue)
 
 
 @given(kwvalue=json, instval=json)
-def test_const(kwvalue, instval):
-    result = evaluate(ConstKeyword, kwvalue, instval)
+def test_const(kwvalue, instval, catalogue):
+    result = evaluate(ConstKeyword, kwvalue, instval, catalogue)
     assert result == isequal(instval, kwvalue)
 
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
-def test_multiple_of(kwvalue, instval):
+def test_multiple_of(kwvalue, instval, catalogue):
     def decimalize(val):
         if isinstance(val, float):
             return Decimal(f'{val}')
         return val
 
-    result = evaluate(MultipleOfKeyword, kwvalue, instval)
+    result = evaluate(MultipleOfKeyword, kwvalue, instval, catalogue)
     try:
         assert result == (decimalize(instval) % decimalize(kwvalue) == 0)
     except InvalidOperation:
@@ -75,62 +74,62 @@ def test_multiple_of(kwvalue, instval):
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
-def test_maximum(kwvalue, instval):
-    result = evaluate(MaximumKeyword, kwvalue, instval)
+def test_maximum(kwvalue, instval, catalogue):
+    result = evaluate(MaximumKeyword, kwvalue, instval, catalogue)
     assert result == (instval <= kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
-def test_exclusive_maximum(kwvalue, instval):
-    result = evaluate(ExclusiveMaximumKeyword, kwvalue, instval)
+def test_exclusive_maximum(kwvalue, instval, catalogue):
+    result = evaluate(ExclusiveMaximumKeyword, kwvalue, instval, catalogue)
     assert result == (instval < kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
-def test_minimum(kwvalue, instval):
-    result = evaluate(MinimumKeyword, kwvalue, instval)
+def test_minimum(kwvalue, instval, catalogue):
+    result = evaluate(MinimumKeyword, kwvalue, instval, catalogue)
     assert result == (instval >= kwvalue)
 
 
 @given(kwvalue=jsonnumber, instval=jsonnumber)
-def test_exclusive_minimum(kwvalue, instval):
-    result = evaluate(ExclusiveMinimumKeyword, kwvalue, instval)
+def test_exclusive_minimum(kwvalue, instval, catalogue):
+    result = evaluate(ExclusiveMinimumKeyword, kwvalue, instval, catalogue)
     assert result == (instval > kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonstring)
-def test_max_length(kwvalue, instval):
-    result = evaluate(MaxLengthKeyword, kwvalue, instval)
+def test_max_length(kwvalue, instval, catalogue):
+    result = evaluate(MaxLengthKeyword, kwvalue, instval, catalogue)
     assert result == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=jsoninteger.filter(lambda x: x >= 0), instval=jsonstring)
-def test_min_length(kwvalue, instval):
-    result = evaluate(MinLengthKeyword, kwvalue, instval)
+def test_min_length(kwvalue, instval, catalogue):
+    result = evaluate(MinLengthKeyword, kwvalue, instval, catalogue)
     assert result == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=hs.just(jsonpointer_regex), instval=hs.from_regex(jsonpointer_regex))
-def test_pattern(kwvalue, instval):
-    result = evaluate(PatternKeyword, kwvalue, instval)
+def test_pattern(kwvalue, instval, catalogue):
+    result = evaluate(PatternKeyword, kwvalue, instval, catalogue)
     assert result == (re.search(kwvalue, instval) is not None)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatarray)
-def test_max_items(kwvalue, instval):
-    result = evaluate(MaxItemsKeyword, kwvalue, instval)
+def test_max_items(kwvalue, instval, catalogue):
+    result = evaluate(MaxItemsKeyword, kwvalue, instval, catalogue)
     assert result == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatarray)
-def test_min_items(kwvalue, instval):
-    result = evaluate(MinItemsKeyword, kwvalue, instval)
+def test_min_items(kwvalue, instval, catalogue):
+    result = evaluate(MinItemsKeyword, kwvalue, instval, catalogue)
     assert result == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=jsonboolean, instval=jsonarray)
-def test_unique_items(kwvalue, instval):
-    result = evaluate(UniqueItemsKeyword, kwvalue, instval)
+def test_unique_items(kwvalue, instval, catalogue):
+    result = evaluate(UniqueItemsKeyword, kwvalue, instval, catalogue)
     if kwvalue:
         uniquified = []
         for item in instval:
@@ -145,11 +144,11 @@ def test_unique_items(kwvalue, instval):
     minmax=hs.tuples(hs.integers(min_value=0, max_value=20), hs.integers(min_value=0, max_value=20)),
     instval=jsonflatarray,
 )
-def test_contains(minmax, instval):
+def test_contains(minmax, instval, catalogue):
     min_contains = min(minmax)
     max_contains = max(minmax)
     contains_count = len(list(filter(lambda item: JSON(item).type == "boolean", instval)))
-    schema = JSONSchema({
+    schema = catalogue.create_schema({
         "contains": {"type": "boolean"},
         "minContains": min_contains,
         "maxContains": max_contains,
@@ -159,27 +158,27 @@ def test_contains(minmax, instval):
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
-def test_max_properties(kwvalue, instval):
-    result = evaluate(MaxPropertiesKeyword, kwvalue, instval)
+def test_max_properties(kwvalue, instval, catalogue):
+    result = evaluate(MaxPropertiesKeyword, kwvalue, instval, catalogue)
     assert result == (len(instval) <= kwvalue)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
-def test_min_properties(kwvalue, instval):
-    result = evaluate(MinPropertiesKeyword, kwvalue, instval)
+def test_min_properties(kwvalue, instval, catalogue):
+    result = evaluate(MinPropertiesKeyword, kwvalue, instval, catalogue)
     assert result == (len(instval) >= kwvalue)
 
 
 @given(kwvalue=propnames, instval=jsonproperties)
-def test_required(kwvalue, instval):
-    result = evaluate(RequiredKeyword, kwvalue, instval)
+def test_required(kwvalue, instval, catalogue):
+    result = evaluate(RequiredKeyword, kwvalue, instval, catalogue)
     missing = any(name for name in kwvalue if name not in instval)
     assert result == (not missing)
 
 
 @given(kwvalue=hs.dictionaries(propname, propnames), instval=jsonproperties)
-def test_dependent_required(kwvalue, instval):
-    result = evaluate(DependentRequiredKeyword, kwvalue, instval)
+def test_dependent_required(kwvalue, instval, catalogue):
+    result = evaluate(DependentRequiredKeyword, kwvalue, instval, catalogue)
     missing = False
     for name, deps in kwvalue.items():
         if name in instval:

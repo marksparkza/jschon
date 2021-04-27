@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
-from jschon import Catalogue, JSON, JSONPointer, JSONSchema, URI, JSONSchemaError
+from jschon import JSON, JSONPointer, JSONSchema, URI, JSONSchemaError
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 from tests.strategies import *
 
@@ -21,8 +21,8 @@ json2 = JSON(example_invalid)
 
 
 @pytest.mark.parametrize('example, json1_valid, json2_valid', schema_tests)
-def test_schema_examples(example, json1_valid, json2_valid):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+def test_schema_examples(example, json1_valid, json2_valid, catalogue):
+    schema = catalogue.create_schema(example, metaschema_uri=metaschema_uri_2020_12)
     schema.validate()
     assert schema.value == example
     assert schema.type == "boolean" if isinstance(example, bool) else "object"
@@ -39,8 +39,8 @@ def test_schema_examples(example, json1_valid, json2_valid):
     {"properties": {"bar": {"multipleOf": -3}}},
     {"allOf": [{"anyOf": []}]},
 ])
-def test_invalid_schema(example):
-    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+def test_invalid_schema(example, catalogue):
+    schema = catalogue.create_schema(example, metaschema_uri=metaschema_uri_2020_12)
     with pytest.raises(JSONSchemaError):
         schema.validate()
 
@@ -53,9 +53,9 @@ def assert_keyword_order(keyword_list, keyword_pairs):
             pass
 
 
-@given(interdependent_keywords)
-def test_keyword_dependency_resolution_2019_09(value: list):
-    metaschema = Catalogue.get_schema(metaschema_uri_2019_09)
+@given(value=interdependent_keywords)
+def test_keyword_dependency_resolution_2019_09(value: list, catalogue):
+    metaschema = catalogue.get_schema(metaschema_uri_2019_09)
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
@@ -95,9 +95,9 @@ def test_keyword_dependency_resolution_2019_09(value: list):
     ])
 
 
-@given(interdependent_keywords)
-def test_keyword_dependency_resolution_2020_12(value: list):
-    metaschema = Catalogue.get_schema(metaschema_uri_2020_12)
+@given(value=interdependent_keywords)
+def test_keyword_dependency_resolution_2020_12(value: list, catalogue):
+    metaschema = catalogue.get_schema(metaschema_uri_2020_12)
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
@@ -168,8 +168,8 @@ id_example = {
     ('#/$defs/B/$defs/Y', 'https://example.com/t/inner.json'),
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f'),
 ])
-def test_base_uri(ptr: str, base_uri: str):
-    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
+def test_base_uri(ptr: str, base_uri: str, catalogue):
+    rootschema = catalogue.create_schema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
     assert schema.base_uri == URI(base_uri)
 
@@ -191,10 +191,10 @@ def test_base_uri(ptr: str, base_uri: str):
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f#', True),
     ('#/$defs/C', 'https://example.com/root.json#/$defs/C', False),
 ])
-def test_uri(ptr: str, uri: str, canonical: bool):
-    rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
+def test_uri(ptr: str, uri: str, canonical: bool, catalogue):
+    rootschema = catalogue.create_schema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
-    assert schema == Catalogue.get_schema(uri := URI(uri))
+    assert schema == catalogue.get_schema(uri := URI(uri))
     if canonical:
         # 'canonical' is as per the JSON Schema spec; however, we skip testing of
         # anchored URIs since we have only one way to calculate a schema's canonical URI
@@ -246,9 +246,9 @@ tree_instance_2019_09 = {
 }
 
 
-def test_recursive_schema_extension_2019_09():
-    tree_schema = JSONSchema(tree_2019_09)
-    strict_tree_schema = JSONSchema(strict_tree_2019_09)
+def test_recursive_schema_extension_2019_09(catalogue):
+    tree_schema = catalogue.create_schema(tree_2019_09)
+    strict_tree_schema = catalogue.create_schema(strict_tree_2019_09)
     tree_json = JSON(tree_instance_2019_09)
     assert tree_schema.evaluate(tree_json).valid is True
     assert strict_tree_schema.evaluate(tree_json).valid is False
@@ -287,9 +287,9 @@ tree_instance_2020_12 = {
 }
 
 
-def test_recursive_schema_extension_2020_12():
-    tree_schema = JSONSchema(tree_2020_12)
-    strict_tree_schema = JSONSchema(strict_tree_2020_12)
+def test_recursive_schema_extension_2020_12(catalogue):
+    tree_schema = catalogue.create_schema(tree_2020_12)
+    strict_tree_schema = catalogue.create_schema(strict_tree_2020_12)
     tree_json = JSON(tree_instance_2020_12)
     assert tree_schema.evaluate(tree_json).valid is True
     assert strict_tree_schema.evaluate(tree_json).valid is False

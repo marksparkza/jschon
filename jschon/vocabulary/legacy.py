@@ -1,4 +1,3 @@
-from jschon.catalogue import Catalogue
 from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON
 from jschon.jsonschema import Keyword, JSONSchema, Scope, Applicator, ArrayApplicator
@@ -24,7 +23,10 @@ class RecursiveRefKeyword_2019_09(Keyword):
 
     def resolve(self) -> None:
         if (base_uri := self.parentschema.base_uri) is not None:
-            self.refschema = Catalogue.get_schema(base_uri, metaschema_uri=self.parentschema.metaschema_uri)
+            self.refschema = self.parentschema.catalogue.get_schema(
+                base_uri,
+                metaschema_uri=self.parentschema.metaschema_uri,
+            )
         else:
             raise JSONSchemaError(f'No base URI against which to resolve "$recursiveRef"')
 
