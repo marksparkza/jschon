@@ -4,7 +4,7 @@ from decimal import Decimal
 import pytest
 from pytest import param as p
 
-from jschon import JSON, JSONSchema
+from jschon import JSON
 from tests import metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 
 
@@ -34,9 +34,9 @@ def test_create_json(benchmark, value):
         p(example_valid, id='valid'),
         p(example_invalid, id='invalid'),
 ))
-def test_evaluate_json(benchmark, request, value):
+def test_evaluate_json(benchmark, request, value, catalogue):
     json = JSON(value)
-    schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri_2020_12)
+    schema = catalogue.create_schema(example_schema, metaschema_uri=metaschema_uri_2020_12)
     scope = benchmark(schema.evaluate, json)
     assert scope.valid is (True if '[valid]' in request.node.name else False)
 
@@ -50,11 +50,11 @@ schema_tests = (
 
 
 @pytest.mark.parametrize('value', schema_tests)
-def test_create_schema(benchmark, value):
-    benchmark(JSONSchema, value, metaschema_uri=metaschema_uri_2020_12)
+def test_create_schema(benchmark, value, catalogue):
+    benchmark(catalogue.create_schema, value, metaschema_uri=metaschema_uri_2020_12)
 
 
 @pytest.mark.parametrize('value', schema_tests)
-def test_validate_schema(benchmark, value):
-    schema = JSONSchema(value, metaschema_uri=metaschema_uri_2020_12)
+def test_validate_schema(benchmark, value, catalogue):
+    schema = catalogue.create_schema(value, metaschema_uri=metaschema_uri_2020_12)
     benchmark(schema.validate)
