@@ -1,6 +1,6 @@
 import pathlib
 from os import PathLike
-from typing import Dict, Mapping, Any
+from typing import Dict, Mapping, Union
 
 from jschon.catalogue import _2019_09, _2020_12
 from jschon.exceptions import CatalogueError, JSONPointerError, URIError
@@ -136,9 +136,14 @@ class Catalogue:
         except KeyError:
             raise CatalogueError(f"Unsupported format attribute '{format_attr}'")
 
-    def create_schema(self, *args: Any, **kwargs: Any) -> JSONSchema:
-        kwargs['catalogue'] = self
-        return JSONSchema(*args, **kwargs)
+    def create_schema(
+            self,
+            value: Union[bool, Mapping[str, AnyJSONCompatible]],
+            *,
+            uri: URI = None,
+            metaschema_uri: URI = None,
+    ) -> JSONSchema:
+        return JSONSchema(value, catalogue=self, uri=uri, metaschema_uri=metaschema_uri)
 
     def add_schema(self, uri: URI, schema: JSONSchema) -> None:
         self._schema_cache[uri] = schema
@@ -146,12 +151,12 @@ class Catalogue:
     def del_schema(self, uri: URI) -> None:
         self._schema_cache.pop(uri, None)
 
-    def get_schema(self, uri: URI, **kwargs: Any) -> JSONSchema:
+    def get_schema(self, uri: URI, *, metaschema_uri: URI = None) -> JSONSchema:
         """Get a (sub)schema identified by uri from the cache, or load it
         from disk if not already cached.
 
-        Additional kwargs are passed to the JSONSchema constructor for
-        newly created instances.
+        metaschema_uri is passed to the JSONSchema constructor when loading
+        a new instance from disk.
         """
         try:
             return self._schema_cache[uri]
@@ -169,7 +174,7 @@ class Catalogue:
 
         if schema is None:
             doc = self.load_json(base_uri)
-            schema = self.create_schema(doc, uri=base_uri, **kwargs)
+            schema = self.create_schema(doc, uri=base_uri, metaschema_uri=metaschema_uri)
 
         if uri.fragment:
             try:
