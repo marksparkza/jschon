@@ -1,0 +1,3 @@
+Exceptions
+==========
+.. automodule:: jschon.exceptions

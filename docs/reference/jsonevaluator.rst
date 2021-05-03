@@ -1,0 +1,3 @@
+JSONEvaluator
+=============
+.. automodule:: jschon.jsonevaluator

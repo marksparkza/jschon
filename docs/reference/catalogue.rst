@@ -1,0 +1,3 @@
+Catalogue
+=========
+.. automodule:: jschon.catalogue

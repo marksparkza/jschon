@@ -1,0 +1,3 @@
+JSONSchema
+==========
+.. automodule:: jschon.jsonschema

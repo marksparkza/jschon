@@ -1,0 +1,3 @@
+URI
+===
+.. automodule:: jschon.uri

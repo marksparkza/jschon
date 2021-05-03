@@ -1,0 +1,3 @@
+JSON
+====
+.. automodule:: jschon.json
