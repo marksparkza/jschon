@@ -1,6 +1,6 @@
 Welcome to jschon!
 ==================
-jschon is a Pythonic and extensible implementation of the
+jschon is a pythonic and extensible implementation of the
 `JSON Schema <https://json-schema.org/>`_ specification.
 
 .. toctree::

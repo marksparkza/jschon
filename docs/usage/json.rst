@@ -139,7 +139,7 @@ supports both serialization and deserialization of JSON documents, via
 the Python standard library's :mod:`json` module.
 
 Serializing a :class:`JSON` instance is simply a matter of getting its
-string representation; for example:
+string representation:
 
 >>> str(JSON({"xyz": (None, False, True)}))
 '{"xyz": [null, false, true]}'
