@@ -26,22 +26,22 @@ class JSONEvaluator:
 
     def validate_schema(self, output_format=OutputFormat.FLAG) -> Dict[str, Any]:
         scope = self.schema.metaschema.evaluate(JSON(self.schema.value))
-        fn = eval(f'self.{output_format.value}')
+        fn = eval(f'self._{output_format.value}')
         return fn(scope)
 
     def evaluate_instance(self, instance: JSON, output_format=OutputFormat.FLAG) -> Dict[str, Any]:
         scope = self.schema.evaluate(instance)
-        fn = eval(f'self.{output_format.value}')
+        fn = eval(f'self._{output_format.value}')
         return fn(scope)
 
     @staticmethod
-    def flag(scope: Scope) -> Dict[str, Any]:
+    def _flag(scope: Scope) -> Dict[str, Any]:
         return {
             "valid": scope.valid
         }
 
     @staticmethod
-    def basic(scope: Scope) -> Dict[str, Any]:
+    def _basic(scope: Scope) -> Dict[str, Any]:
         result = {
             "valid": scope.valid
         }
@@ -67,9 +67,9 @@ class JSONEvaluator:
         return result
 
     @staticmethod
-    def detailed(scope: Scope) -> Dict[str, Any]:
+    def _detailed(scope: Scope) -> Dict[str, Any]:
         raise NotImplementedError
 
     @staticmethod
-    def verbose(scope: Scope) -> Dict[str, Any]:
+    def _verbose(scope: Scope) -> Dict[str, Any]:
         raise NotImplementedError
