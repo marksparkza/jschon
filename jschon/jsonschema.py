@@ -3,7 +3,20 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, Mapping, Union, Optional, Dict, List, Iterator, Tuple, Type, Sequence, ContextManager
+from typing import (
+    Any,
+    Mapping,
+    Union,
+    Optional,
+    Dict,
+    List,
+    Iterator,
+    Tuple,
+    Type,
+    Sequence,
+    ContextManager,
+    TYPE_CHECKING,
+)
 from uuid import uuid4
 
 from jschon.exceptions import JSONSchemaError
@@ -11,6 +24,9 @@ from jschon.json import JSON, AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
 from jschon.utils import tuplify
+
+if TYPE_CHECKING:
+    from jschon.catalogue import Catalogue
 
 __all__ = [
     'JSONSchema',
@@ -38,7 +54,7 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *,
-            catalogue: 'Catalogue' = None,
+            catalogue: Catalogue = None,
             uri: URI = None,
             metaschema_uri: URI = None,
             parent: JSON = None,
@@ -242,7 +258,7 @@ class Metaschema(JSONSchema):
 
     def __init__(
             self,
-            catalogue,
+            catalogue: Catalogue,
             value: Mapping[str, AnyJSONCompatible],
             core_vocabulary: Vocabulary,
             *default_vocabularies: Vocabulary,
