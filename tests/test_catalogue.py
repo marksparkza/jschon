@@ -4,7 +4,7 @@ import tempfile
 
 import pytest
 
-from jschon import Catalogue, CatalogueError, URI, JSONPointer
+from jschon import Catalogue, CatalogueError, URI, JSONPointer, JSONSchema
 from tests import example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
@@ -109,8 +109,8 @@ def test_get_vocabulary(uri, is_known, catalogue):
 
 
 @pytest.fixture
-def example_schema_uri(catalogue):
-    schema = catalogue.create_schema(example_schema, metaschema_uri=metaschema_uri_2020_12)
+def example_schema_uri():
+    schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri_2020_12)
     return schema.uri
 
 

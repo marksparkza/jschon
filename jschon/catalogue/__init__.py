@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 import pathlib
 from os import PathLike
-from typing import Dict, Mapping, Union
+from typing import Dict, Mapping, Optional
 
 from jschon.catalogue import _2019_09, _2020_12
 from jschon.exceptions import CatalogueError, JSONPointerError, URIError
@@ -19,16 +21,36 @@ __all__ = [
 class Catalogue:
     """The catalogue is the largest organizational unit in jschon.
 
-    A catalogue is an in-memory schema cache, usually initialized with a
-    collection of metaschemas and associated vocabularies, and any number of
-    format validation functions. It may be configured with base URI-to-directory
-    mappings, so that JSON files (including the metaschema definition files)
-    may be loaded from disk.
+    A :class:`Catalogue` instance is an in-memory schema cache, usually
+    initialized with a metaschema and its associated vocabularies, and
+    optionally with any number of format validation functions. It may be
+    configured with base URI-to-directory mappings, so that JSON files
+    (including the metaschema definition files) may be loaded from disk.
     """
     _version_initializers = {
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
     }
+    _default_catalogue: Catalogue = None
+
+    @classmethod
+    def create_default_catalogue(cls, *versions: str) -> Catalogue:
+        """Create a default :class:`Catalogue` instance.
+        
+        This allows instances of :class:`JSONSchema` to be created without
+        explicitly passing a ``catalogue`` to the :class:`JSONSchema`
+        constructor.
+        """
+        if cls._default_catalogue is not None:
+            raise CatalogueError("A default catalogue already exists")
+
+        cls._default_catalogue = Catalogue(*versions)
+        return cls._default_catalogue
+
+    @classmethod
+    def get_default_catalogue(cls) -> Optional[Catalogue]:
+        """Get the default :class:`Catalogue` instance, if there is one."""
+        return cls._default_catalogue
 
     def __init__(self, *versions: str):
         """Create a new catalogue, optionally initialized with the metaschema
@@ -136,15 +158,6 @@ class Catalogue:
         except KeyError:
             raise CatalogueError(f"Unsupported format attribute '{format_attr}'")
 
-    def create_schema(
-            self,
-            value: Union[bool, Mapping[str, AnyJSONCompatible]],
-            *,
-            uri: URI = None,
-            metaschema_uri: URI = None,
-    ) -> JSONSchema:
-        return JSONSchema(value, catalogue=self, uri=uri, metaschema_uri=metaschema_uri)
-
     def add_schema(self, uri: URI, schema: JSONSchema) -> None:
         self._schema_cache[uri] = schema
 
@@ -174,7 +187,7 @@ class Catalogue:
 
         if schema is None:
             doc = self.load_json(base_uri)
-            schema = self.create_schema(doc, uri=base_uri, metaschema_uri=metaschema_uri)
+            schema = JSONSchema(doc, catalogue=self, uri=base_uri, metaschema_uri=metaschema_uri)
 
         if uri.fragment:
             try:

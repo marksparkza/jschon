@@ -38,13 +38,18 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *,
-            catalogue,
+            catalogue: 'Catalogue' = None,
             uri: URI = None,
             metaschema_uri: URI = None,
             parent: JSON = None,
             key: str = None,
     ):
         from jschon.catalogue import Catalogue
+
+        if catalogue is None:
+            if (catalogue := Catalogue.get_default_catalogue()) is None:
+                raise JSONSchemaError("catalogue not given and default catalogue not found")
+
         if uri is not None:
             catalogue.add_schema(uri, self)
 

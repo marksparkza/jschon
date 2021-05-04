@@ -52,8 +52,8 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize(argnames, argvalues, ids=testids)
 
 
-def test_validate(metaschema_uri, schema, data, valid, catalogue):
-    json_schema = JSONSchema(schema, metaschema_uri=metaschema_uri, catalogue=catalogue)
+def test_validate(metaschema_uri, schema, data, valid):
+    json_schema = JSONSchema(schema, metaschema_uri=metaschema_uri)
     json_data = JSON(data)
     json_evaluator = JSONEvaluator(json_schema)
     result = json_evaluator.evaluate_instance(json_data)

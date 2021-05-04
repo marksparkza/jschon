@@ -10,6 +10,6 @@ def pytest_addoption(parser):
     testsuite.addoption("--testsuite-formats", action="store_true", help="Include format tests")
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='session', autouse=True)
 def catalogue():
-    return Catalogue('2019-09', '2020-12')
+    return Catalogue.create_default_catalogue('2019-09', '2020-12')

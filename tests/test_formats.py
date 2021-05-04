@@ -3,7 +3,7 @@ import ipaddress
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon import JSON, JSONPointer, JSONPointerError
+from jschon import JSON, JSONPointer, JSONPointerError, JSONSchema
 from jschon.jsonschema import Scope
 from jschon.vocabulary.format import FormatKeyword
 from tests.strategies import jsonpointer
@@ -38,8 +38,8 @@ def jsonpointer_validator(value):
             raise ValueError(str(e))
 
 
-def evaluate(format_attr, instval, catalogue, assert_=True):
-    schema = catalogue.create_schema(True)
+def evaluate(format_attr, instval, assert_=True):
+    schema = JSONSchema(True)
     FormatKeyword(schema, format_attr).evaluate(JSON(instval), scope := Scope(schema))
     assert scope.annotations["format"].value == format_attr
     assert scope._assert is assert_
@@ -47,14 +47,14 @@ def evaluate(format_attr, instval, catalogue, assert_=True):
 
 
 @given(instval=hs.ip_addresses(v=4))
-def test_ipv4_valid(instval, catalogue):
-    result = evaluate("ipv4", str(instval), catalogue)
+def test_ipv4_valid(instval):
+    result = evaluate("ipv4", str(instval))
     assert result is True
 
 
 @given(instval=hs.text())
-def test_ipv4_invalid(instval, catalogue):
-    result = evaluate("ipv4", instval, catalogue)
+def test_ipv4_invalid(instval):
+    result = evaluate("ipv4", instval)
     try:
         ipaddress.IPv4Address(instval)
         assert result is True
@@ -63,14 +63,14 @@ def test_ipv4_invalid(instval, catalogue):
 
 
 @given(instval=hs.ip_addresses(v=6))
-def test_ipv6_valid(instval, catalogue):
-    result = evaluate("ipv6", str(instval), catalogue)
+def test_ipv6_valid(instval):
+    result = evaluate("ipv6", str(instval))
     assert result is True
 
 
 @given(instval=hs.text())
-def test_ipv6_invalid(instval, catalogue):
-    result = evaluate("ipv6", instval, catalogue)
+def test_ipv6_invalid(instval):
+    result = evaluate("ipv6", instval)
     try:
         ipaddress.IPv6Address(instval)
         assert result is True
@@ -79,14 +79,14 @@ def test_ipv6_invalid(instval, catalogue):
 
 
 @given(instval=jsonpointer)
-def test_jsonpointer_valid(instval, catalogue):
-    result = evaluate("json-pointer", instval, catalogue)
+def test_jsonpointer_valid(instval):
+    result = evaluate("json-pointer", instval)
     assert result is True
 
 
 @given(instval=hs.text())
-def test_jsonpointer_invalid(instval, catalogue):
-    result = evaluate("json-pointer", instval, catalogue)
+def test_jsonpointer_invalid(instval):
+    result = evaluate("json-pointer", instval)
     try:
         JSONPointer(instval)
         assert result is True
@@ -95,7 +95,7 @@ def test_jsonpointer_invalid(instval, catalogue):
 
 
 @given(instval=hs.uuids() | hs.text())
-def test_uuid(instval, catalogue):
+def test_uuid(instval):
     # we've not registered a "uuid" validator, so the test should always pass
-    result = evaluate("uuid", str(instval), catalogue, assert_=False)
+    result = evaluate("uuid", str(instval), assert_=False)
     assert result is True
