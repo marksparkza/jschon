@@ -5,21 +5,19 @@ jschon is a pythonic and extensible implementation of the
 
 .. toctree::
    :caption: User Guide
-   :maxdepth: 2
-   :glob:
+   :maxdepth: 1
 
-   usage/*
+   usage/json
+   usage/examples
 
 .. toctree::
    :caption: API Reference
-   :maxdepth: 2
    :glob:
 
    reference/*
 
 .. toctree::
    :caption: Vocabulary Reference
-   :maxdepth: 2
    :glob:
 
    vocabulary/*
