@@ -13,44 +13,56 @@ __all__ = [
 
 
 class JSONPointer(Sequence[str]):
-    """JSON Pointer :rfc:`6901`
+    """:rfc:`6901`-conformant JSON Pointer implementation.
 
     A JSON pointer is a string representing a reference to some value within a
-    JSON document. It consists of a series of 'reference tokens' prefixed by '/',
-    each token in turn being the (escaped) JSON object key or the JSON array
-    index at the next node down the path to the referenced value. The empty
-    string '' represents a reference to an entire JSON document.
+    JSON document. It consists of a series of *reference tokens* each prefixed by
+    ``"/"``, each token in turn being the (escaped) JSON object key or the JSON
+    array index at the next node down the path to the referenced value. The empty
+    string ``""`` represents a reference to an entire JSON document.
 
-    A ``JSONPointer`` instance is an immutable sequence of the unescaped JSON
-    object keys and/or array indices - henceforth referred to simply as 'keys' -
-    that comprise the path to a referenced value.
+    A :class:`JSONPointer` instance is an immutable sequence of the unescaped
+    JSON object keys [#]_ and/or array indices [#]_ that comprise the path to a
+    referenced value within a JSON document.
 
-    A ``JSONPointer`` instance is constructed by the concatenation of any number
-    of arguments, each of which can be one of:
+    A :class:`JSONPointer` instance is constructed by the concatenation of any
+    number of arguments, each of which can be one of:
 
     - a string conforming to the :rfc:`6901` syntax
-    - an iterable of unescaped keys (which can be a ``JSONPointer`` instance)
+    - an iterable of unescaped keys (which may itself be a :class:`JSONPointer`
+      instance)
 
-    Two ``JSONPointer`` instances compare equal if their key sequences are
+    Two :class:`JSONPointer` instances compare equal if their key sequences are
     identical.
 
     The ``/`` operator provides a convenient syntax for extending a JSON pointer.
-    It produces a new ``JSONPointer`` instance by copying the left-hand argument
-    (a ``JSONPointer`` instance) and appending the right-hand argument (an
-    unescaped key, or an iterable of unescaped keys).
+    It produces a new :class:`JSONPointer` instance by copying the left-hand
+    argument (a :class:`JSONPointer` instance) and appending the right-hand
+    argument (an unescaped key, or an iterable of unescaped keys).
 
-    Taking an index into a ``JSONPointer`` returns the unescaped key at that
-    position. Taking a slice into a ``JSONPointer`` returns a new ``JSONPointer``
-    composed of the specified slice of the original's keys.
+    Taking an index into a :class:`JSONPointer` returns the unescaped key at
+    that position. Taking a slice into a :class:`JSONPointer` returns a new
+    :class:`JSONPointer` composed of the specified slice of the original's keys.
+
+    .. [#] An *unescaped* object key is the unmodified form of the key within its
+       mapping. Keys appearing in an RFC 6901 JSON pointer string, on the other
+       hand, are required by the syntax to have reserved characters *escaped*.
+
+    .. [#] Object keys and array indices are uniformly represented as strings
+       and referred to as *keys* in the JSONPointer class.
     """
 
     _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
     _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
 
     def __new__(cls, *values: Union[str, Iterable[str]]) -> JSONPointer:
-        """Constructor.
+        """Create and return a new :class:`JSONPointer` instance, constructed by
+        the concatenation of the given `values`.
 
-        :raise JSONPointerError: if a string argument does not conform to the RFC 6901 syntax
+        :param values: each value may either be an RFC 6901 string, or an iterable
+            of unescaped keys
+        :raise JSONPointerError: if a string argument does not conform to the RFC
+            6901 syntax
         """
         self = object.__new__(cls)
         self._keys = []
@@ -127,9 +139,15 @@ class JSONPointer(Sequence[str]):
         return f"JSONPointer({str(self)!r})"
 
     def evaluate(self, document: Any) -> Any:
-        """Return the value at the location in the document indicated by self.
+        """Return the value within `document` at the location referenced by `self`.
 
-        :raise JSONPointerError: if the location does not exist
+        `document` may be of any type, though if neither JSON-compatible nor
+        a :class:`Mapping` or :class:`Sequence`, evaluation by any non-empty
+        :class:`JSONPointer` will always fail.
+
+        :param document: any Python object
+        :raise JSONPointerError: if `self` references a non-existent location
+            within `document`
         """
 
         def resolve(value, keys):
@@ -158,19 +176,21 @@ class JSONPointer(Sequence[str]):
 
     @classmethod
     def parse_uri_fragment(cls, value: str) -> JSONPointer:
-        """Return a new JSONPointer constructed from the :rfc:`6901` string
-        obtained by decoding the given percent-encoded URI fragment.
-        
-        The given value must exclude the initial '#' of the fragment;
-        this allows for sensible interoperation with URI objects.
+        """Return a new :class:`JSONPointer` constructed from the :rfc:`6901`
+        string obtained by decoding `value`.
+
+        `value` must exclude the initial ``'#'`` of the fragment; this allows
+        for sensible interoperation with :class:`~jschon.uri.URI` objects.
+
+        :param value: a percent-encoded URI fragment
         """
         return JSONPointer(urllib.parse.unquote(value))
 
     def uri_fragment(self) -> str:
-        """Return a percent-encoded URI fragment representation of self.
+        """Return a percent-encoded URI fragment representation of `self`.
 
-        The returned string excludes the initial '#' of the fragment;
-        this allows for sensible interoperation with URI objects.
+        The returned string excludes the initial ``'#'`` of the fragment; this
+        allows for sensible interoperation with :class:`~jschon.uri.URI` objects.
         """
 
         # By default, urllib.parse.quote percent-encodes all characters
@@ -190,8 +210,18 @@ class JSONPointer(Sequence[str]):
 
     @staticmethod
     def escape(key: str) -> str:
+        """Return the escaped form of a JSON object key / array index,
+        suitable for use in an :rfc:`6901` JSON pointer string.
+
+        :param key: an unescaped key
+        """
         return key.replace('~', '~0').replace('/', '~1')
 
     @staticmethod
     def unescape(token: str) -> str:
+        """Return the unescaped form of a reference token appearing in an
+        :rfc:`6901` JSON pointer string
+
+        :param token: an RFC 6901 reference token
+        """
         return token.replace('~1', '/').replace('~0', '~')
