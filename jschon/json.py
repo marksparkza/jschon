@@ -15,18 +15,28 @@ __all__ = [
 ]
 
 AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, Decimal, str, Sequence, Mapping)
+"""Type hint for a JSON-compatible Python object."""
 
 
 class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
+    """An implementation of the JSON data model."""
 
     @classmethod
     def loadf(cls, path: Union[str, PathLike], **kwargs: Any) -> JSON:
-        """Deserialize a JSON file to a ``JSON`` instance."""
+        """Deserialize a JSON file to a :class:`JSON` instance.
+
+        :param path: the path to the file
+        :param kwargs: keyword arguments to pass to the :class:`JSON` (subclass) constructor
+        """
         return cls(json_loadf(path), **kwargs)
 
     @classmethod
     def loads(cls, value: str, **kwargs: Any) -> JSON:
-        """Deserialize a JSON string to a ``JSON`` instance."""
+        """Deserialize a JSON string to a :class:`JSON` instance.
+
+        :param value: the JSON string
+        :param kwargs: keyword arguments to pass to the :class:`JSON` (subclass) constructor
+        """
         return cls(json_loads(value), **kwargs)
 
     def __init__(
@@ -38,10 +48,46 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             itemclass: Type[JSON] = None,
             **itemkwargs: Any,
     ):
+        """Initialize a :class:`JSON` instance from the given JSON-compatible
+        `value`.
+
+        The `parent`, `key`, `itemclass` and `itemkwargs` parameters should
+        typically only be used in the construction of compound :class:`JSON`
+        documents composed of :class:`JSON` subclasses.
+
+        :param value: a JSON-compatible Python object
+        :param parent: the parent node of the instance
+        :param key: the index of the instance within its parent
+        :param itemclass: the :class:`JSON` subclass used to instantiate
+            child nodes of arrays and objects (default: :class:`JSON`)
+        :param itemkwargs: keyword arguments to pass to the `itemclass`
+            constructor
+        """
+
         self.value: AnyJSONCompatible
+        """The instance data.
+        
+        =========   ===============
+        JSON type   value type
+        =========   ===============
+        null        type(None)
+        boolean     bool
+        number      int | Decimal
+        string      str
+        array       list[JSON]
+        object      dict[str, JSON]
+        =========   ===============
+        """
+
         self.type: str
+        """The JSON type of the instance. One of
+        "null", "boolean", "number", "string", "array", "object"."""
+
         self.parent: Optional[JSON] = parent
+        """The containing JSON instance."""
+
         self.key: Optional[str] = key
+        """The index of the instance within its parent."""
 
         if value is None:
             self.type = "null"
@@ -86,6 +132,8 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
     @property
     def path(self) -> JSONPointer:
+        """A :class:`~jschon.jsonpointer.JSONPointer` instance representing
+        the path to the instance from the document root."""
         keys = deque()
         node = self
         while node.parent is not None:

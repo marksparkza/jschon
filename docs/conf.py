@@ -12,7 +12,10 @@ exclude_patterns = ['_build']
 autodoc_default_options = {
     'members': True,
     'member-order': 'groupwise',
+    'special-members': '__init__, __new__',
     'undoc-members': True,
 }
+autodoc_typehints = 'description'
+autodoc_inherit_docstrings = False
 
 html_theme = 'sphinx_rtd_theme'
