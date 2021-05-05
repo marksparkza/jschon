@@ -29,7 +29,7 @@ of each. We begin by importing the :class:`~jschon.json.JSON` class:
 >>> JSON({"foo": True, "bar": False}).type
 'object'
 
-Instances with the JSON types "array" and "object" are constructed
+Instances with the JSON types ``"array"`` and ``"object"`` are constructed
 recursively. Here we create an array and an object:
 
 >>> arr = JSON([1, 2, 3])
@@ -45,7 +45,7 @@ JSON(2)
 JSON(True)
 
 :class:`~jschon.json.JSON` implements the :class:`Sequence` and :class:`Mapping`
-interfaces for instances with the JSON types "array" and "object", respectively:
+interfaces for instances with the JSON types ``"array"`` and ``"object"``, respectively:
 
 >>> [item for item in arr]
 [JSON(1), JSON(2), JSON(3)]
@@ -96,12 +96,12 @@ Notice that, although an array item's sequential index is an integer, its
 >>> document["1b"][1].key
 '1'
 
-The :attr:`~jschon.json.JSON.value` of an "object" node is a :obj:`dict[str, JSON]`:
+The :attr:`~jschon.json.JSON.value` of an ``"object"`` node is a :obj:`dict[str, JSON]`:
 
 >>> document["1a"].value
 {'2a': JSON('foo'), '2b': JSON('bar')}
 
-The :attr:`~jschon.json.JSON.value` of an "array" node is a :obj:`list[JSON]`:
+The :attr:`~jschon.json.JSON.value` of an ``"array"`` node is a :obj:`list[JSON]`:
 
 >>> document["1b"].value
 [JSON({'3a': 'baz'}), JSON({'3b': 'quux'})]
@@ -155,7 +155,7 @@ JSON({'1': 'spam', '2': 'eggs'})
 
 Finally, a word on floating point numbers:
 
-To ensure reliable operation of the JSON Schema "multipleOf" keyword, :class:`float`
+To ensure reliable operation of the JSON Schema ``"multipleOf"`` keyword, :class:`float`
 values are converted to :class:`decimal.Decimal` by the :class:`~jschon.json.JSON`
 constructor, and parsed as :class:`decimal.Decimal` during deserialization:
 

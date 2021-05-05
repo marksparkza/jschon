@@ -81,7 +81,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
         self.type: str
         """The JSON type of the instance. One of
-        "null", "boolean", "number", "string", "array", "object"."""
+        ``"null"``, ``"boolean"``, ``"number"``, ``"string"``, ``"array"``, ``"object"``."""
 
         self.parent: Optional[JSON] = parent
         """The containing JSON instance."""
