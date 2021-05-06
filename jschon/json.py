@@ -53,7 +53,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
         The `parent`, `key`, `itemclass` and `itemkwargs` parameters should
         typically only be used in the construction of compound :class:`JSON`
-        documents composed of :class:`JSON` subclasses.
+        documents by :class:`JSON` subclasses.
 
         :param value: a JSON-compatible Python object
         :param parent: the parent node of the instance
@@ -132,7 +132,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
     @property
     def path(self) -> JSONPointer:
-        """A :class:`~jschon.jsonpointer.JSONPointer` instance representing
+        """A :class:`~jschon.jsonpointer.JSONPointer` representing
         the path to the instance from the document root."""
         keys = deque()
         node = self
