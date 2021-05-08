@@ -8,6 +8,7 @@ jschon is a pythonic and extensible implementation of the
    :maxdepth: 1
 
    usage/json
+   usage/jsonpointer
    usage/examples
 
 .. toctree::
