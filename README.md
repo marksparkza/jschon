@@ -9,17 +9,17 @@
 Welcome to jschon, a JSON Schema implementation for Python!
 
 ## Features
-* [JSON Schema](https://json-schema.org) implementation, with support for:
-  * versions 2019-09 and 2020-12 of the JSON Schema specification
-  * custom metaschemas, vocabularies and format validators
+* [JSON Schema](https://json-schema.org) versions 2019-09 and 2020-12
+* Support for custom metaschemas, vocabularies and format validators
 * JSON class implementing the JSON data model
-* [RFC 6901](https://tools.ietf.org/html/rfc6901) conformant JSON Pointer implementation
+* JSON pointer implementation ([RFC 6901](https://tools.ietf.org/html/rfc6901))
 
 ## Installation
     pip install jschon
 
 ## Documentation
-See [readthedocs](https://jschon.readthedocs.io) for the user guide and API reference.
+Guidance on usage, and an API reference, are available at
+[Read the Docs](https://jschon.readthedocs.io).
 
 ## Contributing
-See the [guidelines for contributing](CONTRIBUTING.md).
+Please see the [guidelines for contributing](CONTRIBUTING.md).
