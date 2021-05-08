@@ -12,7 +12,7 @@ exclude_patterns = ['_build']
 autodoc_default_options = {
     'members': True,
     'member-order': 'groupwise',
-    'special-members': '__init__, __new__',
+    'special-members': '__init__, __new__, __call__',
     'undoc-members': True,
 }
 autodoc_typehints = 'description'
