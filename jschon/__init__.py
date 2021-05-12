@@ -1,7 +1,7 @@
 from .catalogue import Catalogue
+from .evaluator import Evaluator, OutputFormat
 from .exceptions import CatalogueError, JSONSchemaError, JSONPointerError, URIError
 from .json import JSON
-from .jsonevaluator import JSONEvaluator, OutputFormat
 from .jsonpointer import JSONPointer
 from .jsonschema import JSONSchema
 from .uri import URI
@@ -9,8 +9,8 @@ from .uri import URI
 __all__ = [
     'Catalogue',
     'CatalogueError',
+    'Evaluator',
     'JSON',
-    'JSONEvaluator',
     'JSONPointer',
     'JSONPointerError',
     'JSONSchema',

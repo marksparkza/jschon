@@ -5,7 +5,7 @@ from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, Scope
 
 __all__ = [
-    'JSONEvaluator',
+    'Evaluator',
     'OutputFormat',
 ]
 
@@ -17,9 +17,9 @@ class OutputFormat(str, Enum):
     VERBOSE = 'verbose'
 
 
-class JSONEvaluator:
-    """JSONEvaluator provides a high-level interface to schema
-    validation and instance evaluation, with output formatting."""
+class Evaluator:
+    """The :class:`Evaluator` class provides a high-level interface to
+    schema validation and instance evaluation, with output formatting."""
 
     def __init__(self, schema: JSONSchema):
         self.schema: JSONSchema = schema

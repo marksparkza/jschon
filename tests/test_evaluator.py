@@ -1,7 +1,7 @@
 import pytest
 from pytest import param as p
 
-from jschon import JSON, JSONSchema, JSONEvaluator, OutputFormat
+from jschon import JSON, JSONSchema, Evaluator, OutputFormat
 from tests import metaschema_uri_2020_12
 
 schema_valid = {
@@ -58,7 +58,7 @@ schema_invalid_errors = [
 ])
 def test_validate_schema_flag(example, valid):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = JSONEvaluator(schema)
+    evaluator = Evaluator(schema)
     result = evaluator.validate_schema()
     assert result == {
         'valid': valid
@@ -75,7 +75,7 @@ def test_validate_schema_flag(example, valid):
 ])
 def test_validate_schema_basic(example, valid, errors):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = JSONEvaluator(schema)
+    evaluator = Evaluator(schema)
     result = evaluator.validate_schema(OutputFormat.BASIC)
     assert result['valid'] is valid
     if valid:
@@ -190,7 +190,7 @@ instance_tests = (
 @pytest.mark.parametrize('example, valid, output', instance_tests)
 def test_evaluate_instance_flag(example, valid, output):
     schema = JSONSchema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = JSONEvaluator(schema)
+    evaluator = Evaluator(schema)
     result = evaluator.evaluate_instance(JSON(example))
     assert result == {
         'valid': valid
@@ -204,7 +204,7 @@ def test_evaluate_instance_flag(example, valid, output):
 @pytest.mark.parametrize('example, valid, output', instance_tests)
 def test_evaluate_instance_basic(example, valid, output):
     schema = JSONSchema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = JSONEvaluator(schema)
+    evaluator = Evaluator(schema)
     result = evaluator.evaluate_instance(JSON(example), OutputFormat.BASIC)
     assert result['valid'] is valid
     assert result == output

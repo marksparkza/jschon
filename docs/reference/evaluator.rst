@@ -1,0 +1,3 @@
+Evaluator
+=============
+.. automodule:: jschon.evaluator
