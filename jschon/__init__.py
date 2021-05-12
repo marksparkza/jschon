@@ -19,3 +19,5 @@ __all__ = [
     'URI',
     'URIError',
 ]
+
+__version__ = '0.2.0'

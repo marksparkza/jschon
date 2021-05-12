@@ -1,7 +1,9 @@
+import jschon
+
 project = 'jschon'
 author = 'Mark Jacobson'
 copyright = '2021, Mark Jacobson'
-release = '0.2.0'
+release = jschon.__version__
 
 extensions = [
     'sphinx.ext.autodoc',
