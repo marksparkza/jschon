@@ -44,11 +44,18 @@ __all__ = [
 
 
 class JSONSchema(JSON):
+    """JSON schema document model."""
 
     @staticmethod
     def iscompatible(value: Any) -> bool:
-        return isinstance(value, bool) or \
-               isinstance(value, Mapping) and all(isinstance(k, str) for k in value)
+        """Return :const:`True` if `value` can be used to initialize
+        a :class:`JSONSchema` instance, :const:`False` otherwise.
+        
+        `value` is considered schema-compatible if it is either a
+        :class:`bool` or a :class:`Mapping[str, Any]`.
+        """
+        return (isinstance(value, bool) or
+                isinstance(value, Mapping) and all(isinstance(k, str) for k in value))
 
     def __init__(
             self,
@@ -60,6 +67,24 @@ class JSONSchema(JSON):
             parent: JSON = None,
             key: str = None,
     ):
+        """Initialize a :class:`JSONSchema` instance from the given
+        schema-compatible `value`.
+
+        :param value: a schema-compatible Python object
+        :param catalogue: the catalogue in which the schema will find its
+            metaschema, and in which it will be cached; if not given, the
+            default :class:`~jschon.catalogue.Catalogue` instance (created
+            with :meth:`~jschon.catalogue.Catalogue.create_default_catalogue`)
+            is used
+        :param uri: the URI identifying the schema; an ``"$id"`` keyword
+            appearing in `value` will override this
+        :param metaschema_uri: the URI identifying the schema's metaschema;
+            a ``"$schema"`` keyword appearing in `value` will override this
+        :param parent: the parent node of the schema; used internally when
+            creating a subschema
+        :param key: the index of the schema within its parent; used internally
+            when creating a subschema
+        """
         from jschon.catalogue import Catalogue
 
         if catalogue is None:
@@ -70,15 +95,37 @@ class JSONSchema(JSON):
             catalogue.add_schema(uri, self)
 
         self.catalogue: Catalogue = catalogue
+        """The catalogue provides the schema with its keyword vocabulary (via
+        the metaschema), and a (sub)schema cache."""
+
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
-        self.keywords: Dict[str, Keyword] = {}
 
-        # don't call super().__init__
-        self.value: Union[bool, Mapping[str, AnyJSONCompatible]]
+        self.keywords: Dict[str, Keyword] = {}
+        """A dictionary of the schema's keyword objects, indexed by keyword name."""
+
+        # do not call super().__init__
+        # all inherited attributes are initialized here:
+
+        self.value: Union[bool, Mapping[str, JSON]]
+        """The schema data.
+        
+        =========   ===============
+        JSON type   value type
+        =========   ===============
+        boolean     bool
+        object      dict[str, JSON]
+        =========   ===============
+        """
+
         self.type: str
+        """The JSON type of the schema. One of ``"boolean"``, ``"object"``."""
+
         self.parent: Optional[JSON] = parent
+        """The containing JSON or JSONSchema node."""
+
         self.key: Optional[str] = key
+        """The index of the schema within its parent."""
 
         if isinstance(value, bool):
             self.type = "boolean"
@@ -157,12 +204,28 @@ class JSONSchema(JSON):
                     break
 
     def validate(self) -> JSONSchema:
+        """Validate the schema against its metaschema.
+        
+        This method returns `self`, so that schema instantiation and validation
+        may be chained.
+
+        :raise JSONSchemaError: if the schema is invalid against its metaschema
+        """
         if not self.metaschema.evaluate(JSON(self.value)).valid:
             raise JSONSchemaError(f"The schema is invalid against its metaschema")
 
         return self
 
     def evaluate(self, instance: JSON, scope: Scope = None) -> Scope:
+        """Evaluate a JSON document.
+        
+        The returned :class:`Scope` represents the complete evaluation
+        result tree for this (sub)schema node.
+
+        :param instance: the JSON document to evaluate
+        :param scope: the dynamic evaluation scope; used by keywords
+            when invoking this method recursively
+        """
         if scope is None:
             scope = Scope(self)
 
@@ -185,6 +248,10 @@ class JSONSchema(JSON):
 
     @property
     def parentschema(self) -> Optional[JSONSchema]:
+        """The containing :class:`JSONSchema` instance.
+        
+        Note that this is not necessarily the same as `self.parent`.
+        """
         parent = self.parent
         while parent is not None:
             if isinstance(parent, JSONSchema):
@@ -193,6 +260,7 @@ class JSONSchema(JSON):
 
     @property
     def metaschema(self) -> Metaschema:
+        """The schema's :class:`Metaschema`."""
         if (uri := self.metaschema_uri) is None:
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
@@ -203,6 +271,11 @@ class JSONSchema(JSON):
 
     @property
     def metaschema_uri(self) -> Optional[URI]:
+        """The :class:`~jschon.uri.URI` identifying the schema's metaschema.
+        
+        If not defined on this (sub)schema, the metaschema URI
+        is determined by the parent schema.
+        """
         if self._metaschema_uri is not None:
             return self._metaschema_uri
         if self.parentschema is not None:
@@ -214,6 +287,11 @@ class JSONSchema(JSON):
 
     @property
     def base_uri(self) -> Optional[URI]:
+        """The schema's base :class:`~jschon.uri.URI`.
+        
+        The base URI is obtained by searching up the schema tree
+        for a schema URI, and removing any fragment.
+        """
         if self._uri is not None:
             return self._uri.copy(fragment=False)
         if self.parentschema is not None:
@@ -221,6 +299,10 @@ class JSONSchema(JSON):
 
     @property
     def uri(self) -> Optional[URI]:
+        """The :class:`~jschon.uri.URI` identifying the schema.
+
+        Used as the key for caching the schema in the catalogue.
+        """
         return self._uri
 
     @uri.setter
@@ -236,6 +318,11 @@ class JSONSchema(JSON):
 
     @property
     def canonical_uri(self) -> Optional[URI]:
+        """The absolute location of the (sub)schema.
+        
+        This is not necessarily an 'absolute URI', as it may contain
+        a fragment.
+        """
         if self._uri is not None:
             return self._uri
 
