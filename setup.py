@@ -1,15 +1,19 @@
 import pathlib
+import re
 
 from setuptools import setup, find_packages
 
-import jschon
-
 HERE = pathlib.Path(__file__).parent.resolve()
 README = (HERE / 'README.md').read_text(encoding='utf-8')
+VERSION = eval(re.search(
+    '^__version__ = (.*)$',
+    (HERE / 'jschon' / '__init__.py').read_text(encoding='utf-8'),
+    re.MULTILINE,
+)[1])
 
 setup(
     name='jschon',
-    version=jschon.__version__,
+    version=VERSION,
     description='A pythonic, extensible JSON Schema implementation.',
     long_description=README,
     long_description_content_type='text/markdown',
