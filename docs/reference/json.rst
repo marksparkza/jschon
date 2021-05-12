@@ -1,3 +1,3 @@
-JSON
-====
+jschon.json
+===========
 .. automodule:: jschon.json

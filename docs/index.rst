@@ -16,9 +16,3 @@ jschon is a pythonic and extensible implementation of the
    :glob:
 
    reference/*
-
-.. toctree::
-   :caption: Vocabulary Reference
-   :glob:
-
-   vocabulary/*

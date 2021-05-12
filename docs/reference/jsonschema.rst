@@ -1,3 +1,3 @@
-JSONSchema
-==========
+jschon.jsonschema
+=================
 .. automodule:: jschon.jsonschema

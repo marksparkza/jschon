@@ -1,3 +1,3 @@
-Exceptions
-==========
+jschon.exceptions
+=================
 .. automodule:: jschon.exceptions

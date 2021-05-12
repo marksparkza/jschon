@@ -1,3 +1,3 @@
-Evaluator
-=============
+jschon.evaluator
+================
 .. automodule:: jschon.evaluator

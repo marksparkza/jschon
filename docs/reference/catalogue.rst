@@ -1,3 +1,3 @@
-Catalogue
-=========
+jschon.catalogue
+================
 .. automodule:: jschon.catalogue

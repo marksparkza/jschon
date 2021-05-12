@@ -1,3 +1,3 @@
-JSONPointer
-===========
+jschon.jsonpointer
+==================
 .. automodule:: jschon.jsonpointer
