@@ -136,7 +136,7 @@ class JSONSchema(JSON):
             self.value = {}
 
             if self.parent is None and self.uri is None:
-                self.uri = URI(f'mem:{uuid4()}')
+                self.uri = URI(f'urn:uuid:{uuid4()}')
 
             self._bootstrap(value)
 
