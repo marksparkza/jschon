@@ -9,6 +9,7 @@ jschon is a pythonic and extensible implementation of the
 
    usage/json
    usage/jsonpointer
+   usage/jsonschema
    usage/examples
 
 .. toctree::
