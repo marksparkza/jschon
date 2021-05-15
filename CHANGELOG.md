@@ -1,5 +1,19 @@
 # Change log
 
+## v0.3.0 (2021-05-15)
+### Features
+* Evaluator class providing output formatting
+* Multiple Catalogue instances now supported; with an optional default catalogue
+### Bug fixes
+* Fixed percent-encoding of the URI fragment form of JSON pointers
+### Documentation
+* Created user guides and API reference documentation; published to Read the Docs
+### Miscellaneous
+* Improvements to base URI-directory mapping and file loading in the Catalogue
+* Tweaks to annotation and error collection in the Scope class affecting output generation
+* Added more unit tests for exceptional cases
+* Auto-generated schema URIs are now formatted as `'urn:uuid:<uuid>'`
+
 ## v0.2.0 (2021-04-18)
 ### Features
 * Class methods for constructing JSON instances from JSON strings/files
