@@ -30,7 +30,7 @@ class AllOfKeyword(Keyword, ArrayApplicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_indices = []
         for index, subschema in enumerate(self.json):
-            with scope(str(index)) as subscope:
+            with scope(instance, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if not subscope.valid:
                     err_indices += [index]
@@ -45,7 +45,7 @@ class AnyOfKeyword(Keyword, ArrayApplicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         valid = False
         for index, subschema in enumerate(self.json):
-            with scope(str(index)) as subscope:
+            with scope(instance, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if subscope.valid:
                     valid = True
@@ -61,7 +61,7 @@ class OneOfKeyword(Keyword, ArrayApplicator):
         valid_indices = []
         err_indices = []
         for index, subschema in enumerate(self.json):
-            with scope(str(index)) as subscope:
+            with scope(instance, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
                 if subscope.valid:
                     valid_indices += [index]
@@ -98,7 +98,7 @@ class ThenKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling("if")) and if_.valid:
+        if (if_ := scope.sibling(instance, "if")) and if_.valid:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -109,7 +109,7 @@ class ElseKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling("if")) and not if_.valid:
+        if (if_ := scope.sibling(instance, "if")) and not if_.valid:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -124,7 +124,7 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
         err_names = []
         for name, subschema in self.json.items():
             if name in instance:
-                with scope(name) as subscope:
+                with scope(instance, name) as subscope:
                     subschema.evaluate(instance, subscope)
                     if subscope.valid:
                         annotation += [name]
@@ -147,7 +147,7 @@ class PrefixItemsKeyword(Keyword, ArrayApplicator):
         err_indices = []
         for index, item in enumerate(instance[:len(self.json)]):
             eval_index = index
-            with scope(str(index)) as subscope:
+            with scope(item, str(index)) as subscope:
                 self.json[index].evaluate(item, subscope)
                 if not subscope.valid:
                     err_indices += [index]
@@ -166,7 +166,7 @@ class ItemsKeyword(Keyword, Applicator):
     depends = "prefixItems"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (prefix_items := scope.sibling("prefixItems")) and \
+        if (prefix_items := scope.sibling(instance, "prefixItems")) and \
                 (prefix_items_annotation := prefix_items.annotations.get("prefixItems")):
             if prefix_items_annotation.value is True:
                 return
@@ -228,12 +228,13 @@ class ContainsKeyword(Keyword, Applicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
+        scope.noassert()
         for index, item in enumerate(instance):
-            if self.json.evaluate(item, scope).valid:
+            self.json.evaluate(item, scope)
+            if all(subscope.valid for subscope in scope.iter_children(item)):
                 annotation += [index]
-            else:
-                scope.errors.clear()
 
+        scope.reassert()
         scope.annotate(instance, self.key, annotation)
         if not annotation:
             scope.fail(instance, 'The array does not contain any element that is valid '
@@ -249,7 +250,7 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
         err_names = []
         for name, item in instance.items():
             if name in self.json:
-                with scope(name) as subscope:
+                with scope(item, name) as subscope:
                     self.json[name].evaluate(item, subscope)
                     if subscope.valid:
                         annotation += [name]
@@ -272,7 +273,7 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
         for name, item in instance.items():
             for regex, subschema in self.json.items():
                 if re.search(regex, name) is not None:
-                    with scope(regex) as subscope:
+                    with scope(item, regex) as subscope:
                         subschema.evaluate(item, subscope)
                         if subscope.valid:
                             matched_names |= {name}
@@ -292,11 +293,11 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
-        if (properties := scope.sibling("properties")) and \
+        if (properties := scope.sibling(instance, "properties")) and \
                 (properties_annotation := properties.annotations.get("properties")):
             evaluated_names |= set(properties_annotation.value)
 
-        if (pattern_properties := scope.sibling("patternProperties")) and \
+        if (pattern_properties := scope.sibling(instance, "patternProperties")) and \
                 (pattern_properties_annotation := pattern_properties.annotations.get("patternProperties")):
             evaluated_names |= set(pattern_properties_annotation.value)
 

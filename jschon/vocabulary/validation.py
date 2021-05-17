@@ -181,7 +181,7 @@ class MaxContainsKeyword(Keyword):
     depends = "contains"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if contains := scope.sibling("contains"):
+        if contains := scope.sibling(instance, "contains"):
             if (contains_annotation := contains.annotations.get("contains")) and \
                     len(contains_annotation.value) > self.json:
                 scope.fail(instance,
@@ -195,7 +195,7 @@ class MinContainsKeyword(Keyword):
     depends = "contains", "maxContains"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if contains := scope.sibling("contains"):
+        if contains := scope.sibling(instance, "contains"):
             contains_count = len(contains_annotation.value) \
                 if (contains_annotation := contains.annotations.get("contains")) \
                 else 0
@@ -203,7 +203,7 @@ class MinContainsKeyword(Keyword):
             valid = contains_count >= self.json
 
             if valid and not contains.valid:
-                max_contains = scope.sibling("maxContains")
+                max_contains = scope.sibling(instance, "maxContains")
                 if not max_contains or max_contains.valid:
                     contains.errors.clear()
 

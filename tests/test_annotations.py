@@ -1,6 +1,6 @@
 import pytest
 
-from jschon import JSON, JSONSchema
+from jschon import JSON, JSONSchema, JSONPointer
 from tests import metaschema_uri_2020_12
 
 
@@ -17,11 +17,12 @@ from tests import metaschema_uri_2020_12
 ])
 def test_annotate(key, value):
     result = JSONSchema({key: value}, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
+    instpath = JSONPointer()
     assert result.valid is True
-    assert result.children[key].valid is True
-    assert result.children[key]._assert is False
+    assert result.children[instpath][key].valid is True
+    assert result.children[instpath][key]._assert is False
     try:
-        assert result.children[key].annotations[key].value == value
+        assert result.children[instpath][key].annotations[key].value == value
     except KeyError:
         assert value is None
 
@@ -32,7 +33,8 @@ def test_content_schema():
         "contentSchema": {"required": ["foo"], "properties": {"foo": {"type": "string"}}},
     }
     result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
-    assert result.children["contentSchema"].annotations["contentSchema"].value == example["contentSchema"]
+    instpath = JSONPointer()
+    assert result.children[instpath]["contentSchema"].annotations["contentSchema"].value == example["contentSchema"]
 
     del example["contentMediaType"]
     result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))

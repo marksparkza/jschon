@@ -66,7 +66,7 @@ class ContentSchemaKeyword(AnnotationKeyword):
     depends = "contentMediaType"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if scope.sibling("contentMediaType"):
+        if scope.sibling(instance, "contentMediaType"):
             super().evaluate(instance, scope)
         else:
             scope.discard()

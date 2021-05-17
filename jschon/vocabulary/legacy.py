@@ -34,15 +34,14 @@ class RecursiveRefKeyword_2019_09(Keyword):
         refschema = self.refschema
         if (recursive_anchor := refschema.get("$recursiveAnchor")) and \
                 recursive_anchor.value is True:
-            base_scope = scope.root
-            for key in scope.path:
-                if (base_schema := base_scope.schema) is refschema:
-                    break
-                if (base_anchor := base_schema.get("$recursiveAnchor")) and \
+
+            target_scope = scope
+            while target_scope is not None:
+                if (base_anchor := target_scope.schema.get("$recursiveAnchor")) and \
                         base_anchor.value is True:
-                    refschema = base_schema
-                    break
-                base_scope = base_scope.children[key]
+                    refschema = target_scope.schema
+
+                target_scope = target_scope.parent
 
         refschema.evaluate(instance, scope)
 
@@ -77,7 +76,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
             err_indices = []
             for index, item in enumerate(instance[:len(self.json)]):
                 eval_index = index
-                with scope(str(index)) as subscope:
+                with scope(item, str(index)) as subscope:
                     self.json[index].evaluate(item, subscope)
                     if not subscope.valid:
                         err_indices += [index]
@@ -94,7 +93,7 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
     depends = "items"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (items := scope.sibling("items")) and \
+        if (items := scope.sibling(instance, "items")) and \
                 (items_annotation := items.annotations.get("items")) and \
                 type(items_annotation.value) is int:
             annotation = None

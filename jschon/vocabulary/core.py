@@ -153,14 +153,11 @@ class DynamicRefKeyword(Keyword):
         refschema = self.refschema
 
         if self.dynamic:
-            base_scope = scope.root
+            target_scope = scope
             checked_uris = set()
 
-            for key in scope.path:
-                if (base_schema := base_scope.schema) is refschema:
-                    break
-
-                if (base_uri := base_schema.base_uri) is not None and base_uri not in checked_uris:
+            while target_scope is not None:
+                if (base_uri := target_scope.schema.base_uri) is not None and base_uri not in checked_uris:
                     checked_uris |= {base_uri}
                     target_uri = URI(f"#{self.fragment}").resolve(base_uri)
                     try:
@@ -168,11 +165,10 @@ class DynamicRefKeyword(Keyword):
                         if (dynamic_anchor := found_schema.get("$dynamicAnchor")) and \
                                 dynamic_anchor.value == self.fragment:
                             refschema = found_schema
-                            break
                     except CatalogueError:
                         pass
 
-                base_scope = base_scope.children[key]
+                target_scope = target_scope.parent
 
         refschema.evaluate(instance, scope)
 

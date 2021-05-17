@@ -238,10 +238,13 @@ class JSONSchema(JSON):
         else:
             for key, keyword in self.keywords.items():
                 if keyword.can_evaluate(instance):
-                    with scope(key, self) as subscope:
+                    with scope(instance, key, self) as subscope:
                         keyword.evaluate(instance, subscope)
 
-            if any(child._assert and not child.valid for child in scope.children.values()):
+            if scope._assert and any(
+                    child._assert and not child.valid
+                    for child in scope.iter_children(instance)
+            ):
                 scope.fail(instance, "The instance failed validation against the schema")
 
         return scope
@@ -468,17 +471,17 @@ class Scope:
         self.path: JSONPointer = path or JSONPointer()
         self.relpath: JSONPointer = relpath or JSONPointer()
         self.parent: Optional[Scope] = parent
-        self.children: Dict[str, Scope] = {}
+        self.children: Dict[JSONPointer, Dict[str, Scope]] = {}
         self.annotations: Dict[str, Annotation] = {}
         self.errors: List[Error] = []
         self._assert = True
         self._discard = False
 
     @contextmanager
-    def __call__(self, key: str, schema: JSONSchema = None) -> ContextManager[Scope]:
-        """Yield a subscope of the current scope by descending down the
-        evaluation path by ``key``, into ``schema`` if given, or within
-        the schema of the current scope otherwise."""
+    def __call__(self, instance: JSON, key: str, schema: JSONSchema = None) -> ContextManager[Scope]:
+        """Yield a subscope of the current scope, for evaluating `instance`.
+        Descend down the evaluation path by `key`, into `schema` if given, or
+        within the schema of the current scope otherwise."""
         path = self.path / key
         schema = schema or self.schema
         if schema is self.schema:
@@ -486,27 +489,25 @@ class Scope:
         else:
             relpath = JSONPointer((key,))
 
-        self.children[key] = (child := Scope(
+        self.children.setdefault(instance_path := instance.path, {})
+        self.children[instance_path][key] = (child := Scope(
             schema,
             path=path,
             relpath=relpath,
             parent=self,
         ))
+
         try:
             yield child
         finally:
             if child._discard:
-                del self.children[key]
+                del self.children[instance_path][key]
 
-    @property
-    def root(self) -> Scope:
-        scope = self
-        while scope.parent is not None:
-            scope = scope.parent
-        return scope
-
-    def sibling(self, key: str) -> Optional[Scope]:
-        return self.parent.children.get(key) if self.parent else None
+    def sibling(self, instance: JSON, key: str) -> Optional[Scope]:
+        try:
+            return self.parent.children[instance.path][key] if self.parent else None
+        except KeyError:
+            return None
 
     def annotate(self, instance: JSON, key: str, value: AnyJSONCompatible) -> None:
         if value is not None:
@@ -530,6 +531,12 @@ class Scope:
         assertion result."""
         self._assert = False
 
+    def reassert(self) -> None:
+        """Indicate that the scope's validity *should* affect its
+        assertion result. This may be called after temporarily suspending
+        scope assertion with :meth:`noassert`."""
+        self._assert = True
+
     def discard(self) -> None:
         """Indicate that the scope should be ignored and discarded."""
         self._discard = True
@@ -547,6 +554,13 @@ class Scope:
                 relpath = self.relpath
             return schema_uri.copy(fragment=relpath.uri_fragment())
 
+    def iter_children(self, instance: JSON = None) -> Iterator[Scope]:
+        """Return a flattened view of child scopes, optionally filtered
+        by the instance to which they apply."""
+        for instance_path, keyword_scopes in self.children.items():
+            if instance is None or instance.path == instance_path:
+                yield from keyword_scopes.values()
+
     def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[Annotation]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
@@ -555,14 +569,14 @@ class Scope:
                 if (key is None or key == annotation_key) and \
                         (instance is None or instance.path == annotation.instance_path):
                     yield annotation
-            for child in self.children.values():
+            for child in self.iter_children():
                 yield from child.collect_annotations(instance, key)
 
     def collect_errors(self) -> Iterator[Error]:
         """Return an iterator over errors produced in this subtree."""
         if self._assert and not self._discard and not self.valid:
             yield from self.errors
-            for child in self.children.values():
+            for child in self.iter_children():
                 yield from child.collect_errors()
 
     def __str__(self) -> str:

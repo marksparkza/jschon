@@ -129,6 +129,12 @@ output_1_3 = {
             "error": "The array does not contain any element that is valid against the \"contains\" subschema"
         },
         {
+            "instanceLocation": "/0",
+            "keywordLocation": "/then/contains/multipleOf",
+            "absoluteKeywordLocation": "http://example.com#/then/contains/multipleOf",
+            "error": "The value must be a multiple of 2"
+        },
+        {
             "instanceLocation": "/1",
             "keywordLocation": "/then/contains/multipleOf",
             "absoluteKeywordLocation": "http://example.com#/then/contains/multipleOf",
@@ -157,6 +163,12 @@ output_2_2 = {
             "keywordLocation": "/else/contains",
             "absoluteKeywordLocation": "http://example.com#/else/contains",
             "error": "The array does not contain any element that is valid against the \"contains\" subschema"
+        },
+        {
+            "instanceLocation": "/0",
+            "keywordLocation": "/else/contains/multipleOf",
+            "absoluteKeywordLocation": "http://example.com#/else/contains/multipleOf",
+            "error": "The value must be a multiple of 3"
         },
         {
             "instanceLocation": "/1",

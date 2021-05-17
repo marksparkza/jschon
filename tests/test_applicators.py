@@ -10,7 +10,7 @@ from tests import metaschema_uri_2020_12
     ({"if": {"type": "integer"},
       "then": {"minimum": 1},
       "else": {"enum": ["foo", "bar"]}}, 5, "invalid"),
-    ({"contains": {"const": "a"}}, ["a", "b"], ["b", "c"]),
+    ({"contains": {"const": "a"}}, ["b", "a"], ["b", "c"]),
     ({"items": {"const": "a"}}, ["a", "a"], ["a", "b"]),
     ({"unevaluatedItems": False}, [], ["invalid"]),
     ({"additionalProperties": {"const": "a"}}, {"valid": "a"}, {"invalid": "b"}),
