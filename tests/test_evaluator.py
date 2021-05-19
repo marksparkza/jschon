@@ -282,3 +282,37 @@ def test_array_item_output(input, output):
     evaluator = Evaluator(schema)
     result = evaluator.evaluate_instance(JSON(input), OutputFormat.BASIC)
     assert result == output
+
+
+contains_if_schema = {
+    "$id": "http://example.com",
+    "contains": {
+        "if": {"type": "integer"},
+        "else": {"type": "string"}
+    }
+}
+array_input_3 = ['baz', 3.1]
+
+contains_if_output_1 = {'valid': True,
+                        'annotations': [{'instanceLocation': '',
+                                         'keywordLocation': '/contains',
+                                         'absoluteKeywordLocation': 'http://example.com#/contains',
+                                         'annotation': [0, 1]}]}
+contains_if_output_2 = contains_if_output_1
+contains_if_output_3 = {'valid': True,
+                        'annotations': [{'instanceLocation': '',
+                                         'keywordLocation': '/contains',
+                                         'absoluteKeywordLocation': 'http://example.com#/contains',
+                                         'annotation': [0]}]}
+
+
+@pytest.mark.parametrize('input, output', [
+    (array_input_1, contains_if_output_1),
+    (array_input_2, contains_if_output_2),
+    (array_input_3, contains_if_output_3),
+])
+def test_array_item_output(input, output):
+    schema = JSONSchema(contains_if_schema, metaschema_uri=metaschema_uri_2020_12)
+    evaluator = Evaluator(schema)
+    result = evaluator.evaluate_instance(JSON(input), OutputFormat.BASIC)
+    assert result == output

@@ -231,7 +231,7 @@ class ContainsKeyword(Keyword, Applicator):
         scope.noassert()
         for index, item in enumerate(instance):
             self.json.evaluate(item, scope)
-            if all(subscope.valid for subscope in scope.iter_children(item)):
+            if all(not subscope._assert or subscope.valid for subscope in scope.iter_children(item)):
                 annotation += [index]
 
         scope.reassert()
