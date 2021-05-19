@@ -220,3 +220,65 @@ def test_evaluate_instance_basic(example, valid, output):
     result = evaluator.evaluate_instance(JSON(example), OutputFormat.BASIC)
     assert result['valid'] is valid
     assert result == output
+
+
+# https://github.com/marksparkza/jschon/issues/8
+array_schema = {
+    "$id": "http://example.com",
+    "items": {"type": "integer", "description": "an item"}
+}
+array_input_0 = [1, 2]
+array_input_1 = [1, 'foo']
+array_input_2 = ['bar', 2]
+
+array_output_0 = {'valid': True,
+                  'annotations': [{'instanceLocation': '',
+                                   'keywordLocation': '/items',
+                                   'absoluteKeywordLocation': 'http://example.com#/items',
+                                   'annotation': True},
+                                  {'instanceLocation': '/0',
+                                   'keywordLocation': '/items/description',
+                                   'absoluteKeywordLocation': 'http://example.com#/items/description',
+                                   'annotation': 'an item'},
+                                  {'instanceLocation': '/1',
+                                   'keywordLocation': '/items/description',
+                                   'absoluteKeywordLocation': 'http://example.com#/items/description',
+                                   'annotation': 'an item'}]}
+array_output_1 = {'valid': False,
+                  'errors': [{'instanceLocation': '',
+                              'keywordLocation': '',
+                              'absoluteKeywordLocation': 'http://example.com#',
+                              'error': 'The instance failed validation against the schema'},
+                             {'instanceLocation': '/1',
+                              'keywordLocation': '/items',
+                              'absoluteKeywordLocation': 'http://example.com#/items',
+                              'error': 'The instance failed validation against the schema'},
+                             {'instanceLocation': '/1',
+                              'keywordLocation': '/items/type',
+                              'absoluteKeywordLocation': 'http://example.com#/items/type',
+                              'error': 'The instance must be of type "integer"'}]}
+array_output_2 = {'valid': False,
+                  'errors': [{'instanceLocation': '',
+                              'keywordLocation': '',
+                              'absoluteKeywordLocation': 'http://example.com#',
+                              'error': 'The instance failed validation against the schema'},
+                             {'instanceLocation': '/0',
+                              'keywordLocation': '/items',
+                              'absoluteKeywordLocation': 'http://example.com#/items',
+                              'error': 'The instance failed validation against the schema'},
+                             {'instanceLocation': '/0',
+                              'keywordLocation': '/items/type',
+                              'absoluteKeywordLocation': 'http://example.com#/items/type',
+                              'error': 'The instance must be of type "integer"'}]}
+
+
+@pytest.mark.parametrize('input, output', [
+    (array_input_0, array_output_0),
+    (array_input_1, array_output_1),
+    (array_input_2, array_output_2),
+])
+def test_array_item_output(input, output):
+    schema = JSONSchema(array_schema, metaschema_uri=metaschema_uri_2020_12)
+    evaluator = Evaluator(schema)
+    result = evaluator.evaluate_instance(JSON(input), OutputFormat.BASIC)
+    assert result == output
