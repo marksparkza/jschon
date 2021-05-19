@@ -40,12 +40,18 @@ setup(
     python_requires='~=3.8',
     install_requires=['rfc3986'],
     extras_require={
-        'test': ['tox'],
+        'test': [
+            'tox',
+        ],
         'dev': [
             'pytest',
             'coverage',
             'hypothesis',
             'pytest-benchmark',
-        ]
+        ],
+        'doc': [
+            'sphinx',
+            'sphinx-rtd-theme',
+        ],
     },
 )
