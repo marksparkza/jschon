@@ -311,7 +311,7 @@ contains_if_output_3 = {'valid': True,
     (array_input_2, contains_if_output_2),
     (array_input_3, contains_if_output_3),
 ])
-def test_array_item_output(input, output):
+def test_contains_if_output(input, output):
     schema = JSONSchema(contains_if_schema, metaschema_uri=metaschema_uri_2020_12)
     evaluator = Evaluator(schema)
     result = evaluator.evaluate_instance(JSON(input), OutputFormat.BASIC)
