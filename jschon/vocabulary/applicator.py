@@ -98,7 +98,7 @@ class ThenKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling(instance, "if")) and if_.valid:
+        if (if_ := scope.sibling(instance, "if")) and not if_.errors:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -109,7 +109,7 @@ class ElseKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling(instance, "if")) and not if_.valid:
+        if (if_ := scope.sibling(instance, "if")) and if_.errors:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -228,13 +228,12 @@ class ContainsKeyword(Keyword, Applicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
-        scope.noassert()
         for index, item in enumerate(instance):
-            self.json.evaluate(item, scope)
-            if all(not subscope._assert or subscope.valid for subscope in scope.iter_children(item)):
+            if self.json.evaluate(item, scope).valid:
                 annotation += [index]
+            else:
+                scope.errors.clear()
 
-        scope.reassert()
         scope.annotate(instance, self.key, annotation)
         if not annotation:
             scope.fail(instance, 'The array does not contain any element that is valid '

@@ -241,8 +241,8 @@ class JSONSchema(JSON):
                     with scope(instance, key, self) as subscope:
                         keyword.evaluate(instance, subscope)
 
-            if scope._assert and any(
-                    child._assert and not child.valid
+            if any(
+                    not child.valid
                     for child in scope.iter_children(instance)
             ):
                 scope.fail(instance, "The instance failed validation against the schema")
@@ -527,15 +527,9 @@ class Scope:
         )]
 
     def noassert(self) -> None:
-        """Indicate that the scope's validity should not affect its
-        assertion result."""
+        """Indicate that the scope should be taken to be valid,
+        regardless of errors."""
         self._assert = False
-
-    def reassert(self) -> None:
-        """Indicate that the scope's validity *should* affect its
-        assertion result. This may be called after temporarily suspending
-        scope assertion with :meth:`noassert`."""
-        self._assert = True
 
     def discard(self) -> None:
         """Indicate that the scope should be ignored and discarded."""
@@ -543,7 +537,7 @@ class Scope:
 
     @property
     def valid(self) -> bool:
-        return not self.errors
+        return not self._assert or not self.errors
 
     @property
     def absolute_uri(self) -> Optional[URI]:
@@ -564,7 +558,7 @@ class Scope:
     def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[Annotation]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
-        if not self._discard and self.valid:
+        if not self._discard and not self.errors:
             for annotation_key, annotation in self.annotations.items():
                 if (key is None or key == annotation_key) and \
                         (instance is None or instance.path == annotation.instance_path):
@@ -574,7 +568,7 @@ class Scope:
 
     def collect_errors(self) -> Iterator[Error]:
         """Return an iterator over errors produced in this subtree."""
-        if self._assert and not self._discard and not self.valid:
+        if not self._discard and self._assert and self.errors:
             yield from self.errors
             for child in self.iter_children():
                 yield from child.collect_errors()
