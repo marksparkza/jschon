@@ -1,5 +1,13 @@
 # Change log
 
+## v0.4.0 (2021-05-21)
+### Bug fixes
+* Fixed error and annotation collection for array items (#8)
+### Miscellaneous
+* Improved and better encapsulated the Scope class's internal logic
+* Added `doc` dependencies to setup.py
+* Support testing with Python 3.10
+
 ## v0.3.0 (2021-05-15)
 ### Features
 * Evaluator class providing output formatting
@@ -11,7 +19,6 @@
 ### Miscellaneous
 * Improvements to base URI-directory mapping and file loading in the Catalogue
 * Tweaks to annotation and error collection in the Scope class affecting output generation
-* Added more unit tests for exceptional cases
 * Auto-generated schema URIs are now formatted as `'urn:uuid:<uuid>'`
 
 ## v0.2.0 (2021-04-18)
