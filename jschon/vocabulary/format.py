@@ -2,7 +2,8 @@ from typing import Callable
 
 from jschon.exceptions import CatalogueError
 from jschon.json import AnyJSONCompatible, JSON
-from jschon.jsonschema import Keyword, JSONSchema, Scope
+from jschon.jsonschema import JSONSchema, Scope
+from jschon.vocabulary import Keyword
 
 __all__ = [
     'FormatKeyword',

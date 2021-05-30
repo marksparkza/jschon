@@ -1,5 +1,6 @@
 from jschon.json import JSON
-from jschon.jsonschema import Keyword, Scope
+from jschon.jsonschema import Scope
+from jschon.vocabulary import Keyword
 
 __all__ = [
     'TitleKeyword',

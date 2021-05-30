@@ -1,6 +1,7 @@
 from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON
-from jschon.jsonschema import Keyword, JSONSchema, Scope, Applicator, ArrayApplicator
+from jschon.jsonschema import JSONSchema, Scope
+from jschon.vocabulary import Keyword, Applicator, ArrayApplicator
 
 __all__ = [
     'RecursiveRefKeyword_2019_09',

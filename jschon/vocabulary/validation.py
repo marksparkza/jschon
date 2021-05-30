@@ -2,8 +2,9 @@ import decimal
 import re
 
 from jschon.json import JSON
-from jschon.jsonschema import Keyword, Scope, JSONSchema
+from jschon.jsonschema import Scope, JSONSchema
 from jschon.utils import tuplify
+from jschon.vocabulary import Keyword
 
 __all__ = [
     'TypeKeyword',

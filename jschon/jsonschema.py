@@ -4,16 +4,12 @@ from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import (
-    Any,
     Mapping,
     Union,
     Optional,
     Dict,
     List,
     Iterator,
-    Tuple,
-    Type,
-    Sequence,
     ContextManager,
     TYPE_CHECKING,
 )
@@ -27,35 +23,18 @@ from jschon.utils import tuplify
 
 if TYPE_CHECKING:
     from jschon.catalogue import Catalogue
+    from jschon.vocabulary import Keyword, KeywordClass, Metaschema
 
 __all__ = [
     'JSONSchema',
-    'Metaschema',
-    'Vocabulary',
-    'Keyword',
-    'KeywordClass',
-    'Applicator',
-    'ArrayApplicator',
-    'PropertyApplicator',
+    'Scope',
     'Annotation',
     'Error',
-    'Scope',
 ]
 
 
 class JSONSchema(JSON):
     """JSON schema document model."""
-
-    @staticmethod
-    def iscompatible(value: Any) -> bool:
-        """Return :const:`True` if `value` can be used to initialize
-        a :class:`JSONSchema` instance, :const:`False` otherwise.
-        
-        `value` is considered schema-compatible if it is either a
-        :class:`bool` or a :class:`Mapping[str, Any]`.
-        """
-        return (isinstance(value, bool) or
-                isinstance(value, Mapping) and all(isinstance(k, str) for k in value))
 
     def __init__(
             self,
@@ -175,14 +154,16 @@ class JSONSchema(JSON):
         for kw in self.keywords.values():
             if hasattr(kw, 'resolve'):
                 kw.resolve()
-            elif kw.applicator_cls is Applicator:
+            elif isinstance(kw.json, JSONSchema):
                 kw.json._resolve_references()
-            elif kw.applicator_cls is ArrayApplicator:
-                for schema in kw.json:
-                    schema._resolve_references()
-            elif kw.applicator_cls is PropertyApplicator:
-                for schema in kw.json.values():
-                    schema._resolve_references()
+            elif kw.json.type == "array":
+                for item in kw.json:
+                    if isinstance(item, JSONSchema):
+                        item._resolve_references()
+            elif kw.json.type == "object":
+                for item in kw.json.values():
+                    if isinstance(item, JSONSchema):
+                        item._resolve_references()
 
     @staticmethod
     def _resolve_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
@@ -264,6 +245,8 @@ class JSONSchema(JSON):
     @property
     def metaschema(self) -> Metaschema:
         """The schema's :class:`Metaschema`."""
+        from jschon.vocabulary import Metaschema
+
         if (uri := self.metaschema_uri) is None:
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
@@ -342,120 +325,6 @@ class JSONSchema(JSON):
                     relpath = JSONPointer(keys)
 
                 return node._uri.copy(fragment=relpath.uri_fragment())
-
-
-class Metaschema(JSONSchema):
-
-    def __init__(
-            self,
-            catalogue: Catalogue,
-            value: Mapping[str, AnyJSONCompatible],
-            core_vocabulary: Vocabulary,
-            *default_vocabularies: Vocabulary,
-    ):
-        self.core_vocabulary: Vocabulary = core_vocabulary
-        self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
-        self.kwclasses: Dict[str, KeywordClass] = {}
-        super().__init__(value, catalogue=catalogue)
-
-    def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
-        super()._bootstrap(value)
-        self.kwclasses.update(self.core_vocabulary.kwclasses)
-        if "$vocabulary" not in value:
-            for vocabulary in self.default_vocabularies:
-                self.kwclasses.update(vocabulary.kwclasses)
-
-
-class Vocabulary:
-
-    def __init__(self, uri: URI, *kwclasses: KeywordClass):
-        self.uri: URI = uri
-        self.kwclasses: Dict[str, KeywordClass] = {
-            kwclass.key: kwclass for kwclass in kwclasses
-        }
-
-
-class Keyword:
-    key: str = ...
-    types: Optional[Union[str, Tuple[str, ...]]] = None
-    depends: Optional[Union[str, Tuple[str, ...]]] = None
-
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
-        self.applicator_cls = None
-        for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
-            if isinstance(self, applicator_cls):
-                if (kwjson := applicator_cls.jsonify(parentschema, self.key, value)) is not None:
-                    self.applicator_cls = applicator_cls
-                    break
-        else:
-            kwjson = JSON(value, parent=parentschema, key=self.key)
-
-        self.json: JSON = kwjson
-        self.parentschema: JSONSchema = parentschema
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        if self.types is None or instance.type in (types := tuplify(self.types)):
-            return True
-
-        if instance.type == "number" and "integer" in types:
-            return instance.value == int(instance.value)
-
-        return False
-
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        pass
-
-    def __str__(self) -> str:
-        return f'{self.json.path}: {self.json}'
-
-
-KeywordClass = Type[Keyword]
-
-
-class Applicator:
-    """Sets up a subschema for an applicator keyword."""
-
-    @staticmethod
-    def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSONSchema]:
-        if JSONSchema.iscompatible(value):
-            return JSONSchema(value, parent=parentschema, key=key, catalogue=parentschema.catalogue)
-
-
-class ArrayApplicator:
-    """Sets up an array of subschemas for an applicator keyword."""
-
-    @staticmethod
-    def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
-        if isinstance(value, Sequence) and all(JSONSchema.iscompatible(v) for v in value):
-            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema, catalogue=parentschema.catalogue)
-
-
-class PropertyApplicator:
-    """Sets up property-based subschemas for an applicator keyword."""
-
-    @staticmethod
-    def jsonify(parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
-        if isinstance(value, Mapping) and all(
-                isinstance(k, str) and JSONSchema.iscompatible(v)
-                for k, v in value.items()
-        ):
-            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema, catalogue=parentschema.catalogue)
-
-
-@dataclass
-class Annotation:
-    instance_path: JSONPointer
-    evaluation_path: JSONPointer
-    absolute_uri: URI
-    value: AnyJSONCompatible
-
-
-@dataclass
-class Error:
-    instance_path: JSONPointer
-    evaluation_path: JSONPointer
-    absolute_uri: URI
-    message: str
 
 
 class Scope:
@@ -575,3 +444,19 @@ class Scope:
 
     def __str__(self) -> str:
         return str(self.path)
+
+
+@dataclass
+class Annotation:
+    instance_path: JSONPointer
+    evaluation_path: JSONPointer
+    absolute_uri: URI
+    value: AnyJSONCompatible
+
+
+@dataclass
+class Error:
+    instance_path: JSONPointer
+    evaluation_path: JSONPointer
+    absolute_uri: URI
+    message: str

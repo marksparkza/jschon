@@ -1,7 +1,8 @@
 import re
 
 from jschon.json import JSON
-from jschon.jsonschema import Keyword, Scope, Applicator, ArrayApplicator, PropertyApplicator
+from jschon.jsonschema import Scope
+from jschon.vocabulary import Keyword, Applicator, ArrayApplicator, PropertyApplicator
 
 __all__ = [
     'AllOfKeyword',

@@ -2,8 +2,9 @@ from typing import Mapping
 
 from jschon.exceptions import JSONSchemaError, URIError, CatalogueError
 from jschon.json import JSON
-from jschon.jsonschema import Keyword, JSONSchema, Scope, PropertyApplicator, Metaschema
+from jschon.jsonschema import JSONSchema, Scope
 from jschon.uri import URI
+from jschon.vocabulary import Keyword, PropertyApplicator, Metaschema
 
 __all__ = [
     'SchemaKeyword',

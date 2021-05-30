@@ -8,9 +8,10 @@ from jschon.catalogue import _2019_09, _2020_12
 from jschon.exceptions import CatalogueError, JSONPointerError, URIError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
-from jschon.jsonschema import Metaschema, Vocabulary, KeywordClass, JSONSchema
+from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
 from jschon.utils import json_loadf
+from jschon.vocabulary import Vocabulary, KeywordClass, Metaschema
 from jschon.vocabulary.format import FormatValidator
 
 __all__ = [

@@ -2,6 +2,7 @@ import pytest
 
 from jschon.json import JSON
 from jschon.jsonschema import *
+from jschon.vocabulary import *
 from tests import metaschema_uri_2020_12
 
 
