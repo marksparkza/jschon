@@ -244,7 +244,7 @@ class JSONSchema(JSON):
 
     @property
     def metaschema(self) -> Metaschema:
-        """The schema's :class:`Metaschema`."""
+        """The schema's :class:`~jschon.vocabulary.Metaschema`."""
         from jschon.vocabulary import Metaschema
 
         if (uri := self.metaschema_uri) is None:

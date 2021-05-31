@@ -147,18 +147,18 @@ class Catalogue:
         raise CatalogueError(f"File not found for '{uri}'")
 
     def create_vocabulary(self, uri: URI, *kwclasses: KeywordClass) -> None:
-        """Create a :class:`~jschon.jsonschema.Vocabulary` object, which
-        may be used by a :class:`~jschon.jsonschema.Metaschema` to provide
+        """Create a :class:`~jschon.vocabulary.Vocabulary` object, which
+        may be used by a :class:`~jschon.vocabulary.Metaschema` to provide
         keyword classes used in schema construction.
 
         :param uri: the URI identifying the vocabulary
-        :param kwclasses: the :class:`~jschon.jsonschema.Keyword` classes
+        :param kwclasses: the :class:`~jschon.vocabulary.Keyword` classes
             constituting the vocabulary
         """
         self._vocabularies[uri] = Vocabulary(uri, *kwclasses)
 
     def get_vocabulary(self, uri: URI) -> Vocabulary:
-        """Get a :class:`~jschon.jsonschema.Vocabulary` by its `uri`.
+        """Get a :class:`~jschon.vocabulary.Vocabulary` by its `uri`.
 
         :param uri: the URI identifying the vocabulary
         :raise CatalogueError: if `uri` is not a recognized vocabulary URI
@@ -174,12 +174,12 @@ class Catalogue:
             core_vocabulary_uri: URI,
             *default_vocabulary_uris: URI,
     ) -> None:
-        """Create, cache and validate a :class:`~jschon.jsonschema.Metaschema`.
+        """Create, cache and validate a :class:`~jschon.vocabulary.Metaschema`.
 
         :param metaschema_uri: the URI identifying the metaschema
         :param core_vocabulary_uri: the URI identifying the metaschema's
-            core :class:`~jschon.jsonschema.Vocabulary`
-        :param default_vocabulary_uris: default :class:`~jschon.jsonschema.Vocabulary`
+            core :class:`~jschon.vocabulary.Vocabulary`
+        :param default_vocabulary_uris: default :class:`~jschon.vocabulary.Vocabulary`
             URIs, used in the absence of a ``"$vocabulary"`` keyword in the
             metaschema JSON file
         """
