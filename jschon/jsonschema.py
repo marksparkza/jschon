@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass
+from enum import Enum
 from typing import (
     Mapping,
     Union,
@@ -30,6 +31,7 @@ __all__ = [
     'Scope',
     'Annotation',
     'Error',
+    'OutputFormat',
 ]
 
 
@@ -442,6 +444,19 @@ class Scope:
             for child in self.iter_children():
                 yield from child.collect_errors()
 
+    def output(self, format: OutputFormat) -> Dict[str, AnyJSONCompatible]:
+        """Return an output dictionary formatted in accordance with the
+        JSON Schema specification of the given output `format`."""
+        from jschon.output import OutputFormatter
+
+        if format == OutputFormat.FLAG:
+            return OutputFormatter.flag(self)
+
+        if format == OutputFormat.BASIC:
+            return OutputFormatter.basic(self)
+
+        raise NotImplementedError
+
     def __str__(self) -> str:
         return str(self.path)
 
@@ -460,3 +475,10 @@ class Error:
     evaluation_path: JSONPointer
     absolute_uri: URI
     message: str
+
+
+class OutputFormat(str, Enum):
+    FLAG = 'flag'
+    BASIC = 'basic'
+    DETAILED = 'detailed'
+    VERBOSE = 'verbose'

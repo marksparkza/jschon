@@ -1,7 +1,7 @@
 import pytest
 from pytest import param as p
 
-from jschon import JSON, JSONSchema, Evaluator, OutputFormat
+from jschon import JSON, JSONSchema
 from tests import metaschema_uri_2020_12
 
 schema_valid = {
@@ -58,12 +58,7 @@ schema_invalid_errors = [
 ])
 def test_validate_schema_flag(example, valid):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = Evaluator(schema)
-    result = evaluator.validate_schema()
-    assert result == {
-        'valid': valid
-    }
-    result = evaluator.validate_schema(OutputFormat.FLAG)
+    result = schema.metaschema.evaluate(schema).output('flag')
     assert result == {
         'valid': valid
     }
@@ -75,8 +70,7 @@ def test_validate_schema_flag(example, valid):
 ])
 def test_validate_schema_basic(example, valid, errors):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = Evaluator(schema)
-    result = evaluator.validate_schema(OutputFormat.BASIC)
+    result = schema.metaschema.evaluate(schema).output('basic')
     assert result['valid'] is valid
     if valid:
         assert 'errors' not in result
@@ -202,12 +196,7 @@ instance_tests = (
 @pytest.mark.parametrize('example, valid, output', instance_tests)
 def test_evaluate_instance_flag(example, valid, output):
     schema = JSONSchema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = Evaluator(schema)
-    result = evaluator.evaluate_instance(JSON(example))
-    assert result == {
-        'valid': valid
-    }
-    result = evaluator.evaluate_instance(JSON(example), OutputFormat.FLAG)
+    result = schema.evaluate(JSON(example)).output('flag')
     assert result == {
         'valid': valid
     }
@@ -216,8 +205,7 @@ def test_evaluate_instance_flag(example, valid, output):
 @pytest.mark.parametrize('example, valid, output', instance_tests)
 def test_evaluate_instance_basic(example, valid, output):
     schema = JSONSchema(schema_valid, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = Evaluator(schema)
-    result = evaluator.evaluate_instance(JSON(example), OutputFormat.BASIC)
+    result = schema.evaluate(JSON(example)).output('basic')
     assert result['valid'] is valid
     assert result == output
 
@@ -279,8 +267,7 @@ array_output_2 = {'valid': False,
 ])
 def test_array_item_output(input, output):
     schema = JSONSchema(array_schema, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = Evaluator(schema)
-    result = evaluator.evaluate_instance(JSON(input), OutputFormat.BASIC)
+    result = schema.evaluate(JSON(input)).output('basic')
     assert result == output
 
 
@@ -313,6 +300,5 @@ contains_if_output_3 = {'valid': True,
 ])
 def test_contains_if_output(input, output):
     schema = JSONSchema(contains_if_schema, metaschema_uri=metaschema_uri_2020_12)
-    evaluator = Evaluator(schema)
-    result = evaluator.evaluate_instance(JSON(input), OutputFormat.BASIC)
+    result = schema.evaluate(JSON(input)).output('basic')
     assert result == output
