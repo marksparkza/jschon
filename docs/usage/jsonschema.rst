@@ -1,11 +1,11 @@
 JSON Schema
 ===========
-On this page, we'll take a look at the main classes involved in setting up
+On this page, we'll take a look at the classes involved in setting up
 JSON schemas and evaluating JSON documents.
 
 We'll require the following classes:
 
->>> from jschon import Catalogue, Evaluator, JSON, JSONSchema, OutputFormat, URI
+>>> from jschon import Catalogue, JSON, JSONSchema, URI
 
 The catalogue
 -------------
@@ -31,44 +31,8 @@ metaschema:
 
 >>> catalogue = Catalogue.create_default_catalogue('2020-12')
 
-Format validators
-^^^^^^^^^^^^^^^^^
-jschon does not provide built-in support for ``"format"`` keyword validation.
-By default, any occurrence of ``"format"`` in a schema passes, with its value
-simply collected as an annotation. However, jschon allows you to plug in
-validators for *any* format, whether one of the
-`defined formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
-as per the JSON Schema spec, or a custom format known only to your organization.
-
-To support the schema that we'll be creating, let's set up validators for the
-``"ipv4"``, ``"ipv6"`` and ``"hostname"`` formats. The :meth:`~jschon.catalogue.Catalogue.add_format_validators`
-method accepts a dictionary of :class:`~jschon.vocabulary.format.FormatValidator`
-objects indexed by *format attribute*. A :class:`~jschon.vocabulary.format.FormatValidator`
-is simply a callable that accepts a single argument - the value to be validated -
-and raises a :exc:`ValueError` if a supplied value is invalid.
-
-For the IP address formats, we can use the :class:`ipaddress.IPv*Address`
-constructors, available in the Python standard library. For the hostname format,
-we'll define a validation function using a hostname `regex <https://stackoverflow.com/a/106223>`_:
-
->>> import ipaddress
->>> import re
-...
->>> def validate_hostname(value):
-...     hostname_regex = re.compile(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
-...     if not hostname_regex.match(value):
-...         raise ValueError(f"'{value}' is not a valid hostname")
-...
->>> catalogue.add_format_validators({
-...     "ipv4": ipaddress.IPv4Address,
-...     "ipv6": ipaddress.IPv6Address,
-...     "hostname": validate_hostname,
-... })
-
-The schema
-----------
 A basic example
-^^^^^^^^^^^^^^^
+---------------
 First, let's consider a very basic example. Here is a schema that simply ensures
 that a JSON value represents an integer:
 
@@ -77,8 +41,8 @@ that a JSON value represents an integer:
 ... })
 jschon.exceptions.JSONSchemaError: The schema's metaschema URI has not been set
 
-Oops! As you can see, without specifying a *metaschema*, jschon won't know what to
-do with ``"type"`` - or any other keyword. The metaschema URI may be parameterized,
+Oops! As you can see, without specifying a *metaschema*, jschon won't know how to
+interpret ``"type"`` or any other keyword. The metaschema URI may be parameterized,
 or it may be provided using the ``"$schema"`` keyword:
 
 >>> int_schema = JSONSchema({
@@ -122,8 +86,43 @@ precedence:
 >>> int_schema.uri
 URI('https://example.com/the-real-id')
 
+Format validators
+-----------------
+jschon does not provide built-in support for ``"format"`` keyword validation.
+By default, any occurrence of ``"format"`` in a schema passes, with its value
+simply collected as an annotation. However, jschon allows you to plug in
+validators for *any* format, whether one of the
+`defined formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
+as per the JSON Schema spec, or a custom format known only to your organization.
+
+To support the schema that we'll be creating in the next section, let's set up
+validators for the ``"ipv4"``, ``"ipv6"`` and ``"hostname"`` formats. The
+:meth:`~jschon.catalogue.Catalogue.add_format_validators` method accepts a
+dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed
+by *format attribute*. A :class:`~jschon.vocabulary.format.FormatValidator`
+is simply a callable that accepts a single argument - the value to be validated -
+and raises a :exc:`ValueError` if a supplied value is invalid.
+
+For the IP address formats, we can use the :class:`ipaddress.IPv*Address`
+constructors, available in the Python standard library. For the hostname format,
+we'll define a validation function using a hostname `regex <https://stackoverflow.com/a/106223>`_:
+
+>>> import ipaddress
+>>> import re
+...
+>>> def validate_hostname(value):
+...     hostname_regex = re.compile(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
+...     if not hostname_regex.match(value):
+...         raise ValueError(f"'{value}' is not a valid hostname")
+...
+>>> catalogue.add_format_validators({
+...     "ipv4": ipaddress.IPv4Address,
+...     "ipv6": ipaddress.IPv6Address,
+...     "hostname": validate_hostname,
+... })
+
 A more realistic example
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 The objective for this example will be to ensure that a JSON document consists
 of an array of host records, where each record has an IP address and a hostname.
 We can create the schema, and validate it against its metaschema, in one go:
@@ -184,9 +183,7 @@ While in a deeply nested schema:
 >>> hosts_schema["items"]["properties"]["ipaddress"]["oneOf"][0].keywords
 {'format': <jschon.vocabulary.format.FormatKeyword object at 0x7f21fcec87f0>}
 
-The evaluator
--------------
-Now let's create two JSON host record arrays, which we'll evaluate against our
+Now, let's create two JSON host record arrays, which we'll evaluate using our
 hosts schema:
 
 >>> valid_host_records = JSON([
@@ -199,7 +196,8 @@ hosts schema:
 ...     {"ipaddress": "10.0.0", "hostname": "server.local"},
 ... ])
 
-To quickly check the validity of these arrays, we can write the following code:
+To quickly check the validity of these arrays, we can simply read the
+:attr:`~jschon.jsonschema.Scope.valid` property of the result:
 
 >>> hosts_schema.evaluate(valid_host_records).valid
 True
@@ -207,8 +205,21 @@ True
 >>> hosts_schema.evaluate(invalid_host_records).valid
 False
 
-But what is this object that :meth:`~jschon.jsonschema.JSONSchema.evaluate`
-returns?
+Alternatively, we can use the :meth:`~jschon.jsonschema.Scope.output` method to
+generate a JSON-compatible dictionary formatted in accordance with one of the
+`output formats <https://json-schema.org/draft/2020-12/json-schema-core.html#output>`_
+described by the JSON Schema core specification [#]_:
+
+>>> hosts_schema.evaluate(valid_host_records).output('flag')
+{'valid': True}
+
+>>> hosts_schema.evaluate(invalid_host_records).output('basic')
+{'valid': False, 'errors': [{'instanceLocation': '', 'keywordLocation': '', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/0', 'keywordLocation': '/items', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1', 'keywordLocation': '/items', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/0', 'keywordLocation': '/items/properties', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties', 'error': "Properties ['hostname'] are invalid"}, {'instanceLocation': '/0/hostname', 'keywordLocation': '/items/properties/hostname', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/0/hostname', 'keywordLocation': '/items/properties/hostname/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname/format', 'error': 'The instance is invalid against the "hostname" format: \'~localhost\' is not a valid hostname'}, {'instanceLocation': '/1', 'keywordLocation': '/items/properties', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties', 'error': "Properties ['ipaddress'] are invalid"}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf', 'error': 'The instance must be valid against exactly one subschema; it is valid against [] and invalid against [0, 1]'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/0', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/0/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0/format', 'error': 'The instance is invalid against the "ipv4" format: Expected 4 octets in \'10.0.0\''}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/1', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/1', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/1/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/1/format', 'error': 'The instance is invalid against the "ipv6" format: At least 3 parts expected in \'10.0.0\''}]}
+
+The scope tree
+--------------
+What exactly is the object that the :meth:`~jschon.jsonschema.JSONSchema.evaluate`
+method returns?
 
 >>> hosts_schema.evaluate(valid_host_records)
 <jschon.jsonschema.Scope object at 0x7f9ff98d9a00>
@@ -219,41 +230,13 @@ evaluating a JSON instance. Each node in the :class:`~jschon.jsonschema.Scope`
 tree holds the results of evaluating an instance node against a schema node - or,
 to be precise, the results of evaluating an instance *subtree* against a schema
 *subtree*. So, the root node of the :class:`~jschon.jsonschema.Scope` tree represents
-the result of evaluating the entire instance against the entire schema, and its
-:attr:`~jschon.jsonschema.Scope.valid` property indicates the validity of the
-entire instance.
+the result of evaluating the entire instance against the entire schema.
 
-While it is possible to work with the :class:`~jschon.jsonschema.Scope` tree
-directly to collect and interpret evaluation results, jschon provides a higher-level
-interface to JSON instance evaluation: the :class:`~jschon.evaluator.Evaluator` class.
+Applications will typically only need to read the :attr:`~jschon.jsonschema.Scope.valid`
+property or use the :meth:`~jschon.jsonschema.Scope.output` method at the root of
+a :class:`~jschon.jsonschema.Scope` tree, to see the result of evaluating a JSON
+instance. But for custom keyword development, it will be important to understand
+how the :class:`~jschon.jsonschema.Scope` class works - and this will be explained
+in the next guide (to do!).
 
-Here we create an :class:`~jschon.evaluator.Evaluator` for our hosts schema:
-
->>> evaluator = Evaluator(hosts_schema)
-
-The :class:`~jschon.evaluator.Evaluator` methods, :meth:`~jschon.evaluator.Evaluator.validate_schema`
-and :meth:`~jschon.evaluator.Evaluator.evaluate_instance`, each return a JSON-compatible
-dictionary generated from a :class:`~jschon.jsonschema.Scope` result tree and
-structured in accordance with a selected `output format <https://json-schema.org/draft/2020-12/json-schema-core.html#output>`_,
-as described by the JSON Schema core specification. [#]_
-
-:meth:`~jschon.evaluator.Evaluator.validate_schema` may be useful when developing
-new schemas: it can provide detailed information on errors with respect to the
-metaschema; *cf.* the previous section, in which we chained a :meth:`~jschon.jsonschema.JSONSchema.validate`
-call to the :class:`~jschon.jsonschema.JSONSchema` constructor. While this is a
-useful safety check, it does not provide any information beyond a raised exception
-if any schema errors are encountered.
-
-Now let's evaluate those host record arrays that we created:
-
->>> evaluator.evaluate_instance(valid_host_records)
-{'valid': True}
-
-The default output format is :const:`OutputFormat.FLAG`. To see all the errors
-produced in the evaluation of the invalid array, we can select the :const:`OutputFormat.BASIC`
-format:
-
->>> evaluator.evaluate_instance(invalid_host_records, OutputFormat.BASIC)
-{'valid': False, 'errors': [...]}
-
-.. [#] jschon currently supports only the `Flag` and `Basic` output formats.
+.. [#] jschon currently supports only the ``'flag'`` and ``'basic'`` output formats.
