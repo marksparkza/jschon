@@ -5,7 +5,6 @@ jschon is a pythonic and extensible implementation of the
 
 .. toctree::
    :caption: User Guide
-   :maxdepth: 1
 
    usage/json
    usage/jsonpointer
