@@ -11,7 +11,7 @@ __all__ = [
 ]
 
 FormatValidator = Callable[[AnyJSONCompatible], None]
-"""The type of a ``"format"`` keyword validation function.
+"""The type of a ``"format"`` keyword validator.
 
 A :class:`~jschon.vocabulary.format.FormatValidator` is a
 callable accepting a JSON-compatible Python object as its

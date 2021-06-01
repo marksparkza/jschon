@@ -76,14 +76,14 @@ class JSONSchema(JSON):
             catalogue.add_schema(uri, self)
 
         self.catalogue: Catalogue = catalogue
-        """The catalogue provides the schema with its keyword vocabulary (via
-        the metaschema), and a (sub)schema cache."""
+        """The catalogue in which the schema is cached."""
 
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
 
         self.keywords: Dict[str, Keyword] = {}
-        """A dictionary of the schema's keyword objects, indexed by keyword name."""
+        """A dictionary of the schema's :class:`~jschon.vocabulary.Keyword`
+        objects, indexed by keyword name."""
 
         # do not call super().__init__
         # all inherited attributes are initialized here:
@@ -103,7 +103,7 @@ class JSONSchema(JSON):
         """The JSON type of the schema. One of ``"boolean"``, ``"object"``."""
 
         self.parent: Optional[JSON] = parent
-        """The containing JSON or JSONSchema node."""
+        """The containing :class:`~jschon.json.JSON` or :class:`JSONSchema` node."""
 
         self.key: Optional[str] = key
         """The index of the schema within its parent."""

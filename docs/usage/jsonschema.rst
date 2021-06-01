@@ -3,7 +3,7 @@ JSON Schema
 On this page, we'll take a look at the classes involved in setting up
 JSON schemas and evaluating JSON documents.
 
-We'll require the following classes:
+We begin by importing the classes that we'll be working with:
 
 >>> from jschon import Catalogue, JSON, JSONSchema, URI
 
@@ -12,9 +12,8 @@ The catalogue
 The :class:`~jschon.catalogue.Catalogue` may be thought of as the operational
 infrastructure of jschon. It provides a schema cache, enabling schemas and
 subschemas to reference each other. It supports base URI-to-directory mappings,
-so that URI-identified schemas - including the all-important JSON Schema
-metaschemas - can be loaded from disk. And it supports the plugging in of
-``"format"`` keyword validators.
+so that URI-identified schemas - including the JSON Schema metaschemas - can
+be loaded from disk. And it supports plugging in ``"format"`` keyword validators.
 
 A :class:`~jschon.catalogue.Catalogue` may be initialized with the metaschema(s)
 for any number of supported versions of the JSON Schema specification. For example,
@@ -38,16 +37,12 @@ that a JSON value represents an integer:
 
 >>> int_schema = JSONSchema({
 ...     "type": "integer"
-... })
-jschon.exceptions.JSONSchemaError: The schema's metaschema URI has not been set
-
-Oops! As you can see, without specifying a *metaschema*, jschon won't know how to
-interpret ``"type"`` or any other keyword. The metaschema URI may be parameterized,
-or it may be provided using the ``"$schema"`` keyword:
-
->>> int_schema = JSONSchema({
-...     "type": "integer"
 ... }, metaschema_uri=URI("https://json-schema.org/draft/2020-12/schema"))
+
+Every schema requires a metaschema. The referenced :class:`~jschon.vocabulary.Metaschema`
+provides the schema with :class:`~jschon.vocabulary.Keyword` classes for each of
+its keywords, and can be used to validate the schema. The metaschema URI may be
+parameterized, as above, or it may be provided using the ``"$schema"`` keyword:
 
 >>> int_schema = JSONSchema({
 ...     "type": "integer",
@@ -88,12 +83,13 @@ URI('https://example.com/the-real-id')
 
 Format validators
 -----------------
-jschon does not provide built-in support for ``"format"`` keyword validation.
-By default, any occurrence of ``"format"`` in a schema passes, with its value
-simply collected as an annotation. However, jschon allows you to plug in
-validators for *any* format, whether one of the
-`defined formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
-as per the JSON Schema spec, or a custom format known only to your organization.
+jschon does not provide built-in support for validating any of the
+`formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
+defined in the JSON Schema specification. By default, any occurrence of the
+``"format"`` keyword in a schema passes, with its value simply collected as an
+annotation. However, jschon allows you to plug in validators for *any* format,
+whether one of the JSON Schema-defined formats, or a custom format known only
+to your organization.
 
 To support the schema that we'll be creating in the next section, let's set up
 validators for the ``"ipv4"``, ``"ipv6"`` and ``"hostname"`` formats. The
@@ -121,7 +117,7 @@ we'll define a validation function using a hostname `regex <https://stackoverflo
 ...     "hostname": validate_hostname,
 ... })
 
-A more realistic example
+A realistic example
 ------------------------
 The objective for this example will be to ensure that a JSON document consists
 of an array of host records, where each record has an IP address and a hostname.
@@ -197,7 +193,7 @@ hosts schema:
 ... ])
 
 To quickly check the validity of these arrays, we can simply read the
-:attr:`~jschon.jsonschema.Scope.valid` property of the result:
+:attr:`~jschon.jsonschema.Scope.valid` property of the evaluation result:
 
 >>> hosts_schema.evaluate(valid_host_records).valid
 True
@@ -218,7 +214,7 @@ described by the JSON Schema core specification [#]_:
 
 The scope tree
 --------------
-What exactly is the object that the :meth:`~jschon.jsonschema.JSONSchema.evaluate`
+So what exactly is this object that the :meth:`~jschon.jsonschema.JSONSchema.evaluate`
 method returns?
 
 >>> hosts_schema.evaluate(valid_host_records)
@@ -235,7 +231,7 @@ the result of evaluating the entire instance against the entire schema.
 Applications will typically only need to read the :attr:`~jschon.jsonschema.Scope.valid`
 property or use the :meth:`~jschon.jsonschema.Scope.output` method at the root of
 a :class:`~jschon.jsonschema.Scope` tree, to see the result of evaluating a JSON
-instance. But for custom keyword development, it will be important to understand
+document. But for custom keyword development, it will be important to understand
 how the :class:`~jschon.jsonschema.Scope` class works - and this will be explained
 in the next guide (to do!).
 

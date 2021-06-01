@@ -24,9 +24,9 @@ class Catalogue:
 
     A :class:`Catalogue` instance is an in-memory schema cache, usually
     initialized with a metaschema and its associated vocabularies, and
-    optionally with any number of format validation functions. It may be
-    configured with base URI-to-directory mappings, so that JSON files
-    (including the metaschema definition files) may be loaded from disk.
+    optionally with any number of format validators. It may be configured
+    with base URI-to-directory mappings, to enable loading of URI-identified
+    JSON and JSON schema resources from disk.
     """
     _version_initializers = {
         '2019-09': _2019_09.initialize,
@@ -190,16 +190,16 @@ class Catalogue:
         metaschema.validate()
 
     def add_format_validators(self, validators: Mapping[str, FormatValidator]) -> None:
-        """Register a collection of format validation functions.
+        """Register a collection of format validators.
         
-        In jschon, a given occurrence of the ``"format"`` keyword will
-        evaluate a JSON instance using a format validation function, if
-        one has been registered for the applicable *format attribute*
-        (the keyword's value). If a validator has not been registered
-        for that format attribute, keyword evaluation will pass.
+        In jschon, a given occurrence of the ``"format"`` keyword evaluates
+        a JSON instance using a format validation callable, if one has been
+        registered for the applicable *format attribute* (the keyword's value).
+        If a validator has not been registered for that format attribute,
+        keyword evaluation simply passes.
 
-        :param validators: a dictionary of callables, keyed by format
-            attribute
+        :param validators: a dictionary of :class:`~jschon.vocabulary.format.FormatValidator`
+            callables, keyed by format attribute
         """
         self._format_validators.update(validators)
 
@@ -219,6 +219,9 @@ class Catalogue:
 
     def add_schema(self, uri: URI, schema: JSONSchema) -> None:
         """Add a (sub)schema to the cache.
+        
+        Applications should ordinarily not need to call this method. Schemas
+        are cached automatically during construction.
 
         :param uri: the URI identifying the (sub)schema
         :param schema: the :class:`~jschon.jsonschema.JSONSchema` instance to cache
