@@ -1,5 +1,13 @@
 # Change log
 
+## v0.5.0 (2021-06-01)
+### Features
+* An output method on Scope, providing output formatting
+### Breaking changes
+* Dropped the Evaluator class
+### Miscellaneous
+* Moved Metaschema, Vocabulary and Keyword into the vocabulary subpackage
+
 ## v0.4.0 (2021-05-21)
 ### Bug fixes
 * Fixed error and annotation collection for array items (#8)
