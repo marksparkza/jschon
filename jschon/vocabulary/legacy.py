@@ -70,7 +70,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
                 self.json.evaluate(item, scope)
 
             if scope.valid:
-                scope.annotate(instance, "items", True)
+                scope.annotate(True)
 
         elif self.json.type == "array":
             eval_index = None
@@ -83,9 +83,9 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
                         err_indices += [index]
 
             if err_indices:
-                scope.fail(instance, f"Array elements {err_indices} are invalid")
+                scope.fail(f"Array elements {err_indices} are invalid")
             else:
-                scope.annotate(instance, "items", eval_index)
+                scope.annotate(eval_index)
 
 
 class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
@@ -94,16 +94,14 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
     depends = "items"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (items := scope.sibling(instance, "items")) and \
-                (items_annotation := items.annotations.get("items")) and \
-                type(items_annotation.value) is int:
+        if (items := scope.sibling(instance, "items")) and type(items.annotation) is int:
             annotation = None
-            for index, item in enumerate(instance[items_annotation.value + 1:]):
+            for index, item in enumerate(instance[items.annotation + 1:]):
                 annotation = True
                 self.json.evaluate(item, scope)
 
             if scope.valid:
-                scope.annotate(instance, "additionalItems", annotation)
+                scope.annotate(annotation)
         else:
             scope.discard()
 
@@ -138,4 +136,4 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
             self.json.evaluate(item, scope)
 
         if scope.valid:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)

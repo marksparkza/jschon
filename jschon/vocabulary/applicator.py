@@ -37,7 +37,7 @@ class AllOfKeyword(Keyword, ArrayApplicator):
                     err_indices += [index]
 
         if err_indices:
-            scope.fail(instance, f'The instance is invalid against subschemas {err_indices}')
+            scope.fail(f'The instance is invalid against subschemas {err_indices}')
 
 
 class AnyOfKeyword(Keyword, ArrayApplicator):
@@ -52,7 +52,7 @@ class AnyOfKeyword(Keyword, ArrayApplicator):
                     valid = True
 
         if not valid:
-            scope.fail(instance, f'The instance must be valid against at least one subschema')
+            scope.fail(f'The instance must be valid against at least one subschema')
 
 
 class OneOfKeyword(Keyword, ArrayApplicator):
@@ -70,8 +70,8 @@ class OneOfKeyword(Keyword, ArrayApplicator):
                     err_indices += [index]
 
         if len(valid_indices) != 1:
-            scope.fail(instance, 'The instance must be valid against exactly one subschema; '
-                                 f'it is valid against {valid_indices} and invalid against {err_indices}')
+            scope.fail('The instance must be valid against exactly one subschema; '
+                       f'it is valid against {valid_indices} and invalid against {err_indices}')
 
 
 class NotKeyword(Keyword, Applicator):
@@ -81,9 +81,9 @@ class NotKeyword(Keyword, Applicator):
         self.json.evaluate(instance, scope)
 
         if scope.valid:
-            scope.fail(instance, 'The instance must not be valid against the subschema')
+            scope.fail('The instance must not be valid against the subschema')
         else:
-            scope.errors.clear()
+            scope.error = None
 
 
 class IfKeyword(Keyword, Applicator):
@@ -99,7 +99,7 @@ class ThenKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling(instance, "if")) and not if_.errors:
+        if (if_ := scope.sibling(instance, "if")) and not if_.error:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -110,7 +110,7 @@ class ElseKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling(instance, "if")) and if_.errors:
+        if (if_ := scope.sibling(instance, "if")) and if_.error:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -133,10 +133,10 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
                         err_names += [name]
 
         if err_names:
-            scope.fail(instance, f'Properties {err_names} are invalid against '
-                                 f'the corresponding "dependentSchemas" subschemas')
+            scope.fail(f'Properties {err_names} are invalid against '
+                       f'the corresponding "dependentSchemas" subschemas')
         else:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)
 
 
 class PrefixItemsKeyword(Keyword, ArrayApplicator):
@@ -154,11 +154,11 @@ class PrefixItemsKeyword(Keyword, ArrayApplicator):
                     err_indices += [index]
 
         if err_indices:
-            scope.fail(instance, f"Array elements {err_indices} are invalid")
+            scope.fail(f"Array elements {err_indices} are invalid")
         elif eval_index is not None:
             if eval_index == len(instance) - 1:
                 eval_index = True
-            scope.annotate(instance, self.key, eval_index)
+            scope.annotate(eval_index)
 
 
 class ItemsKeyword(Keyword, Applicator):
@@ -168,11 +168,11 @@ class ItemsKeyword(Keyword, Applicator):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (prefix_items := scope.sibling(instance, "prefixItems")) and \
-                (prefix_items_annotation := prefix_items.annotations.get("prefixItems")):
-            if prefix_items_annotation.value is True:
+                prefix_items.annotation is not None:
+            if prefix_items.annotation is True:
                 return
             else:
-                start_index = prefix_items_annotation.value + 1
+                start_index = prefix_items.annotation + 1
         else:
             start_index = 0
 
@@ -182,7 +182,7 @@ class ItemsKeyword(Keyword, Applicator):
             self.json.evaluate(item, scope)
 
         if annotation is True and scope.valid:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)
 
 
 class UnevaluatedItemsKeyword(Keyword, Applicator):
@@ -220,7 +220,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
                 self.json.evaluate(item, scope)
 
         if scope.valid:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)
 
 
 class ContainsKeyword(Keyword, Applicator):
@@ -233,12 +233,12 @@ class ContainsKeyword(Keyword, Applicator):
             if self.json.evaluate(item, scope).valid:
                 annotation += [index]
             else:
-                scope.errors.clear()
+                scope.error = None
 
-        scope.annotate(instance, self.key, annotation)
+        scope.annotate(annotation)
         if not annotation:
-            scope.fail(instance, 'The array does not contain any element that is valid '
-                                 f'against the "{self.key}" subschema')
+            scope.fail('The array does not contain any element that is valid '
+                       f'against the "{self.key}" subschema')
 
 
 class PropertiesKeyword(Keyword, PropertyApplicator):
@@ -258,9 +258,9 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
                         err_names += [name]
 
         if err_names:
-            scope.fail(instance, f"Properties {err_names} are invalid")
+            scope.fail(f"Properties {err_names} are invalid")
         else:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)
 
 
 class PatternPropertiesKeyword(Keyword, PropertyApplicator):
@@ -281,9 +281,9 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
                             err_names += [name]
 
         if err_names:
-            scope.fail(instance, f"Properties {err_names} are invalid")
+            scope.fail(f"Properties {err_names} are invalid")
         else:
-            scope.annotate(instance, self.key, list(matched_names))
+            scope.annotate(list(matched_names))
 
 
 class AdditionalPropertiesKeyword(Keyword, Applicator):
@@ -294,12 +294,12 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
         if (properties := scope.sibling(instance, "properties")) and \
-                (properties_annotation := properties.annotations.get("properties")):
-            evaluated_names |= set(properties_annotation.value)
+                properties.annotation is not None:
+            evaluated_names |= set(properties.annotation)
 
         if (pattern_properties := scope.sibling(instance, "patternProperties")) and \
-                (pattern_properties_annotation := pattern_properties.annotations.get("patternProperties")):
-            evaluated_names |= set(pattern_properties_annotation.value)
+                pattern_properties.annotation is not None:
+            evaluated_names |= set(pattern_properties.annotation)
 
         annotation = []
         for name, item in instance.items():
@@ -308,7 +308,7 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
                     annotation += [name]
 
         if scope.valid:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)
 
 
 class UnevaluatedPropertiesKeyword(Keyword, Applicator):
@@ -336,7 +336,7 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
                     annotation += [name]
 
         if scope.valid:
-            scope.annotate(instance, self.key, annotation)
+            scope.annotate(annotation)
 
 
 class PropertyNamesKeyword(Keyword, Applicator):
@@ -350,5 +350,5 @@ class PropertyNamesKeyword(Keyword, Applicator):
                 err_names += [name]
 
         if err_names:
-            scope.errors.clear()
-            scope.fail(instance, f"Property names {err_names} are invalid")
+            scope.error = None
+            scope.fail(f"Property names {err_names} are invalid")

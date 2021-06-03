@@ -41,7 +41,7 @@ def jsonpointer_validator(value):
 def evaluate(format_attr, instval, assert_=True):
     schema = JSONSchema(True)
     FormatKeyword(schema, format_attr).evaluate(JSON(instval), scope := Scope(schema))
-    assert scope.annotations["format"].value == format_attr
+    assert scope.annotation == format_attr
     assert scope._assert is assert_
     return scope.valid
 

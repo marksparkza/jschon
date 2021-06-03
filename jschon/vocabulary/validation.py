@@ -43,7 +43,7 @@ class TypeKeyword(Keyword):
             valid = False
 
         if not valid:
-            scope.fail(instance, f"The instance must be of type {self.json}")
+            scope.fail(f"The instance must be of type {self.json}")
 
 
 class EnumKeyword(Keyword):
@@ -51,7 +51,7 @@ class EnumKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance not in self.json:
-            scope.fail(instance, f"The value must be one of {self.json}")
+            scope.fail(f"The value must be one of {self.json}")
 
 
 class ConstKeyword(Keyword):
@@ -59,7 +59,7 @@ class ConstKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance != self.json:
-            scope.fail(instance, f"The value must be equal to {self.json}")
+            scope.fail(f"The value must be equal to {self.json}")
 
 
 class MultipleOfKeyword(Keyword):
@@ -69,9 +69,9 @@ class MultipleOfKeyword(Keyword):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
             if instance.value % self.json.value != 0:
-                scope.fail(instance, f"The value must be a multiple of {self.json}")
+                scope.fail(f"The value must be a multiple of {self.json}")
         except decimal.InvalidOperation:
-            scope.fail(instance, f"Invalid operation: {instance} % {self.json}")
+            scope.fail(f"Invalid operation: {instance} % {self.json}")
 
 
 class MaximumKeyword(Keyword):
@@ -80,7 +80,7 @@ class MaximumKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance > self.json:
-            scope.fail(instance, f"The value may not be greater than {self.json}")
+            scope.fail(f"The value may not be greater than {self.json}")
 
 
 class ExclusiveMaximumKeyword(Keyword):
@@ -89,7 +89,7 @@ class ExclusiveMaximumKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance >= self.json:
-            scope.fail(instance, f"The value must be less than {self.json}")
+            scope.fail(f"The value must be less than {self.json}")
 
 
 class MinimumKeyword(Keyword):
@@ -98,7 +98,7 @@ class MinimumKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance < self.json:
-            scope.fail(instance, f"The value may not be less than {self.json}")
+            scope.fail(f"The value may not be less than {self.json}")
 
 
 class ExclusiveMinimumKeyword(Keyword):
@@ -107,7 +107,7 @@ class ExclusiveMinimumKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance <= self.json:
-            scope.fail(instance, f"The value must be greater than {self.json}")
+            scope.fail(f"The value must be greater than {self.json}")
 
 
 class MaxLengthKeyword(Keyword):
@@ -116,7 +116,7 @@ class MaxLengthKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
-            scope.fail(instance, f"The text is too long (maximum {self.json} characters)")
+            scope.fail(f"The text is too long (maximum {self.json} characters)")
 
 
 class MinLengthKeyword(Keyword):
@@ -125,7 +125,7 @@ class MinLengthKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
-            scope.fail(instance, f"The text is too short (minimum {self.json} characters)")
+            scope.fail(f"The text is too short (minimum {self.json} characters)")
 
 
 class PatternKeyword(Keyword):
@@ -138,7 +138,7 @@ class PatternKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if self.regex.search(instance.value) is None:
-            scope.fail(instance, f"The text must match the regular expression {self.json}")
+            scope.fail(f"The text must match the regular expression {self.json}")
 
 
 class MaxItemsKeyword(Keyword):
@@ -147,7 +147,7 @@ class MaxItemsKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
-            scope.fail(instance, f"The array has too many elements (maximum {self.json})")
+            scope.fail(f"The array has too many elements (maximum {self.json})")
 
 
 class MinItemsKeyword(Keyword):
@@ -156,7 +156,7 @@ class MinItemsKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
-            scope.fail(instance, f"The array has too few elements (minimum {self.json})")
+            scope.fail(f"The array has too few elements (minimum {self.json})")
 
 
 class UniqueItemsKeyword(Keyword):
@@ -173,7 +173,7 @@ class UniqueItemsKeyword(Keyword):
                 uniquified += [item]
 
         if len(instance) > len(uniquified):
-            scope.fail(instance, "The array's elements must all be unique")
+            scope.fail("The array's elements must all be unique")
 
 
 class MaxContainsKeyword(Keyword):
@@ -183,10 +183,8 @@ class MaxContainsKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling(instance, "contains"):
-            if (contains_annotation := contains.annotations.get("contains")) and \
-                    len(contains_annotation.value) > self.json:
-                scope.fail(instance,
-                           'The array has too many elements matching the '
+            if contains.annotation is not None and len(contains.annotation) > self.json:
+                scope.fail('The array has too many elements matching the '
                            f'"contains" subschema (maximum {self.json})')
 
 
@@ -197,8 +195,8 @@ class MinContainsKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling(instance, "contains"):
-            contains_count = len(contains_annotation.value) \
-                if (contains_annotation := contains.annotations.get("contains")) \
+            contains_count = len(contains.annotation) \
+                if contains.annotation is not None \
                 else 0
 
             valid = contains_count >= self.json
@@ -206,11 +204,10 @@ class MinContainsKeyword(Keyword):
             if valid and not contains.valid:
                 max_contains = scope.sibling(instance, "maxContains")
                 if not max_contains or max_contains.valid:
-                    contains.errors.clear()
+                    contains.error = None
 
             if not valid:
-                scope.fail(instance,
-                           'The array has too few elements matching the '
+                scope.fail('The array has too few elements matching the '
                            f'"contains" subschema (minimum {self.json})')
 
 
@@ -220,7 +217,7 @@ class MaxPropertiesKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
-            scope.fail(instance, f"The object has too many properties (maximum {self.json})")
+            scope.fail(f"The object has too many properties (maximum {self.json})")
 
 
 class MinPropertiesKeyword(Keyword):
@@ -229,7 +226,7 @@ class MinPropertiesKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
-            scope.fail(instance, f"The object has too few properties (minimum {self.json})")
+            scope.fail(f"The object has too few properties (minimum {self.json})")
 
 
 class RequiredKeyword(Keyword):
@@ -239,7 +236,7 @@ class RequiredKeyword(Keyword):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = [name for name in self.json if name.value not in instance]
         if missing:
-            scope.fail(instance, f"The object is missing required properties {missing}")
+            scope.fail(f"The object is missing required properties {missing}")
 
 
 class DependentRequiredKeyword(Keyword):
@@ -255,4 +252,4 @@ class DependentRequiredKeyword(Keyword):
                     missing[name] = missing_deps
 
         if missing:
-            scope.fail(instance, f"The object is missing dependent properties {missing}")
+            scope.fail(f"The object is missing dependent properties {missing}")

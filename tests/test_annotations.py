@@ -22,7 +22,7 @@ def test_annotate(key, value):
     assert result.children[instpath][key].valid is True
     assert result.children[instpath][key]._assert is False
     try:
-        assert result.children[instpath][key].annotations[key].value == value
+        assert result.children[instpath][key].annotation == value
     except KeyError:
         assert value is None
 
@@ -34,7 +34,7 @@ def test_content_schema():
     }
     result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))
     instpath = JSONPointer()
-    assert result.children[instpath]["contentSchema"].annotations["contentSchema"].value == example["contentSchema"]
+    assert result.children[instpath]["contentSchema"].annotation == example["contentSchema"]
 
     del example["contentMediaType"]
     result = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12).evaluate(JSON(""))

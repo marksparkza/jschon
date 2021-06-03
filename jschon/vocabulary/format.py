@@ -32,11 +32,11 @@ class FormatKeyword(Keyword):
             self.validator = None
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        scope.annotate(instance, self.key, self.json.value)
+        scope.annotate(self.json.value)
         if self.validator is not None:
             try:
                 self.validator(instance.value)
             except ValueError as e:
-                scope.fail(instance, f'The instance is invalid against the "{self.json.value}" format: {e}')
+                scope.fail(f'The instance is invalid against the "{self.json.value}" format: {e}')
         else:
             scope.noassert()
