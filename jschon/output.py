@@ -36,7 +36,28 @@ class OutputFormatter:
 
     @staticmethod
     def verbose(scope: Scope) -> Dict[str, AnyJSONCompatible]:
-        raise NotImplementedError
+        def visit(node: Scope):
+            result = {
+                "valid": node.valid,
+                "instanceLocation": str(node.instpath),
+                "keywordLocation": str(node.path),
+                "absoluteKeywordLocation": str(node.absolute_uri),
+            }
+            if node.valid:
+                if node.annotation is not None:
+                    result["annotation"] = node.annotation
+                result["annotations"] = [visit(child) for child in node.iter_children()]
+                if not result["annotations"]:
+                    del result["annotations"]
+            else:
+                result["errors"] = [visit(child) for child in node.iter_children()]
+                if not result["errors"]:
+                    del result["errors"]
+                    result["error"] = node.error
+
+            return result
+
+        return visit(scope)
 
     @staticmethod
     def _flatten_annotations(scope: Scope) -> Iterator[Dict]:

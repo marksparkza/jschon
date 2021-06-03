@@ -439,6 +439,9 @@ class Scope:
         if format == OutputFormat.BASIC:
             return OutputFormatter.basic(self)
 
+        if format == OutputFormat.VERBOSE:
+            return OutputFormatter.verbose(self)
+
         raise NotImplementedError
 
     def __str__(self) -> str:
