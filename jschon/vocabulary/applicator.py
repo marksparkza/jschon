@@ -193,25 +193,25 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1
         for prefix_items_annotation in scope.parent.collect_annotations(instance, "prefixItems"):
-            if prefix_items_annotation.value is True:
+            if prefix_items_annotation is True:
                 scope.discard()
                 return
-            if prefix_items_annotation.value > last_evaluated_item:
-                last_evaluated_item = prefix_items_annotation.value
+            if prefix_items_annotation > last_evaluated_item:
+                last_evaluated_item = prefix_items_annotation
 
         for items_annotation in scope.parent.collect_annotations(instance, "items"):
-            if items_annotation.value is True:
+            if items_annotation is True:
                 scope.discard()
                 return
 
         for unevaluated_items_annotation in scope.parent.collect_annotations(instance, "unevaluatedItems"):
-            if unevaluated_items_annotation.value is True:
+            if unevaluated_items_annotation is True:
                 scope.discard()
                 return
 
         contains_indices = set()
         for contains_annotation in scope.parent.collect_annotations(instance, "contains"):
-            contains_indices |= set(contains_annotation.value)
+            contains_indices |= set(contains_annotation)
 
         annotation = None
         for index, item in enumerate(instance[(start := last_evaluated_item + 1):], start):
@@ -321,13 +321,13 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         evaluated_names = set()
         for properties_annotation in scope.parent.collect_annotations(instance, "properties"):
-            evaluated_names |= set(properties_annotation.value)
+            evaluated_names |= set(properties_annotation)
         for pattern_properties_annotation in scope.parent.collect_annotations(instance, "patternProperties"):
-            evaluated_names |= set(pattern_properties_annotation.value)
+            evaluated_names |= set(pattern_properties_annotation)
         for additional_properties_annotation in scope.parent.collect_annotations(instance, "additionalProperties"):
-            evaluated_names |= set(additional_properties_annotation.value)
+            evaluated_names |= set(additional_properties_annotation)
         for unevaluated_properties_annotation in scope.parent.collect_annotations(instance, "unevaluatedProperties"):
-            evaluated_names |= set(unevaluated_properties_annotation.value)
+            evaluated_names |= set(unevaluated_properties_annotation)
 
         annotation = []
         for name, item in instance.items():

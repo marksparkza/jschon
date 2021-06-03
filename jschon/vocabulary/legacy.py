@@ -114,19 +114,19 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1
         for items_annotation in scope.parent.collect_annotations(instance, "items"):
-            if items_annotation.value is True:
+            if items_annotation is True:
                 scope.discard()
                 return
-            if type(items_annotation.value) is int and items_annotation.value > last_evaluated_item:
-                last_evaluated_item = items_annotation.value
+            if type(items_annotation) is int and items_annotation > last_evaluated_item:
+                last_evaluated_item = items_annotation
 
         for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):
-            if additional_items_annotation.value is True:
+            if additional_items_annotation is True:
                 scope.discard()
                 return
 
         for unevaluated_items_annotation in scope.parent.collect_annotations(instance, "unevaluatedItems"):
-            if unevaluated_items_annotation.value is True:
+            if unevaluated_items_annotation is True:
                 scope.discard()
                 return
 

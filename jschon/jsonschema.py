@@ -2,14 +2,12 @@ from __future__ import annotations
 
 from collections import deque
 from contextlib import contextmanager
-from dataclasses import dataclass
 from enum import Enum
 from typing import (
     Mapping,
     Union,
     Optional,
     Dict,
-    List,
     Iterator,
     ContextManager,
     TYPE_CHECKING,
@@ -29,8 +27,6 @@ if TYPE_CHECKING:
 __all__ = [
     'JSONSchema',
     'Scope',
-    'Annotation',
-    'Error',
     'OutputFormat',
 ]
 
@@ -415,39 +411,22 @@ class Scope:
             return schema_uri.copy(fragment=relpath.uri_fragment())
 
     def iter_children(self, instance: JSON = None) -> Iterator[Scope]:
-        """Return a flattened view of child scopes, optionally filtered
-        by an instance to which they apply."""
+        """Return an iterator over child scopes of this scope, optionally
+        filtered by an instance to which they apply."""
         for instance_path, keyword_scopes in self.children.items():
             if instance is None or instance.path == instance_path:
                 yield from keyword_scopes.values()
 
-    def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[Annotation]:
+    def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[AnyJSONCompatible]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
         if not self._discard and not self.error:
             if self.annotation is not None and \
                     (key is None or key == self.key) and \
                     (instance is None or instance.path == self.instpath):
-                yield Annotation(
-                    instance_path=self.instpath,
-                    evaluation_path=self.path,
-                    absolute_uri=self.absolute_uri,
-                    value=self.annotation,
-                )
+                yield self.annotation
             for child in self.iter_children():
                 yield from child.collect_annotations(instance, key)
-
-    def collect_errors(self) -> Iterator[Error]:
-        """Return an iterator over errors produced in this subtree."""
-        if not self._discard and self._assert and self.error:
-            yield Error(
-                instance_path=self.instpath,
-                evaluation_path=self.path,
-                absolute_uri=self.absolute_uri,
-                message=self.error,
-            )
-            for child in self.iter_children():
-                yield from child.collect_errors()
 
     def output(self, format: OutputFormat) -> Dict[str, AnyJSONCompatible]:
         """Return an output dictionary formatted in accordance with the
@@ -464,22 +443,6 @@ class Scope:
 
     def __str__(self) -> str:
         return str(self.path)
-
-
-@dataclass
-class Annotation:
-    instance_path: JSONPointer
-    evaluation_path: JSONPointer
-    absolute_uri: URI
-    value: AnyJSONCompatible
-
-
-@dataclass
-class Error:
-    instance_path: JSONPointer
-    evaluation_path: JSONPointer
-    absolute_uri: URI
-    message: str
 
 
 class OutputFormat(str, Enum):

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Iterator
 
 from jschon.json import AnyJSONCompatible
 from jschon.jsonschema import Scope
@@ -24,23 +24,9 @@ class OutputFormatter:
             "valid": scope.valid
         }
         if result["valid"]:
-            result["annotations"] = []
-            for annotation in scope.collect_annotations():
-                result["annotations"] += [{
-                    "instanceLocation": str(annotation.instance_path),
-                    "keywordLocation": str(annotation.evaluation_path),
-                    "absoluteKeywordLocation": str(annotation.absolute_uri),
-                    "annotation": annotation.value,
-                }]
+            result["annotations"] = [annotation for annotation in OutputFormatter._flatten_annotations(scope)]
         else:
-            result["errors"] = []
-            for error in scope.collect_errors():
-                result["errors"] += [{
-                    "instanceLocation": str(error.instance_path),
-                    "keywordLocation": str(error.evaluation_path),
-                    "absoluteKeywordLocation": str(error.absolute_uri),
-                    "error": error.message,
-                }]
+            result["errors"] = [error for error in OutputFormatter._flatten_errors(scope)]
 
         return result
 
@@ -51,3 +37,28 @@ class OutputFormatter:
     @staticmethod
     def verbose(scope: Scope) -> Dict[str, AnyJSONCompatible]:
         raise NotImplementedError
+
+    @staticmethod
+    def _flatten_annotations(scope: Scope) -> Iterator[Dict]:
+        if not scope.error:
+            if scope.annotation is not None:
+                yield {
+                    "instanceLocation": str(scope.instpath),
+                    "keywordLocation": str(scope.path),
+                    "absoluteKeywordLocation": str(scope.absolute_uri),
+                    "annotation": scope.annotation,
+                }
+            for child in scope.iter_children():
+                yield from OutputFormatter._flatten_annotations(child)
+
+    @staticmethod
+    def _flatten_errors(scope: Scope) -> Iterator[Dict]:
+        if not scope.valid:
+            yield {
+                "instanceLocation": str(scope.instpath),
+                "keywordLocation": str(scope.path),
+                "absoluteKeywordLocation": str(scope.absolute_uri),
+                "error": scope.error,
+            }
+            for child in scope.iter_children():
+                yield from OutputFormatter._flatten_errors(child)
