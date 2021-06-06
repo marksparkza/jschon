@@ -221,7 +221,7 @@ class JSONSchema(JSON):
                         keyword.evaluate(instance, subscope)
 
             if any(
-                    not child.valid
+                    not child.pass_
                     for child in scope.iter_children(instance)
             ):
                 scope.fail("The instance failed validation against the schema")
@@ -389,8 +389,8 @@ class Scope:
         self.error = error
 
     def noassert(self) -> None:
-        """Indicate that the scope should be taken to be valid,
-        regardless of errors."""
+        """Indicate that the scope's validity should not affect its
+        assertion result."""
         self._assert = False
 
     def discard(self) -> None:
@@ -399,6 +399,24 @@ class Scope:
 
     @property
     def valid(self) -> bool:
+        """Return the validation result of the scope.
+
+        :rtype: bool
+        """
+        return not self.error
+
+    @property
+    def pass_(self) -> bool:
+        """Return the assertion result of the scope.
+        
+        In the current implementation, this can only ever differ from
+        :attr:`valid` for an "if" keyword subscope: its validation result
+        may be false (triggering "else") while its assertion result is always
+        true. For the root scope (representing the overall document evaluation
+        result), :attr:`valid` will always equal :attr:`pass_`.
+
+        :rtype: bool
+        """
         return not self._assert or not self.error
 
     @property

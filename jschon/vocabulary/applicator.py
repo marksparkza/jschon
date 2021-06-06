@@ -33,7 +33,7 @@ class AllOfKeyword(Keyword, ArrayApplicator):
         for index, subschema in enumerate(self.json):
             with scope(instance, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
-                if not subscope.valid:
+                if not subscope.pass_:
                     err_indices += [index]
 
         if err_indices:
@@ -48,7 +48,7 @@ class AnyOfKeyword(Keyword, ArrayApplicator):
         for index, subschema in enumerate(self.json):
             with scope(instance, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
-                if subscope.valid:
+                if subscope.pass_:
                     valid = True
 
         if not valid:
@@ -64,7 +64,7 @@ class OneOfKeyword(Keyword, ArrayApplicator):
         for index, subschema in enumerate(self.json):
             with scope(instance, str(index)) as subscope:
                 subschema.evaluate(instance, subscope)
-                if subscope.valid:
+                if subscope.pass_:
                     valid_indices += [index]
                 else:
                     err_indices += [index]
@@ -80,7 +80,7 @@ class NotKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.json.evaluate(instance, scope)
 
-        if scope.valid:
+        if scope.pass_:
             scope.fail('The instance must not be valid against the subschema')
         else:
             scope.error = None
@@ -99,7 +99,7 @@ class ThenKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling(instance, "if")) and not if_.error:
+        if (if_ := scope.sibling(instance, "if")) and if_.valid:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -110,7 +110,7 @@ class ElseKeyword(Keyword, Applicator):
     depends = "if"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (if_ := scope.sibling(instance, "if")) and if_.error:
+        if (if_ := scope.sibling(instance, "if")) and not if_.valid:
             self.json.evaluate(instance, scope)
         else:
             scope.discard()
@@ -127,7 +127,7 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
             if name in instance:
                 with scope(instance, name) as subscope:
                     subschema.evaluate(instance, subscope)
-                    if subscope.valid:
+                    if subscope.pass_:
                         annotation += [name]
                     else:
                         err_names += [name]
@@ -150,7 +150,7 @@ class PrefixItemsKeyword(Keyword, ArrayApplicator):
             eval_index = index
             with scope(item, str(index)) as subscope:
                 self.json[index].evaluate(item, subscope)
-                if not subscope.valid:
+                if not subscope.pass_:
                     err_indices += [index]
 
         if err_indices:
@@ -181,7 +181,7 @@ class ItemsKeyword(Keyword, Applicator):
             annotation = True
             self.json.evaluate(item, scope)
 
-        if annotation is True and scope.valid:
+        if annotation is True and scope.pass_:
             scope.annotate(annotation)
 
 
@@ -219,7 +219,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
                 annotation = True
                 self.json.evaluate(item, scope)
 
-        if scope.valid:
+        if scope.pass_:
             scope.annotate(annotation)
 
 
@@ -230,7 +230,7 @@ class ContainsKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
         for index, item in enumerate(instance):
-            if self.json.evaluate(item, scope).valid:
+            if self.json.evaluate(item, scope).pass_:
                 annotation += [index]
             else:
                 scope.error = None
@@ -252,7 +252,7 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
             if name in self.json:
                 with scope(item, name) as subscope:
                     self.json[name].evaluate(item, subscope)
-                    if subscope.valid:
+                    if subscope.pass_:
                         annotation += [name]
                     else:
                         err_names += [name]
@@ -275,7 +275,7 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
                 if re.search(regex, name) is not None:
                     with scope(item, regex) as subscope:
                         subschema.evaluate(item, subscope)
-                        if subscope.valid:
+                        if subscope.pass_:
                             matched_names |= {name}
                         else:
                             err_names += [name]
@@ -304,10 +304,10 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
         annotation = []
         for name, item in instance.items():
             if name not in evaluated_names:
-                if self.json.evaluate(item, scope).valid:
+                if self.json.evaluate(item, scope).pass_:
                     annotation += [name]
 
-        if scope.valid:
+        if scope.pass_:
             scope.annotate(annotation)
 
 
@@ -332,10 +332,10 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
         annotation = []
         for name, item in instance.items():
             if name not in evaluated_names:
-                if self.json.evaluate(item, scope).valid:
+                if self.json.evaluate(item, scope).pass_:
                     annotation += [name]
 
-        if scope.valid:
+        if scope.pass_:
             scope.annotate(annotation)
 
 
@@ -346,7 +346,7 @@ class PropertyNamesKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_names = []
         for name in instance:
-            if not self.json.evaluate(JSON(name), scope).valid:
+            if not self.json.evaluate(JSON(name), scope).pass_:
                 err_names += [name]
 
         if err_names:
