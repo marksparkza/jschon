@@ -42,7 +42,7 @@ hosts_schema = JSONSchema({
         },
         "required": ["ipaddress", "hostname"]
     }
-}).validate()
+})
 
 # a host record array containing valid IP addresses and hostnames
 valid_host_records = JSON([

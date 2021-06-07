@@ -182,18 +182,9 @@ class JSONSchema(JSON):
                     yield kwclass
                     break
 
-    def validate(self) -> JSONSchema:
-        """Validate the schema against its metaschema.
-        
-        This method returns `self`, so that schema instantiation and validation
-        may be chained.
-
-        :raise JSONSchemaError: if the schema is invalid against its metaschema
-        """
-        if not self.metaschema.evaluate(JSON(self.value)).valid:
-            raise JSONSchemaError(f"The schema is invalid against its metaschema")
-
-        return self
+    def validate(self) -> Scope:
+        """Validate the schema against its metaschema."""
+        return self.metaschema.evaluate(self)
 
     def evaluate(self, instance: JSON, scope: Scope = None) -> Scope:
         """Evaluate a JSON document.

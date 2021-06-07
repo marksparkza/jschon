@@ -187,7 +187,8 @@ class Catalogue:
         core_vocabulary = self.get_vocabulary(core_vocabulary_uri)
         default_vocabularies = [self.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
         metaschema = Metaschema(self, metaschema_doc, core_vocabulary, *default_vocabularies)
-        metaschema.validate()
+        if not metaschema.validate().valid:
+            raise CatalogueError("The metaschema is invalid against itself")
 
     def add_format_validators(self, validators: Mapping[str, FormatValidator]) -> None:
         """Register a collection of format validators.

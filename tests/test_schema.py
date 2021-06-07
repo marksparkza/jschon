@@ -23,7 +23,7 @@ json2 = JSON(example_invalid)
 @pytest.mark.parametrize('example, json1_valid, json2_valid', schema_tests)
 def test_schema_examples(example, json1_valid, json2_valid):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
-    schema.validate()
+    assert schema.validate().valid is True
     assert schema.value == example
     assert schema.type == "boolean" if isinstance(example, bool) else "object"
     assert schema.parent is None
@@ -41,8 +41,7 @@ def test_schema_examples(example, json1_valid, json2_valid):
 ])
 def test_invalid_schema(example):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
-    with pytest.raises(JSONSchemaError):
-        schema.validate()
+    assert schema.validate().valid is False
 
 
 def assert_keyword_order(keyword_list, keyword_pairs):
