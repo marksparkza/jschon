@@ -346,9 +346,8 @@ class PropertyNamesKeyword(Keyword, Applicator):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_names = []
         for name in instance:
-            if not self.json.evaluate(JSON(name), scope).pass_:
+            if not self.json.evaluate(JSON(name, parent=instance, key=name), scope).pass_:
                 err_names += [name]
 
         if err_names:
-            scope.error = None
             scope.fail(f"Property names {err_names} are invalid")
