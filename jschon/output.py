@@ -62,10 +62,10 @@ class OutputFormatter:
                 if not result["annotations"]:
                     del result["annotations"]
             else:
+                result["error"] = node.error
                 result["errors"] = [visit(child) for child in node.iter_children()]
                 if not result["errors"]:
                     del result["errors"]
-                    result["error"] = node.error
 
             return result
 
