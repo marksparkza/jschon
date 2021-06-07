@@ -240,4 +240,5 @@ document. But for custom keyword development, it will be important to understand
 how the :class:`~jschon.jsonschema.Scope` class works - and this will be explained
 in the next guide (to do!).
 
-.. [#] jschon currently supports only the ``'flag'`` and ``'basic'`` output formats.
+.. [#] jschon currently supports the ``'flag'``, ``'basic'`` and ``'verbose'``
+   output formats.
