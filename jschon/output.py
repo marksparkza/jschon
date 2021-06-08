@@ -44,7 +44,33 @@ class OutputFormatter:
 
     @staticmethod
     def detailed(scope: Scope) -> Dict[str, AnyJSONCompatible]:
-        raise NotImplementedError
+        def visit(node: Scope):
+            result = {
+                "instanceLocation": str(node.instpath),
+                "keywordLocation": str(node.path),
+                "absoluteKeywordLocation": str(node.absolute_uri),
+                childkey: [visit(child) for child in node.iter_children()
+                           if child.valid is valid],
+            }
+            if not result[childkey]:
+                del result[childkey]
+                if (msgval := getattr(node, msgkey)) is not None:
+                    result[msgkey] = msgval
+            elif len(result[childkey]) == 1:
+                result = result[childkey][0]
+
+            return result
+
+        valid = scope.valid
+        msgkey = "annotation" if valid else "error"
+        childkey = "annotations" if valid else "errors"
+        return {
+            "valid": valid,
+            "instanceLocation": "",
+            "keywordLocation": "",
+            childkey: [visit(child) for child in scope.iter_children()
+                       if child.valid is valid],
+        }
 
     @staticmethod
     def verbose(scope: Scope) -> Dict[str, AnyJSONCompatible]:

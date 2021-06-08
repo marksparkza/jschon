@@ -448,6 +448,9 @@ class Scope:
         if format == OutputFormat.BASIC:
             return OutputFormatter.basic(self)
 
+        if format == OutputFormat.DETAILED:
+            return OutputFormatter.detailed(self)
+
         if format == OutputFormat.VERBOSE:
             return OutputFormatter.verbose(self)
 

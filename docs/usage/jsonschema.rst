@@ -209,13 +209,15 @@ False
 Alternatively, we can use the :meth:`~jschon.jsonschema.Scope.output` method to
 generate a JSON-compatible dictionary formatted in accordance with one of the
 `output formats <https://json-schema.org/draft/2020-12/json-schema-core.html#output>`_
-described by the JSON Schema core specification [#]_:
+described by the JSON Schema core specification:
 
 >>> hosts_schema.evaluate(valid_host_records).output('flag')
 {'valid': True}
 
 >>> hosts_schema.evaluate(invalid_host_records).output('basic')
 {'valid': False, 'errors': [{'instanceLocation': '', 'keywordLocation': '', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '', 'keywordLocation': '/items', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/0', 'keywordLocation': '/items/properties', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties', 'error': "Properties ['hostname'] are invalid"}, {'instanceLocation': '/0/hostname', 'keywordLocation': '/items/properties/hostname', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/0/hostname', 'keywordLocation': '/items/properties/hostname/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname/format', 'error': 'The instance is invalid against the "hostname" format: \'~localhost\' is not a valid hostname'}, {'instanceLocation': '/1', 'keywordLocation': '/items/properties', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties', 'error': "Properties ['ipaddress'] are invalid"}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf', 'error': 'The instance must be valid against exactly one subschema; it is valid against [] and invalid against [0, 1]'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/0', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/0/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0/format', 'error': 'The instance is invalid against the "ipv4" format: Expected 4 octets in \'10.0.0\''}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/1', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/1', 'error': 'The instance failed validation against the schema'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/1/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/1/format', 'error': 'The instance is invalid against the "ipv6" format: At least 3 parts expected in \'10.0.0\''}]}
+
+jschon also supports the ``'detailed'`` and ``'verbose'`` output formats.
 
 The scope tree
 --------------
@@ -239,6 +241,3 @@ a :class:`~jschon.jsonschema.Scope` tree, to see the result of evaluating a JSON
 document. But for custom keyword development, it will be important to understand
 how the :class:`~jschon.jsonschema.Scope` class works - and this will be explained
 in the next guide (to do!).
-
-.. [#] jschon currently supports the ``'flag'``, ``'basic'`` and ``'verbose'``
-   output formats.
