@@ -20,27 +20,26 @@ class OutputFormatter:
 
     @staticmethod
     def basic(scope: Scope) -> Dict[str, AnyJSONCompatible]:
-        def flatten_results(node: Scope, prop: str):
-            if (prop == 'annotation' and node.valid) or not node.valid:
-                if (propval := getattr(node, prop)) is not None:
+        def visit(node: Scope):
+            if node.valid is valid:
+                if (msgval := getattr(node, msgkey)) is not None:
                     yield {
                         "instanceLocation": str(node.instpath),
                         "keywordLocation": str(node.path),
                         "absoluteKeywordLocation": str(node.absolute_uri),
-                        prop: propval,
+                        msgkey: msgval,
                     }
                 for child in node.iter_children():
-                    yield from flatten_results(child, prop)
+                    yield from visit(child)
 
-        result = {
-            "valid": scope.valid
+        valid = scope.valid
+        msgkey = "annotation" if valid else "error"
+        childkey = "annotations" if valid else "errors"
+
+        return {
+            "valid": valid,
+            childkey: [result for result in visit(scope)],
         }
-        if result["valid"]:
-            result["annotations"] = [annotation for annotation in flatten_results(scope, 'annotation')]
-        else:
-            result["errors"] = [error for error in flatten_results(scope, 'error')]
-
-        return result
 
     @staticmethod
     def detailed(scope: Scope) -> Dict[str, AnyJSONCompatible]:
@@ -64,6 +63,7 @@ class OutputFormatter:
         valid = scope.valid
         msgkey = "annotation" if valid else "error"
         childkey = "annotations" if valid else "errors"
+
         return {
             "valid": valid,
             "instanceLocation": str(scope.instpath),
