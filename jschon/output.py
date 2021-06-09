@@ -66,8 +66,9 @@ class OutputFormatter:
         childkey = "annotations" if valid else "errors"
         return {
             "valid": valid,
-            "instanceLocation": "",
-            "keywordLocation": "",
+            "instanceLocation": str(scope.instpath),
+            "keywordLocation": str(scope.path),
+            "absoluteKeywordLocation": str(scope.absolute_uri),
             childkey: [visit(child) for child in scope.iter_children()
                        if child.valid is valid],
         }
