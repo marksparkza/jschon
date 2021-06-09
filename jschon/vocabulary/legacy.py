@@ -69,7 +69,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
             for index, item in enumerate(instance):
                 self.json.evaluate(item, scope)
 
-            if scope.pass_:
+            if scope.passed:
                 scope.annotate(True)
 
         elif self.json.type == "array":
@@ -79,7 +79,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
                 eval_index = index
                 with scope(item, str(index)) as subscope:
                     self.json[index].evaluate(item, subscope)
-                    if not subscope.pass_:
+                    if not subscope.passed:
                         err_indices += [index]
 
             if err_indices:
@@ -100,7 +100,7 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
                 annotation = True
                 self.json.evaluate(item, scope)
 
-            if scope.pass_:
+            if scope.passed:
                 scope.annotate(annotation)
         else:
             scope.discard()
@@ -135,5 +135,5 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
             annotation = True
             self.json.evaluate(item, scope)
 
-        if scope.pass_:
+        if scope.passed:
             scope.annotate(annotation)

@@ -212,10 +212,10 @@ class JSONSchema(JSON):
                         keyword.evaluate(instance, subscope)
 
             if any(
-                    not child.pass_
+                    not child.passed
                     for child in scope.iter_children(instance)
             ):
-                scope.fail("The instance failed validation against the schema")
+                scope.fail()
 
         return scope
 
@@ -336,6 +336,7 @@ class Scope:
         self.children: Dict[JSONPointer, Dict[str, Scope]] = {}
         self.annotation: AnyJSONCompatible = None
         self.error: Optional[str] = None
+        self._valid = True
         self._assert = True
         self._discard = False
 
@@ -374,10 +375,22 @@ class Scope:
             return None
 
     def annotate(self, value: AnyJSONCompatible) -> None:
+        """Set an annotation on the scope."""
         self.annotation = value
 
-    def fail(self, error: str) -> None:
+    def fail(self, error: str = None) -> None:
+        """Flag the scope as invalid, optionally with an error message."""
+        self._valid = False
         self.error = error
+
+    def pass_(self) -> None:
+        """Flag the scope as valid.
+        
+        A scope is initially valid, so this should ordinarily only need
+        to be called by a keyword when it must reverse a scope failure.
+        """
+        self._valid = True
+        self.error = None
 
     def noassert(self) -> None:
         """Indicate that the scope's validity should not affect its
@@ -394,21 +407,21 @@ class Scope:
 
         :rtype: bool
         """
-        return not self.error
+        return self._valid
 
     @property
-    def pass_(self) -> bool:
+    def passed(self) -> bool:
         """Return the assertion result of the scope.
         
         In the current implementation, this can only ever differ from
         :attr:`valid` for an "if" keyword subscope: its validation result
         may be false (triggering "else") while its assertion result is always
         true. For the root scope (representing the overall document evaluation
-        result), :attr:`valid` will always equal :attr:`pass_`.
+        result), :attr:`valid` will always equal :attr:`passed`.
 
         :rtype: bool
         """
-        return not self._assert or not self.error
+        return self._valid or not self._assert
 
     @property
     def absolute_uri(self) -> Optional[URI]:
@@ -429,7 +442,7 @@ class Scope:
     def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[AnyJSONCompatible]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
-        if not self._discard and not self.error:
+        if self._valid and not self._discard:
             if self.annotation is not None and \
                     (key is None or key == self.key) and \
                     (instance is None or instance.path == self.instpath):

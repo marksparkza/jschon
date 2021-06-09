@@ -204,7 +204,7 @@ class MinContainsKeyword(Keyword):
             if valid and not contains.valid:
                 max_contains = scope.sibling(instance, "maxContains")
                 if not max_contains or max_contains.valid:
-                    contains.error = None
+                    contains.pass_()
 
             if not valid:
                 scope.fail('The array has too few elements matching the '
