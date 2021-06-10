@@ -1,5 +1,19 @@
 # Change log
 
+## v0.6.0 (2021-06-10)
+### Features
+* Detailed and verbose output format options
+### Breaking changes
+* JSONSchema.validate() now returns a Scope result object
+### Bug fixes
+* Fixed the instance location (shown in output) for object keys evaluated by "propertyNames"
+### Miscellaneous
+* Failing schema nodes no longer have error messages, and are excluded from basic output
+* A Scope.passed property indicates a scope's assertion result, while Scope.valid indicates its
+  validation result (these can only differ for an "if" keyword subscope)
+* Improved the API (used by keywords) and internal structure of the Scope class
+* Dropped the Annotation and Error classes
+
 ## v0.5.0 (2021-06-01)
 ### Features
 * An output method on Scope, providing output formatting
