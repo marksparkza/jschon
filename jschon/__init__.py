@@ -15,6 +15,20 @@ __all__ = [
     'JSONSchemaError',
     'URI',
     'URIError',
+    'create_catalogue',
 ]
 
 __version__ = '0.7.0'
+
+
+def create_catalogue(*versions: str, default: bool = False) -> Catalogue:
+    """Create and return a new :class:`~jschon.catalogue.Catalogue` instance,
+    optionally initialized with the metaschema(s) of one or more supported
+    versions of the JSON Schema specification.
+
+    :param versions: any of ``'2019-09'``, ``'2020-12'``
+    :param default: if True, new :class:`~jschon.jsonschema.JSONSchema`
+        instances are by default cached in this catalogue
+    :raise CatalogueError: if a supplied version parameter is not recognized
+    """
+    return Catalogue(*versions, default=default)

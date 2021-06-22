@@ -35,35 +35,16 @@ class Catalogue:
     _default_catalogue: Catalogue = None
 
     @classmethod
-    def create_default_catalogue(cls, *versions: str) -> Catalogue:
-        """Create a default :class:`Catalogue` instance, optionally
-        initialized with the metaschema(s) for one or more supported
-        versions of the JSON Schema specification.
-        
-        This allows instances of :class:`~jschon.jsonschema.JSONSchema`
-        to be created without explicitly passing a `catalogue` to the
-        constructor.
-
-        :param versions: any of ``'2019-09'``, ``'2020-12'``
-        :raise CatalogueError: if a default catalogue already exists
-        """
-        if cls._default_catalogue is not None:
-            raise CatalogueError("A default catalogue already exists")
-
-        cls._default_catalogue = Catalogue(*versions)
-        return cls._default_catalogue
-
-    @classmethod
-    def get_default_catalogue(cls) -> Optional[Catalogue]:
+    def get_default(cls) -> Optional[Catalogue]:
         """Get the default :class:`Catalogue` instance, if there is one."""
         return cls._default_catalogue
 
-    def __init__(self, *versions: str):
-        """Create a new :class:`Catalogue` instance, optionally initialized
-        with the metaschema(s) for one or more supported versions of the JSON
-        Schema specification.
+    def __init__(self, *versions: str, default: bool):
+        """Initialize a :class:`Catalogue` instance.
         
         :param versions: any of ``'2019-09'``, ``'2020-12'``
+        :param default: if True, new :class:`~jschon.jsonschema.JSONSchema`
+            instances are by default cached in this catalogue
         :raise CatalogueError: if a supplied version parameter is not recognized
         """
         self._directories: Dict[URI, PathLike] = {}
@@ -77,6 +58,9 @@ class Catalogue:
 
         for initializer in initializers:
             initializer(self)
+        
+        if default:
+            Catalogue._default_catalogue = self
 
     def add_directory(self, base_uri: URI, base_dir: PathLike) -> None:
         """Register a base URI-to-directory mapping.

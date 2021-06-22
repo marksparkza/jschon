@@ -12,7 +12,7 @@ json_example = {"foo": "bar"}
 
 @pytest.fixture
 def new_catalogue():
-    return Catalogue()
+    return Catalogue(default=False)
 
 
 def test_new_catalogue(new_catalogue):

@@ -1,8 +1,7 @@
-from jschon import Catalogue, JSON, JSONSchema
+from jschon import create_catalogue, JSON, JSONSchema
 
-# create a catalogue, initialized with the JSON Schema 2020-12
-# metaschema and vocabularies
-Catalogue.create_default_catalogue('2020-12')
+# create a catalogue with support for JSON Schema version 2020-12
+create_catalogue('2020-12', default=True)
 
 # define an extensible tree schema
 tree_schema = JSONSchema({

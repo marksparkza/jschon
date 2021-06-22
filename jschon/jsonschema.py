@@ -48,11 +48,10 @@ class JSONSchema(JSON):
         schema-compatible `value`.
 
         :param value: a schema-compatible Python object
-        :param catalogue: the catalogue in which the schema will find its
-            metaschema, and in which it will be cached; if not given, the
-            default :class:`~jschon.catalogue.Catalogue` instance (created
-            with :meth:`~jschon.catalogue.Catalogue.create_default_catalogue`)
-            is used
+        :param catalogue: the catalogue in which the schema is cached;
+            omitting this parameter has the same effect as setting it
+            to the default catalogue, i.e. that created by
+            `jschon.create_catalogue(..., default=True)`
         :param uri: the URI identifying the schema; an ``"$id"`` keyword
             appearing in `value` will override this
         :param metaschema_uri: the URI identifying the schema's metaschema;
@@ -65,7 +64,7 @@ class JSONSchema(JSON):
         from jschon.catalogue import Catalogue
 
         if catalogue is None:
-            if (catalogue := Catalogue.get_default_catalogue()) is None:
+            if (catalogue := Catalogue.get_default()) is None:
                 raise JSONSchemaError("catalogue not given and default catalogue not found")
 
         if uri is not None:
