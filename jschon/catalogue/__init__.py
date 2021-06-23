@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import pathlib
+import uuid
+from contextlib import contextmanager
 from os import PathLike
-from typing import Dict, Mapping, Optional
+from typing import Dict, Mapping, Optional, Hashable, ContextManager
 
 from jschon.catalogue import _2019_09, _2020_12
 from jschon.exceptions import CatalogueError, JSONPointerError, URIError
@@ -50,7 +52,7 @@ class Catalogue:
         self._directories: Dict[URI, PathLike] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
         self._format_validators: Dict[str, FormatValidator] = {}
-        self._schema_cache: Dict[URI, JSONSchema] = {}
+        self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
         try:
             initializers = [self._version_initializers[version] for version in versions]
         except KeyError as e:
@@ -58,7 +60,7 @@ class Catalogue:
 
         for initializer in initializers:
             initializer(self)
-        
+
         if default:
             Catalogue._default_catalogue = self
 
@@ -202,51 +204,82 @@ class Catalogue:
         except KeyError:
             raise CatalogueError(f"Unsupported format attribute '{format_attr}'")
 
-    def add_schema(self, uri: URI, schema: JSONSchema) -> None:
-        """Add a (sub)schema to the cache.
-        
-        Applications should ordinarily not need to call this method. Schemas
-        are cached automatically during construction.
+    def add_schema(
+            self,
+            uri: URI,
+            schema: JSONSchema,
+            *,
+            session: Hashable = 'default',
+    ) -> None:
+        """Add a (sub)schema to a session cache.
 
         :param uri: the URI identifying the (sub)schema
         :param schema: the :class:`~jschon.jsonschema.JSONSchema` instance to cache
+        :param session: a session identifier
         """
-        self._schema_cache[uri] = schema
+        self._schema_cache.setdefault(session, {})
+        self._schema_cache[session][uri] = schema
 
-    def del_schema(self, uri: URI) -> None:
-        """Remove a (sub)schema from the cache.
+    def del_schema(
+            self,
+            uri: URI,
+            *,
+            session: Hashable = 'default',
+    ) -> None:
+        """Remove a (sub)schema from a session cache.
 
         :param uri: the URI identifying the (sub)schema
+        :param session: a session identifier
         """
-        self._schema_cache.pop(uri, None)
+        if session in self._schema_cache:
+            self._schema_cache[session].pop(uri, None)
 
-    def get_schema(self, uri: URI, *, metaschema_uri: URI = None) -> JSONSchema:
-        """Get a (sub)schema identified by `uri` from the cache, or load it
-        from disk if not already cached.
+    def get_schema(
+            self,
+            uri: URI,
+            *,
+            metaschema_uri: URI = None,
+            session: Hashable = 'default',
+    ) -> JSONSchema:
+        """Get a (sub)schema identified by `uri` from the session cache, or
+        load it from disk if not already cached.
 
         :param uri: the URI identifying the (sub)schema
         :param metaschema_uri: passed to the :class:`~jschon.jsonschema.JSONSchema`
             constructor when loading a new instance from disk
+        :param session: a session identifier
         :raise CatalogueError: if a schema cannot be found for `uri`, or if the
             object referenced by `uri` is not a :class:`~jschon.jsonschema.JSONSchema`
         """
-        try:
-            return self._schema_cache[uri]
-        except KeyError:
-            pass
+        try_caches = ('__meta__',) \
+            if session == '__meta__' \
+            else (session, '__meta__')
+
+        for cacheid in try_caches:
+            try:
+                return self._schema_cache[cacheid][uri]
+            except KeyError:
+                pass
 
         schema = None
         base_uri = uri.copy(fragment=False)
 
         if uri.fragment is not None:
-            try:
-                schema = self._schema_cache[base_uri]
-            except KeyError:
-                pass
+            for cacheid in try_caches:
+                try:
+                    schema = self._schema_cache[cacheid][base_uri]
+                except KeyError:
+                    pass
 
         if schema is None:
             doc = self.load_json(base_uri)
-            schema = JSONSchema(doc, catalogue=self, uri=base_uri, metaschema_uri=metaschema_uri)
+            schema = JSONSchema(
+                doc,
+                catalogue=self,
+                session=session,
+                uri=base_uri,
+                metaschema_uri=metaschema_uri,
+            )
 
         if uri.fragment:
             try:
@@ -259,3 +292,16 @@ class Catalogue:
             raise CatalogueError(f"The object referenced by {uri} is not a JSON Schema")
 
         return schema
+
+    @contextmanager
+    def session(self, session: Hashable = None) -> ContextManager[Hashable]:
+        if session is None:
+            session = uuid.uuid4()
+
+        if session in self._schema_cache:
+            raise CatalogueError("session is already in use")
+
+        try:
+            yield session
+        finally:
+            self._schema_cache.pop(session, None)

@@ -100,7 +100,9 @@ class RefKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
-        self.refschema = self.parentschema.catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+        self.refschema = self.parentschema.catalogue.get_schema(
+            uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
+        )
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.refschema.evaluate(instance, scope)
@@ -117,7 +119,7 @@ class AnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for "$anchor" value "{value}"')
 
-        parentschema.catalogue.add_schema(uri, parentschema)
+        parentschema.catalogue.add_schema(uri, parentschema, session=parentschema.session)
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False
@@ -146,7 +148,9 @@ class DynamicRefKeyword(Keyword):
             else:
                 raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
 
-        self.refschema = self.parentschema.catalogue.get_schema(uri, metaschema_uri=self.parentschema.metaschema_uri)
+        self.refschema = self.parentschema.catalogue.get_schema(
+            uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
+        )
         if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.value == self.fragment:
             self.dynamic = True
 
@@ -162,7 +166,9 @@ class DynamicRefKeyword(Keyword):
                     checked_uris |= {base_uri}
                     target_uri = URI(f"#{self.fragment}").resolve(base_uri)
                     try:
-                        found_schema = self.parentschema.catalogue.get_schema(target_uri)
+                        found_schema = self.parentschema.catalogue.get_schema(
+                            target_uri, session=self.parentschema.session
+                        )
                         if (dynamic_anchor := found_schema.get("$dynamicAnchor")) and \
                                 dynamic_anchor.value == self.fragment:
                             refschema = found_schema
@@ -185,7 +191,7 @@ class DynamicAnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for "$dynamicAnchor" value "{value}"')
 
-        parentschema.catalogue.add_schema(uri, parentschema)
+        parentschema.catalogue.add_schema(uri, parentschema, session=parentschema.session)
 
     def can_evaluate(self, instance: JSON) -> bool:
         return False
