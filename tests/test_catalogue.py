@@ -4,7 +4,7 @@ import tempfile
 
 import pytest
 
-from jschon import Catalogue, CatalogueError, URI, JSONPointer, JSONSchema
+from jschon import Catalogue, CatalogueError, URI, JSONPointer, JSONSchema, create_catalogue
 from tests import example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
@@ -130,3 +130,26 @@ def test_get_schema(example_schema_uri, ptr, is_schema, catalogue):
     else:
         with pytest.raises(CatalogueError):
             catalogue.get_schema(uri)
+
+
+def sessioned_schema(uri, const, session):
+    kwargs = {'uri': uri, 'metaschema_uri': metaschema_uri_2020_12}
+    if session is not None:
+        kwargs['session'] = session
+    return JSONSchema({"const": const}, **kwargs)
+
+
+def test_session_independence(catalogue):
+    uri = URI("http://example.com")
+    sessioned_schema(uri, 0, None)  # 'default' session
+    sessioned_schema(uri, 1, 'one')
+    sessioned_schema(uri, 2, 'two')
+    assert catalogue.get_schema(uri)["const"] == 0
+    assert catalogue.get_schema(uri, session='default')["const"] == 0
+    assert catalogue.get_schema(uri, session='one')["const"] == 1
+    assert catalogue.get_schema(uri, session='two')["const"] == 2
+
+
+def test_metaschema_isolation():
+    catalogue = create_catalogue('2020-12')
+    assert catalogue._schema_cache.keys() == {'__meta__'}

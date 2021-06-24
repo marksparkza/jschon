@@ -111,7 +111,13 @@ class Applicator:
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSONSchema]:
         if _is_schema_compatible(value):
-            return JSONSchema(value, parent=parentschema, key=key, catalogue=parentschema.catalogue)
+            return JSONSchema(
+                value,
+                parent=parentschema,
+                key=key,
+                catalogue=parentschema.catalogue,
+                session=parentschema.session,
+            )
 
 
 class ArrayApplicator:
@@ -121,7 +127,14 @@ class ArrayApplicator:
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
         if isinstance(value, Sequence) and all(_is_schema_compatible(v) for v in value):
-            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema, catalogue=parentschema.catalogue)
+            return JSON(
+                value,
+                parent=parentschema,
+                key=key,
+                itemclass=JSONSchema,
+                catalogue=parentschema.catalogue,
+                session=parentschema.session,
+            )
 
 
 class PropertyApplicator:
@@ -134,4 +147,11 @@ class PropertyApplicator:
                 isinstance(k, str) and _is_schema_compatible(v)
                 for k, v in value.items()
         ):
-            return JSON(value, parent=parentschema, key=key, itemclass=JSONSchema, catalogue=parentschema.catalogue)
+            return JSON(
+                value,
+                parent=parentschema,
+                key=key,
+                itemclass=JSONSchema,
+                catalogue=parentschema.catalogue,
+                session=parentschema.session,
+            )
