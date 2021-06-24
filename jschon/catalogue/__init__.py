@@ -268,6 +268,7 @@ class Catalogue:
             for cacheid in try_caches:
                 try:
                     schema = self._schema_cache[cacheid][base_uri]
+                    break
                 except KeyError:
                     pass
 
