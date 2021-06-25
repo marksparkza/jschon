@@ -18,7 +18,7 @@ specification.
 ## Installation
     pip install jschon
 
-## Usage
+## Hello World Example
 _Note: the `create_catalogue` function will be available from v0.7.0. For v0.6.0
 installations, use `Catalogue.create_default_catalogue('2020-12')`._
 
@@ -43,8 +43,13 @@ schema = JSONSchema({
     }
 })
 
-valid_instance = JSON({"greeting": "Hello, World!"})
-invalid_instance = JSON({"greeting": "Hi"})
+valid_instance = JSON({
+    "greeting": "Hello, World!"
+})
+
+invalid_instance = JSON({
+    "greeting": "Hi, World"
+})
 
 pp(schema.evaluate(valid_instance).valid)
 # True
@@ -61,8 +66,19 @@ pp(schema.evaluate(invalid_instance).output('detailed'))
 ```
 
 ## Documentation
-A user guide, API reference and further examples are available at
+Further examples, as well as a user guide and API reference, are available at
 [Read the Docs](https://jschon.readthedocs.io).
+
+## Testing
+The tests can be run with tox. You will need to have the relevant Python
+interpreters installed on your system.
+
+Install jschon in editable mode:
+
+    pip install -e git+https://github.com/marksparkza/jschon.git#egg=jschon[test]
+
+Then, `cd` to the jschon source directory (`pip list` will give you the
+location), and type `tox`.
 
 ## Contributing
 Please see the [guidelines for contributing](CONTRIBUTING.md).
