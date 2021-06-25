@@ -6,10 +6,11 @@
 [![PyPI](https://img.shields.io/pypi/v/jschon)](https://pypi.org/project/jschon)
 [![Documentation Status](https://readthedocs.org/projects/jschon/badge/?version=latest)](https://jschon.readthedocs.io/en/latest/?badge=latest)
 
-Welcome to jschon, a JSON Schema implementation for Python!
+jschon is a pythonic and extensible implementation of the [JSON Schema](https://json-schema.org)
+specification.
 
 ## Features
-* [JSON Schema](https://json-schema.org) versions 2019-09 and 2020-12
+* JSON Schema 2019-09 and 2020-12 vocabulary implementations
 * Support for custom metaschemas, vocabularies and format validators
 * JSON class implementing the JSON data model
 * JSON pointer implementation ([RFC 6901](https://tools.ietf.org/html/rfc6901))
@@ -17,8 +18,50 @@ Welcome to jschon, a JSON Schema implementation for Python!
 ## Installation
     pip install jschon
 
+## Usage
+_Note: the `create_catalogue` function will be available from v0.7.0. For v0.6.0
+installations, use `Catalogue.create_default_catalogue('2020-12')`._
+
+```python
+from jschon import create_catalogue, JSON, JSONSchema
+from pprint import pp
+
+create_catalogue('2020-12', default=True)
+
+schema = JSONSchema({
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/greeting",
+    "type": "object",
+    "properties": {
+        "greeting": {"$ref": "#/$defs/greetingDefinition"}
+    },
+    "$defs": {
+        "greetingDefinition": {
+            "type": "string",
+            "minLength": 10
+        }
+    }
+})
+
+valid_instance = JSON({"greeting": "Hello, World!"})
+invalid_instance = JSON({"greeting": "Hi"})
+
+pp(schema.evaluate(valid_instance).valid)
+# True
+
+pp(schema.evaluate(invalid_instance).output('detailed'))
+# {'valid': False,
+#  'instanceLocation': '',
+#  'keywordLocation': '',
+#  'absoluteKeywordLocation': 'https://example.com/greeting#',
+#  'errors': [{'instanceLocation': '/greeting',
+#              'keywordLocation': '/properties/greeting/$ref/minLength',
+#              'absoluteKeywordLocation': 'https://example.com/greeting#/$defs/greetingDefinition/minLength',
+#              'error': 'The text is too short (minimum 10 characters)'}]}
+```
+
 ## Documentation
-Guidance on usage, and an API reference, are available at
+A user guide, API reference and further examples are available at
 [Read the Docs](https://jschon.readthedocs.io).
 
 ## Contributing
