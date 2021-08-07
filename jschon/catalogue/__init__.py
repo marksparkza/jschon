@@ -22,14 +22,24 @@ __all__ = [
 
 
 class Catalogue:
-    """The catalogue is the largest organizational unit in jschon.
+    """The :class:`Catalogue` acts primarily as a schema cache, enabling schemas
+    and subschemas to be indexed, re-used, and cross-referenced by URI. The cache
+    is transparently partitioned by (arbitrary) session identifiers, which may
+    optionally be provided when creating :class:`~jschon.jsonschema.JSONSchema`
+    objects.
+    
+    A :class:`Catalogue` instance is typically initialized by providing one or
+    more JSON Schema version identifiers. Each such identifier triggers the
+    construction of a corresponding :class:`~jschon.vocabulary.Metaschema` object,
+    which in turn provides any referencing schema with all of the :class:`~jschon.vocabulary.Keyword`
+    class implementations for that version of the JSON Schema vocabulary.
 
-    A :class:`Catalogue` instance is an in-memory schema cache, usually
-    initialized with a metaschema and its associated vocabularies, and
-    optionally with any number of format validators. It may be configured
-    with base URI-to-directory mappings, to enable loading of URI-identified
-    JSON and JSON schema resources from disk.
+    A :class:`Catalogue` instance may additionally be configured with base
+    URI-to-directory mappings, to enable loading of URI-identified JSON and JSON
+    schema resources from disk, and it supports the plugging in of custom
+    ``"format"`` keyword validators.
     """
+
     _version_initializers = {
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,

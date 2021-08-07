@@ -23,8 +23,8 @@ __version__ = '0.7.0'
 
 def create_catalogue(*versions: str, default: bool = False) -> Catalogue:
     """Create and return a new :class:`~jschon.catalogue.Catalogue` instance,
-    optionally initialized with the metaschema(s) of one or more supported
-    versions of the JSON Schema specification.
+    optionally pre-populated with :class:`~jschon.vocabulary.Metaschema` objects
+    supporting one or more versions of the JSON Schema vocabulary.
 
     :param versions: any of ``'2019-09'``, ``'2020-12'``
     :param default: if True, new :class:`~jschon.jsonschema.JSONSchema`
