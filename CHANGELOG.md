@@ -1,5 +1,15 @@
 # Change log
 
+## v0.7.0 (2021-08-08)
+### Features
+* Top-level catalogue initialization function
+* Session id-based schema caching
+### Breaking changes
+* Removed the Catalogue.create_default_catalogue method
+### Documentation
+* Added sections on getting started and running the tests
+* Improved JSONSchema and Catalogue usage docs
+
 ## v0.6.0 (2021-06-10)
 ### Features
 * Detailed and verbose output format options

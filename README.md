@@ -19,9 +19,6 @@ specification.
     pip install jschon
 
 ## Hello World Example
-_Note: the `create_catalogue` function will be available from v0.7.0. For v0.6.0
-installations, use `Catalogue.create_default_catalogue('2020-12')`._
-
 ```python
 from jschon import create_catalogue, JSON, JSONSchema
 from pprint import pp
