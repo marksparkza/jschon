@@ -83,7 +83,7 @@ Format validators
 jschon does not provide built-in support for validating the ``"format"`` keyword.
 By default, any occurrence of ``"format"`` in a schema passes, with its value -
 also known as its *format attribute* - simply collected as an annotation.
-However, we can enable validation of any format attribute - whether a format
+However, we can enable validation for any format attribute - whether a format
 `defined <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
 in the JSON Schema specification, or a custom format - by associating it with
 a *format validator*.

@@ -113,7 +113,7 @@ which validates a numeric JSON value:
 ...     "type": "number"
 ... }'''
 
-We can deserialize this string into a new :class:`~jschon.jsonschema.JSONSchema`
+We can deserialize this JSON string into a new :class:`~jschon.jsonschema.JSONSchema`
 instance using the :meth:`~jschon.json.JSON.loads` class method:
 
 >>> num_schema = JSONSchema.loads(schema_text)

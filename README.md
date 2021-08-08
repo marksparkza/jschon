@@ -70,15 +70,20 @@ Further examples, as well as a user guide and API reference, are available at
 [Read the Docs](https://jschon.readthedocs.io).
 
 ## Testing
-The tests can be run with tox. You will need to have the relevant Python
-interpreters installed on your system.
+jschon is tested using the
+[JSON Schema Test Suite](https://github.com/marksparkza/JSON-Schema-Test-Suite)
+(excluding optional and format tests), along with custom unit tests that make
+use of the [Hypothesis](https://hypothesis.readthedocs.io) testing library.
 
-Install jschon in editable mode:
+To run the tests, install jschon in editable mode, including testing dependencies:
 
     pip install -e git+https://github.com/marksparkza/jschon.git#egg=jschon[test]
 
 Then, `cd` to the jschon source directory (`pip show jschon` will give you the
 location), and type `tox`.
+
+Note that a complete test run requires all of the supported Python versions
+(3.8, 3.9, 3.10) to be installed on your system.
 
 ## Contributing
 Please see the [guidelines for contributing](CONTRIBUTING.md).
