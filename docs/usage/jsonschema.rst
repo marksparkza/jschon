@@ -12,7 +12,7 @@ fully loaded, compiled and ready for use and re-use.
 class, and provides all the capabilities of its ancestor, as described in the
 :doc:`json` guide. Only its JSON type is limited - to one of ``"object"`` and
 ``"boolean"`` - in accordance with the JSON Schema specification. As we might
-expect, :class:`~jschon.jsonschema.JSONSchema` introduces a raft of new properties
+expect, :class:`~jschon.jsonschema.JSONSchema` introduces several new properties
 and behaviours, which we'll explore in the following sections.
 
 Initializing the catalog
@@ -113,7 +113,7 @@ which validates a numeric JSON value:
 ...     "type": "number"
 ... }'''
 
-We can deserialize this JSON string into a new :class:`~jschon.jsonschema.JSONSchema`
+We can deserialize this JSON text into a new :class:`~jschon.jsonschema.JSONSchema`
 instance using the :meth:`~jschon.json.JSON.loads` class method:
 
 >>> num_schema = JSONSchema.loads(schema_text)
@@ -142,9 +142,8 @@ any other :class:`~jschon.jsonschema.JSONSchema` constructor argument:
 
 Retrieving a schema from the catalog
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The final method of :class:`~jschon.jsonschema.JSONSchema` instantiation is
-implicit. We can retrieve a :class:`~jschon.jsonschema.JSONSchema` object by URI
-from the :class:`~jschon.catalog.Catalog`. If the schema is not already
-cached, it is loaded from disk and compiled on-the-fly. This approach requires
-the catalog to be configured with an appropriate base URI-to-directory mapping.
-For more information, see :ref:`catalog-uri-directory-mapping`.
+Finally, a :class:`~jschon.jsonschema.JSONSchema` object may be instantiated implicitly,
+when retrieving it by URI from the :class:`~jschon.catalog.Catalog`. If the schema is not
+already cached, it is loaded from disk and compiled on the fly. This approach requires
+the catalog to be configured with an appropriate base URI-to-directory mapping. For
+more information, see :ref:`catalog-uri-directory-mapping`.

@@ -80,13 +80,13 @@ The ``".json"`` part of the filename may be omitted:
 
 Format validators
 -----------------
-jschon does not provide built-in support for validating the ``"format"`` keyword.
-By default, any occurrence of ``"format"`` in a schema passes, with its value -
-also known as its *format attribute* - simply collected as an annotation.
-However, we can enable validation for any format attribute - whether a format
-`defined <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
-in the JSON Schema specification, or a custom format - by associating it with
-a *format validator*.
+jschon does not provide built-in support for validating any
+`formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
+defined in the JSON Schema specification. By default, any occurrence of the
+``"format"`` keyword in a schema passes, with its value - its *format attribute* -
+simply collected as an annotation. However, we can assign *format validators*
+to any format attributes - including custom format attributes - that we wish
+to validate.
 
 The :meth:`~jschon.catalog.Catalog.add_format_validators` method accepts a
 dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed

@@ -2,7 +2,7 @@ Running the tests
 =================
 jschon has been extensively tested, using the
 `JSON Schema Test Suite <https://github.com/marksparkza/JSON-Schema-Test-Suite>`_
-(excluding *optional* and *format* tests), along with custom unit tests that make
+(excluding optional and format tests), along with custom unit tests that make
 use of the `Hypothesis <https://hypothesis.readthedocs.io/>`_ testing library.
 
 To run the tests, install jschon in editable mode, including testing dependencies:

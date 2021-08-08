@@ -35,9 +35,7 @@ class Catalog:
     class implementations for that version of the JSON Schema vocabulary.
 
     A :class:`Catalog` instance may additionally be configured with base
-    URI-to-directory mappings, to enable loading of URI-identified JSON and JSON
-    schema resources from disk, and it supports the plugging in of custom
-    ``"format"`` keyword validators.
+    URI-to-directory mappings and format attribute validators.
     """
 
     _version_initializers = {
