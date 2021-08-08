@@ -1,5 +1,9 @@
 # Change log
 
+## v0.7.1 (2021-08-08)
+### Breaking changes
+* Renamed Catalogue to Catalog
+
 ## v0.7.0 (2021-08-08)
 ### Features
 * Top-level catalogue initialization function
