@@ -77,7 +77,7 @@ Install jschon in editable mode:
 
     pip install -e git+https://github.com/marksparkza/jschon.git#egg=jschon[test]
 
-Then, `cd` to the jschon source directory (`pip list` will give you the
+Then, `cd` to the jschon source directory (`pip show jschon` will give you the
 location), and type `tox`.
 
 ## Contributing

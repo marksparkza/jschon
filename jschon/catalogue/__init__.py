@@ -251,7 +251,7 @@ class Catalogue:
             metaschema_uri: URI = None,
             session: Hashable = 'default',
     ) -> JSONSchema:
-        """Get a (sub)schema identified by `uri` from the session cache, or
+        """Get a (sub)schema identified by `uri` from a session cache, or
         load it from disk if not already cached.
 
         :param uri: the URI identifying the (sub)schema

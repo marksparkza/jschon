@@ -1,5 +1,5 @@
-JSON Pointer
-============
+JSONPointer
+===========
 The :class:`~jschon.jsonpointer.JSONPointer` class is an implementation of the
 :rfc:`6901` JSON Pointer specification. In jschon, :class:`~jschon.jsonpointer.JSONPointer`
 is commonly used to represent paths to nodes within :class:`~jschon.json.JSON`

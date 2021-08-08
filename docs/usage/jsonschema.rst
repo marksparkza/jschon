@@ -1,48 +1,69 @@
-JSON Schema
-===========
-On this page, we'll take a look at the classes involved in setting up
-JSON schemas and evaluating JSON documents.
+JSONSchema
+==========
+The :class:`~jschon.jsonschema.JSONSchema` class represents a *compiled* JSON
+schema document. Once instantiated, a :class:`~jschon.jsonschema.JSONSchema`
+object contains all the structural information and executable code it requires
+for evaluating :class:`~jschon.json.JSON` instances, and it may be re-used any
+number of times for such evaluation. References to other schemas are resolved
+during construction, guaranteeing further that any referenced schemas are also
+fully loaded, compiled and ready for use and re-use.
 
-We begin by importing the classes that we'll be working with:
+:class:`~jschon.jsonschema.JSONSchema` is a specialization of the :class:`~jschon.json.JSON`
+class, and provides all the capabilities of its ancestor, as described in the
+:doc:`json` guide. Only its JSON type is limited - to one of ``"object"`` and
+``"boolean"`` - in accordance with the JSON Schema specification. As we might
+expect, :class:`~jschon.jsonschema.JSONSchema` introduces a raft of new properties
+and behaviours, which we'll explore in the following sections.
 
->>> from jschon import Catalogue, JSON, JSONSchema, URI
+Initializing the catalogue
+--------------------------
+Before we can begin creating and working with schemas, we must set up a catalogue.
+For the examples shown on the remainder of this page, we'll use the following:
 
-The catalogue
--------------
-The :class:`~jschon.catalogue.Catalogue` may be thought of as the operational
-infrastructure of jschon. It provides a schema cache, enabling schemas and
-subschemas to reference each other. It supports base URI-to-directory mappings,
-so that URI-identified schemas - including the JSON Schema metaschemas - can
-be loaded from disk. And it supports plugging in ``"format"`` keyword validators.
+>>> from jschon import create_catalogue
+>>> create_catalogue('2020-12', default=True)
 
-A :class:`~jschon.catalogue.Catalogue` may be initialized with the metaschema(s)
-for any number of supported versions of the JSON Schema specification. For example,
-to prepare a :class:`~jschon.catalogue.Catalogue` for use with both 2019-09 and
-2020-12 schemas:
+Creating a schema
+-----------------
+There are several different ways to instantiate a :class:`~jschon.jsonschema.JSONSchema`:
 
->>> catalogue = Catalogue('2019-09', '2020-12')
+* Create it directly from a schema-compatible Python object such as a
+  :class:`dict` or a :class:`bool`.
+* Deserialize it from a JSON file or a JSON string using the
+  :meth:`~jschon.json.JSON.loadf` or :meth:`~jschon.json.JSON.loads`
+  class method.
+* Retrieve it from the :class:`~jschon.catalogue.Catalogue` by providing
+  a schema URI, which maps to a schema file on disk.
 
-In the following examples (and in many use cases), a single :class:`~jschon.catalogue.Catalogue`
-instance will suffice. We can create a *default catalogue* - which will then be
-used implicitly by :class:`~jschon.jsonschema.JSONSchema` unless otherwise
-instructed - and here we'll initialize it with just the JSON Schema 2020-12
-metaschema:
+But first, let's import the classes that we'll be using:
 
->>> catalogue = Catalogue.create_default_catalogue('2020-12')
+>>> from jschon import JSONSchema, URI
 
-A basic example
----------------
-First, let's consider a very basic example. Here is a schema that simply ensures
-that a JSON value represents an integer:
+Creating a schema from a Python object
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+A :class:`~jschon.jsonschema.JSONSchema` object can be created directly from
+any schema-compatible Python object, such as a :class:`dict` or a :class:`bool`.
+
+For boolean schemas and empty schemas, it's as simple as:
+
+>>> true_schema = JSONSchema(True)
+>>> false_schema = JSONSchema(False)
+>>> empty_schema = JSONSchema({})
+
+Creating a :class:`~jschon.jsonschema.JSONSchema` object from any non-empty
+:class:`Mapping`, however, requires that we specify a metaschema. Here's a
+very basic example of a schema that simply ensures that a JSON value represents
+an integer:
 
 >>> int_schema = JSONSchema({
 ...     "type": "integer"
 ... }, metaschema_uri=URI("https://json-schema.org/draft/2020-12/schema"))
 
-Every schema requires a metaschema. The referenced :class:`~jschon.vocabulary.Metaschema`
-provides the schema with :class:`~jschon.vocabulary.Keyword` classes for each of
-its keywords, and can be used to validate the schema. The metaschema URI may be
-parameterized, as above, or it may be provided using the ``"$schema"`` keyword:
+The `metaschema_uri` parameter resolves to a :class:`~jschon.vocabulary.Metaschema`
+object, which provides the new :class:`~jschon.jsonschema.JSONSchema` instance
+with :class:`~jschon.vocabulary.Keyword` classes for each of its keywords. The
+metaschema URI may be parameterized, as above, or it may be provided using the
+``"$schema"`` keyword:
 
 >>> int_schema = JSONSchema({
 ...     "type": "integer",
@@ -81,163 +102,49 @@ precedence:
 >>> int_schema.uri
 URI('https://example.com/the-real-id')
 
-Format validators
------------------
-jschon does not provide built-in support for validating any of the
-`formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
-defined in the JSON Schema specification. By default, any occurrence of the
-``"format"`` keyword in a schema passes, with its value simply collected as an
-annotation. However, jschon allows you to plug in validators for *any* format,
-whether one of the JSON Schema-defined formats, or a custom format known only
-to your organization.
+Deserializing a schema from a JSON text document
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Suppose that we have a string containing a JSON schema, such as the following,
+which validates a numeric JSON value:
 
-To support the schema that we'll be creating in the next section, let's set up
-validators for the ``"ipv4"``, ``"ipv6"`` and ``"hostname"`` formats. The
-:meth:`~jschon.catalogue.Catalogue.add_format_validators` method accepts a
-dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed
-by *format attribute*. A :class:`~jschon.vocabulary.format.FormatValidator`
-is simply a callable that accepts a single argument - the value to be validated -
-and raises a :exc:`ValueError` if a supplied value is invalid.
-
-For the IP address formats, we can use the :class:`ipaddress.IPv*Address`
-constructors, available in the Python standard library. For the hostname format,
-we'll define a validation function using a hostname `regex <https://stackoverflow.com/a/106223>`_:
-
->>> import ipaddress
->>> import re
-...
->>> def validate_hostname(value):
-...     hostname_regex = re.compile(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
-...     if not hostname_regex.match(value):
-...         raise ValueError(f"'{value}' is not a valid hostname")
-...
->>> catalogue.add_format_validators({
-...     "ipv4": ipaddress.IPv4Address,
-...     "ipv6": ipaddress.IPv6Address,
-...     "hostname": validate_hostname,
-... })
-
-A realistic example
-------------------------
-The objective for this example will be to ensure that a JSON document consists
-of an array of host records, where each record has an IP address and a hostname.
-Here is a schema that will validate such a document:
-
->>> hosts_schema = JSONSchema({
+>>> schema_text = '''{
 ...     "$schema": "https://json-schema.org/draft/2020-12/schema",
-...     "$id": "https://example.com/hosts-schema",
-...     "type": "array",
-...     "items": {
-...         "type": "object",
-...         "properties": {
-...             "ipaddress": {
-...                 "type": "string",
-...                 "oneOf": [
-...                     {"format": "ipv4"},
-...                     {"format": "ipv6"}
-...                 ]
-...             },
-...             "hostname": {
-...                 "type": "string",
-...                 "format": "hostname"
-...             }
-...         },
-...         "required": ["ipaddress", "hostname"]
-...     }
-... })
+...     "$id": "https://example.com/num-schema",
+...     "type": "number"
+... }'''
 
-For a sanity check, we can validate the schema against its metaschema:
+We can deserialize this string into a new :class:`~jschon.jsonschema.JSONSchema`
+instance using the :meth:`~jschon.json.JSON.loads` class method:
 
->>> hosts_schema.validate().valid
-True
+>>> num_schema = JSONSchema.loads(schema_text)
 
-Before we move on to evaluating JSON documents with this schema, let's take a
-quick peek under the hood.
+If the schema is stored in a JSON text file, we can deserialize directly from
+the file by providing the file path to the :meth:`~jschon.json.JSON.loadf` class
+method:
 
-:class:`~jschon.jsonschema.JSONSchema` is a specialization of the :class:`~jschon.json.JSON`
-class. As with any ``"object"``-type :class:`~jschon.json.JSON` instance, the schema is
-constructed recursively, with nested schemas themselves being :class:`~jschon.jsonschema.JSONSchema`
-instances:
+>>> num_schema = JSONSchema.loadf('/path/to/num-schema.json')
 
->>> hosts_schema["items"]["properties"]["ipaddress"]
-JSONSchema({'type': 'string', 'oneOf': [{'format': 'ipv4'}, {'format': 'ipv6'}]})
+The argument to :meth:`~jschon.json.JSON.loadf` may be a plain :class:`str`, or
+any :class:`PathLike` object; for example:
 
-Descending further down the schema tree, we see that the entire schema may be
-composed of a complex hierarchy of :class:`~jschon.json.JSON` and :class:`~jschon.jsonschema.JSONSchema`
-nodes:
+>>> import pathlib
+>>> schema_path = pathlib.Path(__file__).parent / 'num-schema.json',
+>>> num_schema = JSONSchema.loadf(schema_path)
 
->>> hosts_schema["items"]["properties"]["ipaddress"]["oneOf"]
-JSON([{'format': 'ipv4'}, {'format': 'ipv6'}])
+Both :meth:`~jschon.json.JSON.loads` and :meth:`~jschon.json.JSON.loadf` accept
+keyword arguments that are passed through to the :class:`~jschon.jsonschema.JSONSchema`
+constructor, in case we need to parameterize the metaschema URI, the schema URI, or
+any other :class:`~jschon.jsonschema.JSONSchema` constructor argument:
 
->>> hosts_schema["items"]["properties"]["ipaddress"]["oneOf"][0]
-JSONSchema({'format': 'ipv4'})
+>>> num_schema = JSONSchema.loads(schema_text, metaschema_uri=URI("https://json-schema.org/draft/2020-12/schema"))
 
-Although a schema's structure is fully described by the :class:`~jschon.json.JSON`
-class, its behaviour depends on its :attr:`~jschon.jsonschema.JSONSchema.keywords`.
-At the top level, we have:
+>>> num_schema = JSONSchema.loadf(schema_path, uri=URI("https://example.com/num-schema"))
 
->>> hosts_schema.keywords
-{'$id': <jschon.vocabulary.core.IdKeyword object at 0x7f21fcee8430>, '$schema': <jschon.vocabulary.core.SchemaKeyword object at 0x7f21fcee8d90>, 'type': <jschon.vocabulary.validation.TypeKeyword object at 0x7f21fcee89a0>, 'items': <jschon.vocabulary.applicator.ItemsKeyword object at 0x7f21fcee8f40>}
-
-While in a deeply nested schema:
-
->>> hosts_schema["items"]["properties"]["ipaddress"]["oneOf"][0].keywords
-{'format': <jschon.vocabulary.format.FormatKeyword object at 0x7f21fcec87f0>}
-
-Now, let's create two JSON host record arrays, which we'll evaluate using our
-hosts schema:
-
->>> valid_host_records = JSON([
-...     {"ipaddress": "127.0.0.1", "hostname": "localhost"},
-...     {"ipaddress": "10.0.0.8", "hostname": "server.local"},
-... ])
-
->>> invalid_host_records = JSON([
-...     {"ipaddress": "127.0.0.1", "hostname": "~localhost"},
-...     {"ipaddress": "10.0.0", "hostname": "server.local"},
-... ])
-
-To quickly check the validity of these arrays, we can simply read the
-:attr:`~jschon.jsonschema.Scope.valid` property of the evaluation result:
-
->>> hosts_schema.evaluate(valid_host_records).valid
-True
-
->>> hosts_schema.evaluate(invalid_host_records).valid
-False
-
-Alternatively, we can use the :meth:`~jschon.jsonschema.Scope.output` method to
-generate a JSON-compatible dictionary formatted in accordance with one of the
-`output formats <https://json-schema.org/draft/2020-12/json-schema-core.html#output>`_
-described by the JSON Schema core specification:
-
->>> hosts_schema.evaluate(valid_host_records).output('flag')
-{'valid': True}
-
->>> hosts_schema.evaluate(invalid_host_records).output('basic')
-{'valid': False, 'errors': [{'instanceLocation': '/0', 'keywordLocation': '/items/properties', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties', 'error': "Properties ['hostname'] are invalid"}, {'instanceLocation': '/0/hostname', 'keywordLocation': '/items/properties/hostname/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname/format', 'error': 'The instance is invalid against the "hostname" format: \'~localhost\' is not a valid hostname'}, {'instanceLocation': '/1', 'keywordLocation': '/items/properties', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties', 'error': "Properties ['ipaddress'] are invalid"}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf', 'error': 'The instance must be valid against exactly one subschema; it is valid against [] and invalid against [0, 1]'}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/0/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0/format', 'error': 'The instance is invalid against the "ipv4" format: Expected 4 octets in \'10.0.0\''}, {'instanceLocation': '/1/ipaddress', 'keywordLocation': '/items/properties/ipaddress/oneOf/1/format', 'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/1/format', 'error': 'The instance is invalid against the "ipv6" format: At least 3 parts expected in \'10.0.0\''}]}
-
-jschon also supports the ``'detailed'`` and ``'verbose'`` output formats.
-
-The scope tree
---------------
-So what exactly is this object that the :meth:`~jschon.jsonschema.JSONSchema.evaluate`
-method returns?
-
->>> hosts_schema.evaluate(valid_host_records)
-<jschon.jsonschema.Scope object at 0x7f9ff98d9a00>
-
-:class:`~jschon.jsonschema.Scope` is a tree whose structure reflects the dynamic
-evaluation path that was taken through a schema (and any referenced schemas) while
-evaluating a JSON instance. Each node in the :class:`~jschon.jsonschema.Scope`
-tree holds the results of evaluating an instance node against a schema node - or,
-to be precise, the results of evaluating an instance *subtree* against a schema
-*subtree*. So, the root node of the :class:`~jschon.jsonschema.Scope` tree represents
-the result of evaluating the entire instance against the entire schema.
-
-Applications will typically only need to read the :attr:`~jschon.jsonschema.Scope.valid`
-property or use the :meth:`~jschon.jsonschema.Scope.output` method at the root of
-a :class:`~jschon.jsonschema.Scope` tree, to see the result of evaluating a JSON
-document. But for custom keyword development, it will be important to understand
-how the :class:`~jschon.jsonschema.Scope` class works - and this will be explained
-in the next guide (to do!).
+Retrieving a schema from the catalogue
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The final method of :class:`~jschon.jsonschema.JSONSchema` instantiation is
+implicit. We can retrieve a :class:`~jschon.jsonschema.JSONSchema` object by URI
+from the :class:`~jschon.catalogue.Catalogue`. If the schema is not already
+cached, it is loaded from disk and compiled on-the-fly. This approach requires
+the catalogue to be configured with an appropriate base URI-to-directory mapping.
+For more information, see :ref:`catalogue-uri-directory-mapping`.
