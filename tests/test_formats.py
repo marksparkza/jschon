@@ -10,14 +10,14 @@ from tests.strategies import jsonpointer
 
 
 @pytest.fixture(scope='module', autouse=True)
-def setup_validators(catalogue):
-    catalogue.add_format_validators({
+def setup_validators(catalog):
+    catalog.add_format_validators({
         "ipv4": ipv4_validator,
         "ipv6": ipv6_validator,
         "json-pointer": jsonpointer_validator,
     })
     yield
-    catalogue._format_validators.clear()
+    catalog._format_validators.clear()
 
 
 def ipv4_validator(value):

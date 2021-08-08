@@ -53,8 +53,8 @@ def assert_keyword_order(keyword_list, keyword_pairs):
 
 
 @given(value=interdependent_keywords)
-def test_keyword_dependency_resolution_2019_09(value: list, catalogue):
-    metaschema = catalogue.get_schema(metaschema_uri_2019_09)
+def test_keyword_dependency_resolution_2019_09(value: list, catalog):
+    metaschema = catalog.get_schema(metaschema_uri_2019_09)
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
@@ -95,8 +95,8 @@ def test_keyword_dependency_resolution_2019_09(value: list, catalogue):
 
 
 @given(value=interdependent_keywords)
-def test_keyword_dependency_resolution_2020_12(value: list, catalogue):
-    metaschema = catalogue.get_schema(metaschema_uri_2020_12)
+def test_keyword_dependency_resolution_2020_12(value: list, catalog):
+    metaschema = catalog.get_schema(metaschema_uri_2020_12)
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
@@ -190,10 +190,10 @@ def test_base_uri(ptr: str, base_uri: str):
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f#', True),
     ('#/$defs/C', 'https://example.com/root.json#/$defs/C', False),
 ])
-def test_uri(ptr: str, uri: str, canonical: bool, catalogue):
+def test_uri(ptr: str, uri: str, canonical: bool, catalog):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
-    assert schema == catalogue.get_schema(uri := URI(uri))
+    assert schema == catalog.get_schema(uri := URI(uri))
     if canonical:
         # 'canonical' is as per the JSON Schema spec; however, we skip testing of
         # anchored URIs since we have only one way to calculate a schema's canonical URI

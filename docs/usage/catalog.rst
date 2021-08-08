@@ -1,6 +1,6 @@
-Catalogue
-=========
-The role of the :class:`~jschon.catalogue.Catalogue` in jschon is twofold:
+Catalog
+=======
+The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
 
 #. It acts as a schema cache, enabling schemas and subschemas to be indexed,
    re-used, and cross-referenced by URI - allowing for the definition of multiple,
@@ -12,42 +12,42 @@ The role of the :class:`~jschon.catalogue.Catalogue` in jschon is twofold:
    base URI-to-directory mappings that enable URI-identified schemas to be
    located on disk.
 
-A :class:`~jschon.catalogue.Catalogue` object is typically created once per
-application, using the :func:`~jschon.create_catalogue` function:
+A :class:`~jschon.catalog.Catalog` object is typically created once per
+application, using the :func:`~jschon.create_catalog` function:
 
->>> from jschon import create_catalogue
->>> create_catalogue('2020-12', default=True)
+>>> from jschon import create_catalog
+>>> create_catalog('2020-12', default=True)
 
-:func:`~jschon.create_catalogue` accepts a variable argument list indicating which
+:func:`~jschon.create_catalog` accepts a variable argument list indicating which
 versions of the JSON Schema vocabulary to support. For example, the following
 initialization call will enable our application to work with both 2019-09 and
 2020-12 schemas:
 
->>> create_catalogue('2019-09', '2020-12', default=True)
+>>> create_catalog('2019-09', '2020-12', default=True)
 
 The `default` parameter (which is ``False`` by default) indicates that the created
-:class:`~jschon.catalogue.Catalogue` instance should be used by any new
+:class:`~jschon.catalog.Catalog` instance should be used by any new
 :class:`~jschon.jsonschema.JSONSchema` objects that our application creates.
-To be precise, setting `default` to ``True`` means that the `catalogue` parameter
+To be precise, setting `default` to ``True`` means that the `catalog` parameter
 of the :class:`~jschon.jsonschema.JSONSchema` constructor can be omitted, in which
-case it implicitly takes the value of the default :class:`~jschon.catalogue.Catalogue`
+case it implicitly takes the value of the default :class:`~jschon.catalog.Catalog`
 instance.
 
-If our application requires distinct :class:`~jschon.catalogue.Catalogue`
+If our application requires distinct :class:`~jschon.catalog.Catalog`
 instances with different configurations, then our setup might look something
 like this:
 
->>> cat201909 = create_catalogue('2019-09')
->>> cat202012 = create_catalogue('2020-12')
+>>> cat201909 = create_catalog('2019-09')
+>>> cat202012 = create_catalog('2020-12')
 
 Then, when we create :class:`~jschon.jsonschema.JSONSchema` objects, we must
-pass the relevant :class:`~jschon.catalogue.Catalogue` instance via the
-`catalogue` parameter. For example:
+pass the relevant :class:`~jschon.catalog.Catalog` instance via the
+`catalog` parameter. For example:
 
->>> schema201909 = JSONSchema({"type": "object", ...}, catalogue=cat201909)
->>> schema202012 = JSONSchema.loadf('/path/to/schema.json', catalogue=cat202012)
+>>> schema201909 = JSONSchema({"type": "object", ...}, catalog=cat201909)
+>>> schema202012 = JSONSchema.loadf('/path/to/schema.json', catalog=cat202012)
 
-.. _catalogue-uri-directory-mapping:
+.. _catalog-uri-directory-mapping:
 
 URI-to-directory mappings
 -------------------------
@@ -63,20 +63,20 @@ in a directory hierarchy such as the following::
             bar.json
 
 If our schemas share a common base URI, say ``"https://example.com/schema/"``,
-then we can configure a base URI-to-directory mapping on the catalogue:
+then we can configure a base URI-to-directory mapping on the catalog:
 
->>> from jschon import create_catalogue
->>> catalogue = create_catalogue('2020-12', default=True)
->>> catalogue.add_directory(URI("https://example.com/schema/"), '/path/to/schema/')
+>>> from jschon import create_catalog
+>>> catalog = create_catalog('2020-12', default=True)
+>>> catalog.add_directory(URI("https://example.com/schema/"), '/path/to/schema/')
 
 Now, we can retrieve :class:`~jschon.jsonschema.JSONSchema` objects with the
-:meth:`~jschon.catalogue.Catalogue.get_schema` method:
+:meth:`~jschon.catalog.Catalog.get_schema` method:
 
->>> foo1_schema = catalogue.get_schema(URI("https://example.com/schema/v1/foo.json"))
+>>> foo1_schema = catalog.get_schema(URI("https://example.com/schema/v1/foo.json"))
 
 The ``".json"`` part of the filename may be omitted:
 
->>> bar2_schema = catalogue.get_schema(URI("https://example.com/schema/v2/bar"))
+>>> bar2_schema = catalog.get_schema(URI("https://example.com/schema/v2/bar"))
 
 Format validators
 -----------------
@@ -88,7 +88,7 @@ However, we can enable validation for any format attribute - whether a format
 in the JSON Schema specification, or a custom format - by associating it with
 a *format validator*.
 
-The :meth:`~jschon.catalogue.Catalogue.add_format_validators` method accepts a
+The :meth:`~jschon.catalog.Catalog.add_format_validators` method accepts a
 dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed
 by format attribute. A :class:`~jschon.vocabulary.format.FormatValidator`
 is simply a callable that accepts a single argument - the value to be validated -
@@ -100,19 +100,19 @@ format. For the IP address formats, we can use the :class:`ipaddress.IPv*Address
 classes, available in the Python standard library, since their constructors raise
 a :exc:`ValueError` for an invalid constructor argument. For the hostname format,
 we'll define a validation function using a hostname `regex <https://stackoverflow.com/a/106223>`_.
-Our catalogue setup looks like this:
+Our catalog setup looks like this:
 
 >>> import ipaddress
 >>> import re
->>> from jschon import create_catalogue
+>>> from jschon import create_catalog
 ...
 >>> def validate_hostname(value):
 ...     hostname_regex = re.compile(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
 ...     if not hostname_regex.match(value):
 ...         raise ValueError(f"'{value}' is not a valid hostname")
 ...
->>> catalogue = create_catalogue('2020-12', default=True)
->>> catalogue.add_format_validators({
+>>> catalog = create_catalog('2020-12', default=True)
+>>> catalog.add_format_validators({
 ...     "ipv4": ipaddress.IPv4Address,
 ...     "ipv6": ipaddress.IPv6Address,
 ...     "hostname": validate_hostname,

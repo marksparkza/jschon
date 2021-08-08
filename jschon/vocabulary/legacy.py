@@ -24,7 +24,7 @@ class RecursiveRefKeyword_2019_09(Keyword):
 
     def resolve(self) -> None:
         if (base_uri := self.parentschema.base_uri) is not None:
-            self.refschema = self.parentschema.catalogue.get_schema(
+            self.refschema = self.parentschema.catalog.get_schema(
                 base_uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
             )
         else:

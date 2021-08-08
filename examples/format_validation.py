@@ -1,7 +1,7 @@
 import ipaddress
 import re
 
-from jschon import create_catalogue, JSON, JSONSchema
+from jschon import create_catalog, JSON, JSONSchema
 
 
 # define a "hostname" format validation function
@@ -12,11 +12,11 @@ def validate_hostname(value):
         raise ValueError(f"'{value}' is not a valid hostname")
 
 
-# create a catalogue with support for JSON Schema version 2020-12
-catalogue = create_catalogue('2020-12', default=True)
+# create a catalog with support for JSON Schema version 2020-12
+catalog = create_catalog('2020-12', default=True)
 
 # register IP address and hostname format validators
-catalogue.add_format_validators({
+catalog.add_format_validators({
     "ipv4": ipaddress.IPv4Address,
     "ipv6": ipaddress.IPv6Address,
     "hostname": validate_hostname,

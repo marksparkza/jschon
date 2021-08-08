@@ -1,6 +1,6 @@
 from typing import Callable
 
-from jschon.exceptions import CatalogueError
+from jschon.exceptions import CatalogError
 from jschon.json import AnyJSONCompatible, JSON
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.vocabulary import Keyword
@@ -27,8 +27,8 @@ class FormatKeyword(Keyword):
         super().__init__(parentschema, value)
 
         try:
-            self.validator: FormatValidator = parentschema.catalogue.get_format_validator(value)
-        except CatalogueError:
+            self.validator: FormatValidator = parentschema.catalog.get_format_validator(value)
+        except CatalogError:
             self.validator = None
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:

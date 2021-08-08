@@ -3,8 +3,8 @@ jschon
 The following classes may be imported directly from the top-level
 :mod:`jschon` package:
 
-* :class:`~jschon.catalogue.Catalogue`
-* :class:`~jschon.exceptions.CatalogueError`
+* :class:`~jschon.catalog.Catalog`
+* :class:`~jschon.exceptions.CatalogError`
 * :class:`~jschon.json.JSON`
 * :class:`~jschon.jsonpointer.JSONPointer`
 * :class:`~jschon.exceptions.JSONPointerError`
@@ -13,9 +13,9 @@ The following classes may be imported directly from the top-level
 * :class:`~jschon.uri.URI`
 * :class:`~jschon.exceptions.URIError`
 
-The package additionally defines the catalogue initialization function:
+The package additionally defines the catalog initialization function:
 
-.. autofunction:: jschon.create_catalogue
+.. autofunction:: jschon.create_catalog
 
 .. toctree::
    :caption: Module Reference

@@ -6,8 +6,8 @@ from contextlib import contextmanager
 from os import PathLike
 from typing import Dict, Mapping, Optional, Hashable, ContextManager
 
-from jschon.catalogue import _2019_09, _2020_12
-from jschon.exceptions import CatalogueError, JSONPointerError, URIError
+from jschon.catalog import _2019_09, _2020_12
+from jschon.exceptions import CatalogError, JSONPointerError, URIError
 from jschon.json import AnyJSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
@@ -17,24 +17,24 @@ from jschon.vocabulary import Vocabulary, KeywordClass, Metaschema
 from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
-    'Catalogue',
+    'Catalog',
 ]
 
 
-class Catalogue:
-    """The :class:`Catalogue` acts primarily as a schema cache, enabling schemas
+class Catalog:
+    """The :class:`Catalog` acts primarily as a schema cache, enabling schemas
     and subschemas to be indexed, re-used, and cross-referenced by URI. The cache
     is transparently partitioned by (arbitrary) session identifiers, which may
     optionally be provided when creating :class:`~jschon.jsonschema.JSONSchema`
     objects.
     
-    A :class:`Catalogue` instance is typically initialized by providing one or
+    A :class:`Catalog` instance is typically initialized by providing one or
     more JSON Schema version identifiers. Each such identifier triggers the
     construction of a corresponding :class:`~jschon.vocabulary.Metaschema` object,
     which in turn provides any referencing schema with all of the :class:`~jschon.vocabulary.Keyword`
     class implementations for that version of the JSON Schema vocabulary.
 
-    A :class:`Catalogue` instance may additionally be configured with base
+    A :class:`Catalog` instance may additionally be configured with base
     URI-to-directory mappings, to enable loading of URI-identified JSON and JSON
     schema resources from disk, and it supports the plugging in of custom
     ``"format"`` keyword validators.
@@ -44,20 +44,20 @@ class Catalogue:
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
     }
-    _default_catalogue: Catalogue = None
+    _default_catalog: Catalog = None
 
     @classmethod
-    def get_default(cls) -> Optional[Catalogue]:
-        """Get the default :class:`Catalogue` instance, if there is one."""
-        return cls._default_catalogue
+    def get_default(cls) -> Optional[Catalog]:
+        """Get the default :class:`Catalog` instance, if there is one."""
+        return cls._default_catalog
 
     def __init__(self, *versions: str, default: bool):
-        """Initialize a :class:`Catalogue` instance.
+        """Initialize a :class:`Catalog` instance.
         
         :param versions: any of ``'2019-09'``, ``'2020-12'``
         :param default: if True, new :class:`~jschon.jsonschema.JSONSchema`
-            instances are by default cached in this catalogue
-        :raise CatalogueError: if a supplied version parameter is not recognized
+            instances are by default cached in this catalog
+        :raise CatalogError: if a supplied version parameter is not recognized
         """
         self._directories: Dict[URI, PathLike] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
@@ -66,13 +66,13 @@ class Catalogue:
         try:
             initializers = [self._version_initializers[version] for version in versions]
         except KeyError as e:
-            raise CatalogueError(f'Unrecognized version "{e.args[0]}"')
+            raise CatalogError(f'Unrecognized version "{e.args[0]}"')
 
         for initializer in initializers:
             initializer(self)
 
         if default:
-            Catalogue._default_catalogue = self
+            Catalog._default_catalog = self
 
     def add_directory(self, base_uri: URI, base_dir: PathLike) -> None:
         """Register a base URI-to-directory mapping.
@@ -84,18 +84,18 @@ class Catalogue:
         :param base_uri: a normalized, absolute URI - including scheme, without
             a fragment, and ending with ``'/'``
         :param base_dir: a directory path accessible on the file system
-        :raise CatalogueError: if either `base_uri` or `base_dir` is invalid
+        :raise CatalogError: if either `base_uri` or `base_dir` is invalid
         """
         try:
             base_uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
         except URIError as e:
-            raise CatalogueError from e
+            raise CatalogError from e
 
         if not base_uri.path or not base_uri.path.endswith('/'):
-            raise CatalogueError("base_uri must end with '/'")
+            raise CatalogError("base_uri must end with '/'")
 
         if not pathlib.Path(base_dir).is_dir():
-            raise CatalogueError(f"'{base_dir}' is not a directory")
+            raise CatalogError(f"'{base_dir}' is not a directory")
 
         self._directories[base_uri] = base_dir
 
@@ -108,13 +108,13 @@ class Catalogue:
 
         :param uri: a normalized, absolute URI - including scheme, without
             a fragment
-        :raise CatalogueError: if `uri` is invalid, or if a corresponding
+        :raise CatalogError: if `uri` is invalid, or if a corresponding
             file cannot be found
         """
         try:
             uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
         except URIError as e:
-            raise CatalogueError from e
+            raise CatalogError from e
 
         uristr = str(uri)
         candidates = [
@@ -140,7 +140,7 @@ class Catalogue:
             except FileNotFoundError:
                 pass
 
-        raise CatalogueError(f"File not found for '{uri}'")
+        raise CatalogError(f"File not found for '{uri}'")
 
     def create_vocabulary(self, uri: URI, *kwclasses: KeywordClass) -> None:
         """Create a :class:`~jschon.vocabulary.Vocabulary` object, which
@@ -157,12 +157,12 @@ class Catalogue:
         """Get a :class:`~jschon.vocabulary.Vocabulary` by its `uri`.
 
         :param uri: the URI identifying the vocabulary
-        :raise CatalogueError: if `uri` is not a recognized vocabulary URI
+        :raise CatalogError: if `uri` is not a recognized vocabulary URI
         """
         try:
             return self._vocabularies[uri]
         except KeyError:
-            raise CatalogueError(f"Unrecognized vocabulary URI '{uri}'")
+            raise CatalogError(f"Unrecognized vocabulary URI '{uri}'")
 
     def create_metaschema(
             self,
@@ -184,7 +184,7 @@ class Catalogue:
         default_vocabularies = [self.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
         metaschema = Metaschema(self, metaschema_doc, core_vocabulary, *default_vocabularies)
         if not metaschema.validate().valid:
-            raise CatalogueError("The metaschema is invalid against itself")
+            raise CatalogError("The metaschema is invalid against itself")
 
     def add_format_validators(self, validators: Mapping[str, FormatValidator]) -> None:
         """Register a collection of format validators.
@@ -206,13 +206,13 @@ class Catalogue:
 
         :param format_attr: the format attribute (``"format"`` keyword value)
             to which the validator applies
-        :raise CatalogueError: if no format validator is registered for the
+        :raise CatalogError: if no format validator is registered for the
             given `format_attr`
         """
         try:
             return self._format_validators[format_attr]
         except KeyError:
-            raise CatalogueError(f"Unsupported format attribute '{format_attr}'")
+            raise CatalogError(f"Unsupported format attribute '{format_attr}'")
 
     def add_schema(
             self,
@@ -258,7 +258,7 @@ class Catalogue:
         :param metaschema_uri: passed to the :class:`~jschon.jsonschema.JSONSchema`
             constructor when loading a new instance from disk
         :param session: a session identifier
-        :raise CatalogueError: if a schema cannot be found for `uri`, or if the
+        :raise CatalogError: if a schema cannot be found for `uri`, or if the
             object referenced by `uri` is not a :class:`~jschon.jsonschema.JSONSchema`
         """
         try_caches = ('__meta__',) \
@@ -286,7 +286,7 @@ class Catalogue:
             doc = self.load_json(base_uri)
             schema = JSONSchema(
                 doc,
-                catalogue=self,
+                catalog=self,
                 session=session,
                 uri=base_uri,
                 metaschema_uri=metaschema_uri,
@@ -297,10 +297,10 @@ class Catalogue:
                 ptr = JSONPointer.parse_uri_fragment(uri.fragment)
                 schema = ptr.evaluate(schema)
             except JSONPointerError as e:
-                raise CatalogueError(f"Schema not found for {uri}") from e
+                raise CatalogError(f"Schema not found for {uri}") from e
 
         if not isinstance(schema, JSONSchema):
-            raise CatalogueError(f"The object referenced by {uri} is not a JSON Schema")
+            raise CatalogError(f"The object referenced by {uri} is not a JSON Schema")
 
         return schema
 
@@ -310,7 +310,7 @@ class Catalogue:
             session = uuid.uuid4()
 
         if session in self._schema_cache:
-            raise CatalogueError("session is already in use")
+            raise CatalogError("session is already in use")
 
         try:
             yield session

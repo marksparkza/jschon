@@ -4,22 +4,22 @@ import tempfile
 
 import pytest
 
-from jschon import Catalogue, CatalogueError, URI, JSONPointer, JSONSchema, JSON, create_catalogue
+from jschon import Catalog, CatalogError, URI, JSONPointer, JSONSchema, JSON, create_catalog
 from tests import example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
 
 
 @pytest.fixture
-def new_catalogue():
-    return Catalogue(default=False)
+def new_catalog():
+    return Catalog(default=False)
 
 
-def test_new_catalogue(new_catalogue):
-    assert not new_catalogue._directories
-    assert not new_catalogue._vocabularies
-    assert not new_catalogue._format_validators
-    assert not new_catalogue._schema_cache
+def test_new_catalog(new_catalog):
+    assert not new_catalog._directories
+    assert not new_catalog._vocabularies
+    assert not new_catalog._format_validators
+    assert not new_catalog._schema_cache
 
 
 @pytest.fixture
@@ -42,17 +42,17 @@ def setup_tmpdir():
     'http://example.com/foo/',
     'http://example.com/foo/bar/',
 ])
-def test_add_directory_and_load_json(base_uri, setup_tmpdir, new_catalogue):
+def test_add_directory_and_load_json(base_uri, setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    new_catalogue.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
-    json_doc = new_catalogue.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
+    new_catalog.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
+    json_doc = new_catalog.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
     assert json_doc == json_example
     # incorrect base URI
-    with pytest.raises(CatalogueError):
-        new_catalogue.load_json(URI(f'http://example.net/{subdir_name}/{jsonfile_name}'))
+    with pytest.raises(CatalogError):
+        new_catalog.load_json(URI(f'http://example.net/{subdir_name}/{jsonfile_name}'))
     # incorrect file name
-    with pytest.raises(CatalogueError):
-        new_catalogue.load_json(URI(f'{base_uri}{subdir_name}/baz'))
+    with pytest.raises(CatalogError):
+        new_catalog.load_json(URI(f'{base_uri}{subdir_name}/baz'))
 
 
 @pytest.mark.parametrize('base_uri', [
@@ -62,20 +62,20 @@ def test_add_directory_and_load_json(base_uri, setup_tmpdir, new_catalogue):
     'http://example.com/foo/#bar',  # contains non-empty fragment
     'http://example.com/foo/bar',  # does not end with '/'
 ])
-def test_add_directory_invalid_uri(base_uri, setup_tmpdir, new_catalogue):
+def test_add_directory_invalid_uri(base_uri, setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    with pytest.raises(CatalogueError):
-        new_catalogue.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
+    with pytest.raises(CatalogError):
+        new_catalog.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
 
 
-def test_add_directory_invalid_dir(setup_tmpdir, new_catalogue):
+def test_add_directory_invalid_dir(setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
     # base_dir is a file
-    with pytest.raises(CatalogueError):
-        new_catalogue.add_directory(URI('http://example.com/'), pathlib.Path(tmpdir_path) / subdir_name / jsonfile_name)
+    with pytest.raises(CatalogError):
+        new_catalog.add_directory(URI('http://example.com/'), pathlib.Path(tmpdir_path) / subdir_name / jsonfile_name)
     # base_dir does not exist
-    with pytest.raises(CatalogueError):
-        new_catalogue.add_directory(URI('http://example.com/'), pathlib.Path(tmpdir_path) / 'foo')
+    with pytest.raises(CatalogError):
+        new_catalog.add_directory(URI('http://example.com/'), pathlib.Path(tmpdir_path) / 'foo')
 
 
 @pytest.mark.parametrize('uri', [
@@ -84,9 +84,9 @@ def test_add_directory_invalid_dir(setup_tmpdir, new_catalogue):
     'http://example.com/foo/file.json#',  # contains empty fragment
     'http://example.com/foo/file.json#bar',  # contains non-empty fragment
 ])
-def test_load_json_invalid_uri(uri, new_catalogue):
-    with pytest.raises(CatalogueError):
-        new_catalogue.load_json(URI(uri))
+def test_load_json_invalid_uri(uri, new_catalog):
+    with pytest.raises(CatalogError):
+        new_catalog.load_json(URI(uri))
 
 
 @pytest.mark.parametrize('uri, is_known', [
@@ -99,13 +99,13 @@ def test_load_json_invalid_uri(uri, new_catalogue):
     ("https://json-schema.org/draft/2020-12/meta/format-assertion", False),
     ("https://json-schema.org/draft/2020-12/vocab/content", True),
 ])
-def test_get_vocabulary(uri, is_known, catalogue):
+def test_get_vocabulary(uri, is_known, catalog):
     if is_known:
-        vocabulary = catalogue.get_vocabulary(URI(uri))
+        vocabulary = catalog.get_vocabulary(URI(uri))
         assert vocabulary.uri == uri
     else:
-        with pytest.raises(CatalogueError):
-            catalogue.get_vocabulary(URI(uri))
+        with pytest.raises(CatalogError):
+            catalog.get_vocabulary(URI(uri))
 
 
 @pytest.fixture
@@ -122,14 +122,14 @@ def example_schema_uri():
     ("/then", True),
     ("/else", True),
 ])
-def test_get_schema(example_schema_uri, ptr, is_schema, catalogue):
+def test_get_schema(example_schema_uri, ptr, is_schema, catalog):
     uri = example_schema_uri.copy(fragment=ptr)
     if is_schema:
-        subschema = catalogue.get_schema(uri)
+        subschema = catalog.get_schema(uri)
         assert JSONPointer(ptr).evaluate(example_schema) == subschema
     else:
-        with pytest.raises(CatalogueError):
-            catalogue.get_schema(uri)
+        with pytest.raises(CatalogError):
+            catalog.get_schema(uri)
 
 
 def sessioned_schema(uri, schema, session):
@@ -139,20 +139,20 @@ def sessioned_schema(uri, schema, session):
     return JSONSchema(schema, **kwargs)
 
 
-def test_session_independence(catalogue):
+def test_session_independence(catalog):
     uri = URI("http://example.com")
     sessioned_schema(uri, {"const": 0}, None)  # 'default' session
     sessioned_schema(uri, {"const": 1}, 'one')
     sessioned_schema(uri, {"const": 2}, 'two')
-    assert catalogue.get_schema(uri)["const"] == 0
-    assert catalogue.get_schema(uri, session='default')["const"] == 0
-    assert catalogue.get_schema(uri, session='one')["const"] == 1
-    assert catalogue.get_schema(uri, session='two')["const"] == 2
+    assert catalog.get_schema(uri)["const"] == 0
+    assert catalog.get_schema(uri, session='default')["const"] == 0
+    assert catalog.get_schema(uri, session='one')["const"] == 1
+    assert catalog.get_schema(uri, session='two')["const"] == 2
 
 
 def test_metaschema_isolation():
-    new_catalogue = create_catalogue('2019-09', '2020-12')
-    assert new_catalogue._schema_cache.keys() == {'__meta__'}
+    new_catalog = create_catalog('2019-09', '2020-12')
+    assert new_catalog._schema_cache.keys() == {'__meta__'}
 
     # mask the metaschema with a boolean false schema, in the fubar session
     sessioned_schema(metaschema_uri_2020_12, False, 'fubar')

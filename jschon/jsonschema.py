@@ -22,7 +22,7 @@ from jschon.uri import URI
 from jschon.utils import tuplify
 
 if TYPE_CHECKING:
-    from jschon.catalogue import Catalogue
+    from jschon.catalog import Catalog
     from jschon.vocabulary import Keyword, KeywordClass, Metaschema
 
 __all__ = [
@@ -39,7 +39,7 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, AnyJSONCompatible]],
             *,
-            catalogue: Catalogue = None,
+            catalog: Catalog = None,
             session: Hashable = 'default',
             uri: URI = None,
             metaschema_uri: URI = None,
@@ -50,10 +50,10 @@ class JSONSchema(JSON):
         schema-compatible `value`.
 
         :param value: a schema-compatible Python object
-        :param catalogue: the catalogue in which the schema is cached;
+        :param catalog: the catalog in which the schema is cached;
             omitting this parameter has the same effect as setting it
-            to the default catalogue, i.e. that created by
-            `jschon.create_catalogue(..., default=True)`
+            to the default catalog, i.e. that created by
+            `jschon.create_catalog(..., default=True)`
         :param session: a session identifier, identifying which session
             cache to put the schema in
         :param uri: the URI identifying the schema; an ``"$id"`` keyword
@@ -65,17 +65,17 @@ class JSONSchema(JSON):
         :param key: the index of the schema within its parent; used internally
             when creating a subschema
         """
-        from jschon.catalogue import Catalogue
+        from jschon.catalog import Catalog
 
-        if catalogue is None:
-            if (catalogue := Catalogue.get_default()) is None:
-                raise JSONSchemaError("catalogue not given and default catalogue not found")
+        if catalog is None:
+            if (catalog := Catalog.get_default()) is None:
+                raise JSONSchemaError("catalog not given and default catalog not found")
 
         if uri is not None:
-            catalogue.add_schema(uri, self, session=session)
+            catalog.add_schema(uri, self, session=session)
 
-        self.catalogue: Catalogue = catalogue
-        """The catalogue in which the schema is cached."""
+        self.catalog: Catalog = catalog
+        """The catalog in which the schema is cached."""
 
         self.session: Hashable = session
         """A session identifier, identifying which session
@@ -247,7 +247,7 @@ class JSONSchema(JSON):
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
         if not isinstance(
-                metaschema := self.catalogue.get_schema(uri, session='__meta__'),
+                metaschema := self.catalog.get_schema(uri, session='__meta__'),
                 Metaschema,
         ):
             raise JSONSchemaError(f"The schema referenced by {uri} is not a metachema")
@@ -286,7 +286,7 @@ class JSONSchema(JSON):
     def uri(self) -> Optional[URI]:
         """The :class:`~jschon.uri.URI` identifying the schema.
 
-        Used as the key for caching the schema in the catalogue.
+        Used as the key for caching the schema in the catalog.
         """
         return self._uri
 
@@ -294,12 +294,12 @@ class JSONSchema(JSON):
     def uri(self, value: Optional[URI]) -> None:
         if self._uri != value:
             if self._uri is not None:
-                self.catalogue.del_schema(self._uri, session=self.session)
+                self.catalog.del_schema(self._uri, session=self.session)
 
             self._uri = value
 
             if self._uri is not None:
-                self.catalogue.add_schema(self._uri, self, session=self.session)
+                self.catalog.add_schema(self._uri, self, session=self.session)
 
     @property
     def canonical_uri(self) -> Optional[URI]:

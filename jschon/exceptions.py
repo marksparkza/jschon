@@ -1,4 +1,4 @@
-class CatalogueError(Exception):
+class CatalogError(Exception):
     pass
 
 

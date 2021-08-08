@@ -1,13 +1,13 @@
-from .catalogue import Catalogue
-from .exceptions import CatalogueError, JSONSchemaError, JSONPointerError, URIError
+from .catalog import Catalog
+from .exceptions import CatalogError, JSONSchemaError, JSONPointerError, URIError
 from .json import JSON
 from .jsonpointer import JSONPointer
 from .jsonschema import JSONSchema
 from .uri import URI
 
 __all__ = [
-    'Catalogue',
-    'CatalogueError',
+    'Catalog',
+    'CatalogError',
     'JSON',
     'JSONPointer',
     'JSONPointerError',
@@ -15,20 +15,20 @@ __all__ = [
     'JSONSchemaError',
     'URI',
     'URIError',
-    'create_catalogue',
+    'create_catalog',
 ]
 
 __version__ = '0.7.1'
 
 
-def create_catalogue(*versions: str, default: bool = False) -> Catalogue:
-    """Create and return a new :class:`~jschon.catalogue.Catalogue` instance,
+def create_catalog(*versions: str, default: bool = False) -> Catalog:
+    """Create and return a new :class:`~jschon.catalog.Catalog` instance,
     optionally pre-populated with :class:`~jschon.vocabulary.Metaschema` objects
     supporting one or more versions of the JSON Schema vocabulary.
 
     :param versions: any of ``'2019-09'``, ``'2020-12'``
     :param default: if True, new :class:`~jschon.jsonschema.JSONSchema`
-        instances are by default cached in this catalogue
-    :raise CatalogueError: if a supplied version parameter is not recognized
+        instances are by default cached in this catalog
+    :raise CatalogError: if a supplied version parameter is not recognized
     """
-    return Catalogue(*versions, default=default)
+    return Catalog(*versions, default=default)

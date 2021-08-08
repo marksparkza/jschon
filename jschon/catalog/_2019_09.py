@@ -9,13 +9,13 @@ from jschon.vocabulary.legacy import *
 from jschon.vocabulary.validation import *
 
 
-def initialize(catalogue):
-    catalogue.add_directory(
+def initialize(catalog):
+    catalog.add_directory(
         URI('https://json-schema.org/draft/2019-09/'),
         pathlib.Path(__file__).parent / 'json-schema-spec-2019-09',
     )
 
-    catalogue.create_vocabulary(
+    catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
@@ -28,7 +28,7 @@ def initialize(catalogue):
         CommentKeyword,
     )
 
-    catalogue.create_vocabulary(
+    catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
@@ -49,7 +49,7 @@ def initialize(catalogue):
         PropertyNamesKeyword,
     )
 
-    catalogue.create_vocabulary(
+    catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
@@ -73,12 +73,12 @@ def initialize(catalogue):
         DependentRequiredKeyword,
     )
 
-    catalogue.create_vocabulary(
+    catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/format"),
         FormatKeyword,
     )
 
-    catalogue.create_vocabulary(
+    catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
@@ -89,14 +89,14 @@ def initialize(catalogue):
         ExamplesKeyword,
     )
 
-    catalogue.create_vocabulary(
+    catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2019-09/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
         ContentSchemaKeyword,
     )
 
-    catalogue.create_metaschema(
+    catalog.create_metaschema(
         URI("https://json-schema.org/draft/2019-09/schema"),
         URI("https://json-schema.org/draft/2019-09/vocab/core"),
         URI("https://json-schema.org/draft/2019-09/vocab/applicator"),

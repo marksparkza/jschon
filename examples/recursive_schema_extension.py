@@ -1,7 +1,7 @@
-from jschon import create_catalogue, JSON, JSONSchema
+from jschon import create_catalog, JSON, JSONSchema
 
-# create a catalogue with support for JSON Schema version 2020-12
-create_catalogue('2020-12', default=True)
+# create a catalog with support for JSON Schema version 2020-12
+create_catalog('2020-12', default=True)
 
 # define an extensible tree schema
 tree_schema = JSONSchema({

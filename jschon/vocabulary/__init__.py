@@ -8,7 +8,7 @@ from jschon.uri import URI
 from jschon.utils import tuplify
 
 if TYPE_CHECKING:
-    from jschon.catalogue import Catalogue
+    from jschon.catalog import Catalog
 
 __all__ = [
     'Metaschema',
@@ -32,7 +32,7 @@ class Metaschema(JSONSchema):
 
     def __init__(
             self,
-            catalogue: Catalogue,
+            catalog: Catalog,
             value: Mapping[str, AnyJSONCompatible],
             core_vocabulary: Vocabulary,
             *default_vocabularies: Vocabulary,
@@ -40,7 +40,7 @@ class Metaschema(JSONSchema):
         self.core_vocabulary: Vocabulary = core_vocabulary
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
         self.kwclasses: Dict[str, KeywordClass] = {}
-        super().__init__(value, catalogue=catalogue, session='__meta__')
+        super().__init__(value, catalog=catalog, session='__meta__')
 
     def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
         super()._bootstrap(value)
@@ -115,7 +115,7 @@ class Applicator:
                 value,
                 parent=parentschema,
                 key=key,
-                catalogue=parentschema.catalogue,
+                catalog=parentschema.catalog,
                 session=parentschema.session,
             )
 
@@ -132,7 +132,7 @@ class ArrayApplicator:
                 parent=parentschema,
                 key=key,
                 itemclass=JSONSchema,
-                catalogue=parentschema.catalogue,
+                catalog=parentschema.catalog,
                 session=parentschema.session,
             )
 
@@ -152,6 +152,6 @@ class PropertyApplicator:
                 parent=parentschema,
                 key=key,
                 itemclass=JSONSchema,
-                catalogue=parentschema.catalogue,
+                catalog=parentschema.catalog,
                 session=parentschema.session,
             )

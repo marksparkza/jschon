@@ -1,7 +1,7 @@
-from jschon import create_catalogue, JSON, JSONSchema
+from jschon import create_catalog, JSON, JSONSchema
 from pprint import pp
 
-create_catalogue('2020-12', default=True)
+create_catalog('2020-12', default=True)
 
 schema = JSONSchema({
     "$schema": "https://json-schema.org/draft/2020-12/schema",

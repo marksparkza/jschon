@@ -15,13 +15,13 @@ class, and provides all the capabilities of its ancestor, as described in the
 expect, :class:`~jschon.jsonschema.JSONSchema` introduces a raft of new properties
 and behaviours, which we'll explore in the following sections.
 
-Initializing the catalogue
---------------------------
-Before we can begin creating and working with schemas, we must set up a catalogue.
+Initializing the catalog
+------------------------
+Before we can begin creating and working with schemas, we must set up a catalog.
 For the examples shown on the remainder of this page, we'll use the following:
 
->>> from jschon import create_catalogue
->>> create_catalogue('2020-12', default=True)
+>>> from jschon import create_catalog
+>>> create_catalog('2020-12', default=True)
 
 Creating a schema
 -----------------
@@ -32,7 +32,7 @@ There are several different ways to instantiate a :class:`~jschon.jsonschema.JSO
 * Deserialize it from a JSON file or a JSON string using the
   :meth:`~jschon.json.JSON.loadf` or :meth:`~jschon.json.JSON.loads`
   class method.
-* Retrieve it from the :class:`~jschon.catalogue.Catalogue` by providing
+* Retrieve it from the :class:`~jschon.catalog.Catalog` by providing
   a schema URI, which maps to a schema file on disk.
 
 But first, let's import the classes that we'll be using:
@@ -85,10 +85,10 @@ An identifying URI is automatically generated for every root schema:
 >>> int_schema.uri
 URI('urn:uuid:f3adf4a3-c03d-4f30-9072-5bc7b8e9f078')
 
-The schema URI is used as the key for caching the schema in the catalogue, and
+The schema URI is used as the key for caching the schema in the catalog, and
 is required for resolving references to itself and to any subschemas it may
 contain. If the schema is intended to be referenced from other schemas in the
-catalogue, then a URI should be provided explicitly. This may either be passed via
+catalog, then a URI should be provided explicitly. This may either be passed via
 the `uri` parameter to the constructor, or declared in the schema document itself
 using the ``"$id"`` keyword. If both are provided, the ``"$id"`` keyword takes
 precedence:
@@ -140,11 +140,11 @@ any other :class:`~jschon.jsonschema.JSONSchema` constructor argument:
 
 >>> num_schema = JSONSchema.loadf(schema_path, uri=URI("https://example.com/num-schema"))
 
-Retrieving a schema from the catalogue
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Retrieving a schema from the catalog
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The final method of :class:`~jschon.jsonschema.JSONSchema` instantiation is
 implicit. We can retrieve a :class:`~jschon.jsonschema.JSONSchema` object by URI
-from the :class:`~jschon.catalogue.Catalogue`. If the schema is not already
+from the :class:`~jschon.catalog.Catalog`. If the schema is not already
 cached, it is loaded from disk and compiled on-the-fly. This approach requires
-the catalogue to be configured with an appropriate base URI-to-directory mapping.
-For more information, see :ref:`catalogue-uri-directory-mapping`.
+the catalog to be configured with an appropriate base URI-to-directory mapping.
+For more information, see :ref:`catalog-uri-directory-mapping`.

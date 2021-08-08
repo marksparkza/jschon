@@ -2,7 +2,7 @@ Classes
 =======
 .. toctree::
 
-   catalogue
+   catalog
    json
    jsonpointer
    jsonschema
