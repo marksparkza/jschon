@@ -18,7 +18,7 @@ __all__ = [
     'create_catalogue',
 ]
 
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 
 
 def create_catalogue(*versions: str, default: bool = False) -> Catalogue:
