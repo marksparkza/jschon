@@ -1,0 +1,13 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/org-schema",
+    "type": "object",
+    "properties": {
+        "people": {
+            "type": "array",
+            "items": {
+                "$ref": "https://example.com/person-schema"
+            }
+        }
+    }
+}

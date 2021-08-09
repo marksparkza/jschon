@@ -78,6 +78,9 @@ The ``".json"`` part of the filename may be omitted:
 
 >>> bar2_schema = catalog.get_schema(URI("https://example.com/schema/v2/bar"))
 
+Further examples demonstrating the usage of URI-to-directory mappings are
+given in :doc:`../examples/file_based_schemas`.
+
 Format validators
 -----------------
 jschon does not provide built-in support for validating any
