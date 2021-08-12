@@ -23,7 +23,7 @@ The following example demonstrates several key steps involved in a typical
 jschon use case:
 
 * Set up a `Catalog`.
-* Create a compiled `JSONSchema` object.
+* Create a compiled `JSONSchema`.
 * `validate()` the schema against its `Metaschema`.
 * Create a `JSON` instance.
 * `evaluate()` the instance.
