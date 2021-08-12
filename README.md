@@ -86,7 +86,7 @@ pprint.pp(invalid_result.output('detailed'))
 
 The script produces the following output:
 
-```py
+```
 Schema validity check: True
 Valid JSON result: True
 Valid JSON basic output:
