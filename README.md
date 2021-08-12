@@ -18,13 +18,26 @@ specification.
 ## Installation
     pip install jschon
 
-## Hello World Example
-```python
-from jschon import create_catalog, JSON, JSONSchema
-from pprint import pp
+## Usage
+The following example demonstrates several key steps involved in a typical
+jschon use case:
 
+* Set up a `Catalog`.
+* Create a compiled `JSONSchema` object.
+* `validate()` the schema against its `Metaschema`.
+* Create a `JSON` instance.
+* `evaluate()` the instance.
+* Generate `output()` from the evaluation result.
+
+```py
+import pprint
+
+from jschon import create_catalog, JSON, JSONSchema
+
+# initialize the catalog, with JSON Schema 2020-12 vocabulary support
 create_catalog('2020-12', default=True)
 
+# create a schema to validate a JSON greeting object
 schema = JSONSchema({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://example.com/greeting",
@@ -35,31 +48,64 @@ schema = JSONSchema({
     "$defs": {
         "greetingDefinition": {
             "type": "string",
-            "minLength": 10
+            "pattern": "^Hello, .+!$"
         }
     }
 })
 
-valid_instance = JSON({
+# validate the schema against its metaschema
+schema_validity = schema.validate()
+print(f'Schema validity check: {schema_validity.valid}')
+
+# declare a valid JSON instance
+valid_json = JSON({
     "greeting": "Hello, World!"
 })
 
-invalid_instance = JSON({
+# declare an invalid JSON instance
+invalid_json = JSON({
     "greeting": "Hi, World"
 })
 
-pp(schema.evaluate(valid_instance).valid)
-# True
+# evaluate the valid instance
+valid_result = schema.evaluate(valid_json)
 
-pp(schema.evaluate(invalid_instance).output('detailed'))
-# {'valid': False,
-#  'instanceLocation': '',
-#  'keywordLocation': '',
-#  'absoluteKeywordLocation': 'https://example.com/greeting#',
-#  'errors': [{'instanceLocation': '/greeting',
-#              'keywordLocation': '/properties/greeting/$ref/minLength',
-#              'absoluteKeywordLocation': 'https://example.com/greeting#/$defs/greetingDefinition/minLength',
-#              'error': 'The text is too short (minimum 10 characters)'}]}
+# evaluate the invalid instance
+invalid_result = schema.evaluate(invalid_json)
+
+# print output for the valid case
+print(f'Valid JSON result: {valid_result.valid}')
+print('Valid JSON basic output:')
+pprint.pp(valid_result.output('basic'))
+
+# print output for the invalid case
+print(f'Invalid JSON result: {invalid_result.valid}')
+print('Invalid JSON detailed output:')
+pprint.pp(invalid_result.output('detailed'))
+```
+
+The script produces the following output:
+
+```py
+Schema validity check: True
+Valid JSON result: True
+Valid JSON basic output:
+{'valid': True,
+ 'annotations': [{'instanceLocation': '',
+                  'keywordLocation': '/properties',
+                  'absoluteKeywordLocation': 'https://example.com/greeting#/properties',
+                  'annotation': ['greeting']}]}
+Invalid JSON result: False
+Invalid JSON detailed output:
+{'valid': False,
+ 'instanceLocation': '',
+ 'keywordLocation': '',
+ 'absoluteKeywordLocation': 'https://example.com/greeting#',
+ 'errors': [{'instanceLocation': '/greeting',
+             'keywordLocation': '/properties/greeting/$ref/pattern',
+             'absoluteKeywordLocation': 'https://example.com/greeting#/$defs/greetingDefinition/pattern',
+             'error': 'The text must match the regular expression "^Hello, '
+                      '.+!$"'}]}
 ```
 
 ## Documentation
