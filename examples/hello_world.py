@@ -32,7 +32,7 @@ valid_json = JSON({
 
 # declare an invalid JSON instance
 invalid_json = JSON({
-    "greeting": "Hi, World"
+    "greeting": "Hi, World."
 })
 
 # evaluate the valid instance

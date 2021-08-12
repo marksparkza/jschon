@@ -64,7 +64,7 @@ valid_json = JSON({
 
 # declare an invalid JSON instance
 invalid_json = JSON({
-    "greeting": "Hi, World"
+    "greeting": "Hi, World."
 })
 
 # evaluate the valid instance
@@ -104,8 +104,7 @@ Invalid JSON detailed output:
  'errors': [{'instanceLocation': '/greeting',
              'keywordLocation': '/properties/greeting/$ref/pattern',
              'absoluteKeywordLocation': 'https://example.com/greeting#/$defs/greetingDefinition/pattern',
-             'error': 'The text must match the regular expression "^Hello, '
-                      '.+!$"'}]}
+             'error': 'The text must match the regular expression "^Hello, .+!$"'}]}
 ```
 
 ## Documentation
