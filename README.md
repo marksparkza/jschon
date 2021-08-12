@@ -108,10 +108,17 @@ Invalid JSON detailed output:
 ```
 
 ## Documentation
-Further examples, as well as a user guide and API reference, are available at
-[Read the Docs](https://jschon.readthedocs.io).
+Further examples of usage, and an API reference, are available at
+[Read the Docs](https://jschon.readthedocs.io/en/latest/).
 
-## Testing
+## Additional resources
+* [Understanding JSON Schema](https://json-schema.org/understanding-json-schema/)
+* JSON Schema 2020-12 [core](https://json-schema.org/draft/2020-12/json-schema-core.html)
+  and [validation](https://json-schema.org/draft/2020-12/json-schema-validation.html)
+  specifications
+* [jschon.dev](https://jschon.dev/) - an online validator powered by jschon
+
+## Running the tests
 jschon is tested using the
 [JSON Schema Test Suite](https://github.com/marksparkza/JSON-Schema-Test-Suite)
 (excluding optional and format tests), along with custom unit tests that make
