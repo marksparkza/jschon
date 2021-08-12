@@ -1,0 +1,19 @@
+Schema validity check: True
+Valid JSON result: True
+Valid JSON basic output:
+{'valid': True,
+ 'annotations': [{'instanceLocation': '',
+                  'keywordLocation': '/properties',
+                  'absoluteKeywordLocation': 'https://example.com/greeting#/properties',
+                  'annotation': ['greeting']}]}
+Invalid JSON result: False
+Invalid JSON detailed output:
+{'valid': False,
+ 'instanceLocation': '',
+ 'keywordLocation': '',
+ 'absoluteKeywordLocation': 'https://example.com/greeting#',
+ 'errors': [{'instanceLocation': '/greeting',
+             'keywordLocation': '/properties/greeting/$ref/pattern',
+             'absoluteKeywordLocation': 'https://example.com/greeting#/$defs/greetingDefinition/pattern',
+             'error': 'The text must match the regular expression "^Hello, '
+                      '.+!$"'}]}

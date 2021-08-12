@@ -1,8 +1,11 @@
-from jschon import create_catalog, JSON, JSONSchema
-from pprint import pp
+import pprint
 
+from jschon import create_catalog, JSON, JSONSchema
+
+# initialize the catalog, with JSON Schema 2020-12 vocabulary support
 create_catalog('2020-12', default=True)
 
+# create a schema to validate a JSON greeting object
 schema = JSONSchema({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://example.com/greeting",
@@ -13,28 +16,37 @@ schema = JSONSchema({
     "$defs": {
         "greetingDefinition": {
             "type": "string",
-            "minLength": 10
+            "pattern": "^Hello, .+!$"
         }
     }
 })
 
-valid_instance = JSON({
+# validate the schema against its metaschema
+schema_validity = schema.validate()
+print(f'Schema validity check: {schema_validity.valid}')
+
+# declare a valid JSON instance
+valid_json = JSON({
     "greeting": "Hello, World!"
 })
 
-invalid_instance = JSON({
+# declare an invalid JSON instance
+invalid_json = JSON({
     "greeting": "Hi, World"
 })
 
-pp(schema.evaluate(valid_instance).valid)
-# True
+# evaluate the valid instance
+valid_result = schema.evaluate(valid_json)
 
-pp(schema.evaluate(invalid_instance).output('detailed'))
-# {'valid': False,
-#  'instanceLocation': '',
-#  'keywordLocation': '',
-#  'absoluteKeywordLocation': 'https://example.com/greeting#',
-#  'errors': [{'instanceLocation': '/greeting',
-#              'keywordLocation': '/properties/greeting/$ref/minLength',
-#              'absoluteKeywordLocation': 'https://example.com/greeting#/$defs/greetingDefinition/minLength',
-#              'error': 'The text is too short (minimum 10 characters)'}]}
+# evaluate the invalid instance
+invalid_result = schema.evaluate(invalid_json)
+
+# print output for the valid case
+print(f'Valid JSON result: {valid_result.valid}')
+print('Valid JSON basic output:')
+pprint.pp(valid_result.output('basic'))
+
+# print output for the invalid case
+print(f'Invalid JSON result: {invalid_result.valid}')
+print('Invalid JSON detailed output:')
+pprint.pp(invalid_result.output('detailed'))

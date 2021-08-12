@@ -1,3 +1,5 @@
+import pprint
+
 from jschon import create_catalog, JSON, JSONSchema
 
 # create a catalog with support for JSON Schema version 2020-12
@@ -30,12 +32,34 @@ strict_tree_schema = JSONSchema({
 })
 
 # declare a JSON instance with a misspelled field
-tree_instance = JSON({
+tree_json = JSON({
     "children": [{"daat": 1}]
 })
 
-print(tree_schema.evaluate(tree_instance).valid)
-# True
+# evaluate the JSON instance with the tree schema
+tree_result = tree_schema.evaluate(tree_json)
 
-print(strict_tree_schema.evaluate(tree_instance).valid)
-# False
+# evaluate the JSON instance with the strict-tree schema
+strict_tree_result = strict_tree_schema.evaluate(tree_json)
+
+# print output for the tree case
+print(f'Tree schema result: {tree_result.valid}')
+print('Tree schema flag output:')
+pprint.pp(tree_result.output('flag'))
+print('Tree schema basic output:')
+pprint.pp(tree_result.output('basic'))
+print('Tree schema detailed output:')
+pprint.pp(tree_result.output('detailed'))
+print('Tree schema verbose output:')
+pprint.pp(tree_result.output('verbose'))
+
+# print output for the strict-tree case
+print(f'Strict tree schema result: {strict_tree_result.valid}')
+print('Strict tree schema flag output:')
+pprint.pp(strict_tree_result.output('flag'))
+print('Strict tree schema basic output:')
+pprint.pp(strict_tree_result.output('basic'))
+print('Strict tree schema detailed output:')
+pprint.pp(strict_tree_result.output('detailed'))
+print('Strict tree schema verbose output:')
+pprint.pp(strict_tree_result.output('verbose'))

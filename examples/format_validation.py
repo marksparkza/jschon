@@ -1,4 +1,5 @@
 import ipaddress
+import pprint
 import re
 
 from jschon import create_catalog, JSON, JSONSchema
@@ -46,21 +47,31 @@ hosts_schema = JSONSchema({
     }
 })
 
-# a host record array containing valid IP addresses and hostnames
+# declare a host record array containing valid IP addresses and hostnames
 valid_host_records = JSON([
     {"ipaddress": "127.0.0.1", "hostname": "localhost"},
     {"ipaddress": "10.0.0.8", "hostname": "server.local"},
 ])
 
-# a host record array containing some values that are invalid
+# declare a host record array containing some values that are invalid
 # per the registered format validators
 invalid_host_records = JSON([
     {"ipaddress": "127.0.0.1", "hostname": "~localhost"},
     {"ipaddress": "10.0.0", "hostname": "server.local"},
 ])
 
-print(hosts_schema.evaluate(valid_host_records).valid)
-# True
+# evaluate the valid array
+valid_result = hosts_schema.evaluate(valid_host_records)
 
-print(hosts_schema.evaluate(invalid_host_records).valid)
-# False
+# evaluate the invalid array
+invalid_result = hosts_schema.evaluate(invalid_host_records)
+
+# print output for the valid case
+print(f'Valid array result: {valid_result.valid}')
+print('Valid array basic output:')
+pprint.pp(valid_result.output('basic'))
+
+# print output for the invalid case
+print(f'Invalid array result: {invalid_result.valid}')
+print('Invalid array detailed output:')
+pprint.pp(invalid_result.output('detailed'))
