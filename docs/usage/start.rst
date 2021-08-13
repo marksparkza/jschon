@@ -9,15 +9,14 @@ Installation
 
 A basic example
 ---------------
-The following example demonstrates several key steps involved in a typical
-jschon use case:
+The example shown below illustrates several key aspects of jschon usage:
 
-* Set up a :class:`~jschon.catalog.Catalog`.
-* Create a compiled :class:`~jschon.jsonschema.JSONSchema`.
-* :meth:`~jschon.jsonschema.JSONSchema.validate` the schema against its :class:`~jschon.vocabulary.Metaschema`.
-* Create a :class:`~jschon.json.JSON` instance.
-* :meth:`~jschon.jsonschema.JSONSchema.evaluate` the instance.
-* Generate :meth:`~jschon.jsonschema.Scope.output` from the evaluation result.
+* :class:`~jschon.catalog.Catalog` setup
+* Construction of a compiled, reusable :class:`~jschon.jsonschema.JSONSchema` object
+* Validation of the schema by a :class:`~jschon.vocabulary.Metaschema`
+* Construction of a :class:`~jschon.json.JSON` instance
+* Evaluation of the instance
+* Output generation
 
 .. literalinclude:: ../../examples/hello_world.py
 
