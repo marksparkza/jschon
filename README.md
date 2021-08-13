@@ -19,15 +19,14 @@ specification.
     pip install jschon
 
 ## Usage
-The following example demonstrates several key steps involved in a typical
-jschon use case:
+A simple example illustrates several key aspects of jschon usage:
 
-* Set up a `Catalog`.
-* Create a compiled `JSONSchema`.
-* `validate()` the schema against its `Metaschema`.
-* Create a `JSON` instance.
-* `evaluate()` the instance.
-* Generate `output()` from the evaluation result.
+* Catalog setup
+* Construction of a compiled, reusable `JSONSchema` object
+* Validation of the schema by a metaschema
+* Construction of a `JSON` instance
+* Evaluation of the instance
+* Output generation
 
 ```py
 import pprint
@@ -112,11 +111,11 @@ Further examples of usage, and an API reference, are available at
 [Read the Docs](https://jschon.readthedocs.io/en/latest/).
 
 ## Additional resources
-* [Understanding JSON Schema](https://json-schema.org/understanding-json-schema/)
+* [jschon.dev](https://jschon.dev/) - an online validator powered by jschon
 * JSON Schema 2020-12 [core](https://json-schema.org/draft/2020-12/json-schema-core.html)
   and [validation](https://json-schema.org/draft/2020-12/json-schema-validation.html)
   specifications
-* [jschon.dev](https://jschon.dev/) - an online validator powered by jschon
+* [Understanding JSON Schema](https://json-schema.org/understanding-json-schema/)
 
 ## Running the tests
 jschon is tested using the
