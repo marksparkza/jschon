@@ -1,0 +1,16 @@
+{
+    "title": "A meta-schema describing the syntax of a vocabulary supporting remote enumerations",
+    "$id": "https://example.com/enumRef/enumRef-vocabulary",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$vocabulary": {
+        "https://example.com/enumRef": true
+    },
+    "$dynamicAnchor": "meta",
+    "type": ["object", "boolean"],
+    "properties": {
+        "enumRef": {
+            "type": "string",
+            "format": "uri-reference"
+        }
+    }
+}

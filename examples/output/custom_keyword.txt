@@ -1,0 +1,25 @@
+Schema validity check: True
+Valid JSON result: True
+Valid JSON detailed output:
+{'valid': True,
+ 'instanceLocation': '',
+ 'keywordLocation': '',
+ 'absoluteKeywordLocation': 'https://example.com/remote-enum-test-schema#',
+ 'annotations': [{'instanceLocation': '',
+                  'keywordLocation': '/type',
+                  'absoluteKeywordLocation': 'https://example.com/remote-enum-test-schema#/type'},
+                 {'instanceLocation': '',
+                  'keywordLocation': '/enumRef',
+                  'absoluteKeywordLocation': 'https://example.com/remote-enum-test-schema#/enumRef',
+                  'annotation': 'https://example.com/remote-enum-colours'}]}
+Invalid JSON result: False
+Invalid JSON detailed output:
+{'valid': False,
+ 'instanceLocation': '',
+ 'keywordLocation': '',
+ 'absoluteKeywordLocation': 'https://example.com/remote-enum-test-schema#',
+ 'errors': [{'instanceLocation': '',
+             'keywordLocation': '/enumRef',
+             'absoluteKeywordLocation': 'https://example.com/remote-enum-test-schema#/enumRef',
+             'error': 'The instance is not a member of the '
+                      'https://example.com/remote-enum-colours enumeration'}]}
