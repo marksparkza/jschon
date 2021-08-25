@@ -230,3 +230,23 @@ def test_contains_if_output(input, output):
     schema = JSONSchema(contains_if_schema, metaschema_uri=metaschema_uri_2020_12)
     result = schema.evaluate(JSON(input)).output('basic')
     assert result == output
+
+
+# https://github.com/marksparkza/jschon/issues/15
+@pytest.mark.parametrize('foo_schema, valid', [
+    (False, False),
+    (True, True),
+    ({}, True),
+    ({"not": {}}, False),
+])
+def test_absolute_ref_location(foo_schema, valid):
+    schema = JSONSchema({
+        "$id": "http://example.com",
+        "$ref": "#/$defs/foo",
+        "$defs": {
+            "foo": foo_schema
+        }
+    }, metaschema_uri=metaschema_uri_2020_12)
+    result = schema.evaluate(JSON({})).output('verbose')
+    key = 'annotations' if valid else 'errors'
+    assert result[key][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
