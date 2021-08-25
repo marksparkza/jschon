@@ -2,7 +2,7 @@ import pytest
 from pytest import param as p
 
 from jschon import JSON, JSONSchema
-from tests import metaschema_uri_2020_12
+from tests import metaschema_uri_2020_12, metaschema_uri_2019_09
 
 schema_valid = {
     "$id": "http://example.com",
@@ -264,3 +264,16 @@ def test_absolute_dynamic_ref_location():
     }, metaschema_uri=metaschema_uri_2020_12)
     result = schema.evaluate(JSON({})).output('verbose')
     assert result['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
+
+
+def test_absolute_recursive_ref_location():
+    schema = JSONSchema({
+        "$id": "http://example.com",
+        "$recursiveAnchor": True,
+        "items": {
+            "$recursiveRef": "#"
+        },
+        "type": ["array", "string"]
+    }, metaschema_uri=metaschema_uri_2019_09)
+    result = schema.evaluate(JSON([["foo"]])).output('verbose')
+    assert result['annotations'][0]['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com'
