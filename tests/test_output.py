@@ -250,3 +250,17 @@ def test_absolute_ref_location(foo_schema, valid):
     result = schema.evaluate(JSON({})).output('verbose')
     key = 'annotations' if valid else 'errors'
     assert result[key][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
+
+
+def test_absolute_dynamic_ref_location():
+    schema = JSONSchema({
+        "$id": "http://example.com",
+        "$dynamicRef": "#item",
+        "$defs": {
+            "foo": {
+                "$dynamicAnchor": "item"
+            }
+        }
+    }, metaschema_uri=metaschema_uri_2020_12)
+    result = schema.evaluate(JSON({})).output('verbose')
+    assert result['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
