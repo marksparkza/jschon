@@ -106,6 +106,7 @@ class RefKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         self.refschema.evaluate(instance, scope)
+        scope.refschema(self.refschema)
 
 
 class AnchorKeyword(Keyword):
@@ -178,6 +179,7 @@ class DynamicRefKeyword(Keyword):
                 target_scope = target_scope.parent
 
         refschema.evaluate(instance, scope)
+        scope.refschema(refschema)
 
 
 class DynamicAnchorKeyword(Keyword):

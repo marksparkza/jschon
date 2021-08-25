@@ -348,6 +348,7 @@ class Scope:
         self._valid = True
         self._assert = True
         self._discard = False
+        self._refschema: Optional[JSONSchema] = None
 
     @contextmanager
     def __call__(self, instance: JSON, key: str, schema: JSONSchema = None) -> ContextManager[Scope]:
@@ -410,6 +411,14 @@ class Scope:
         """Indicate that the scope should be ignored and discarded."""
         self._discard = True
 
+    def refschema(self, schema: JSONSchema) -> None:
+        """Set the referenced schema for the scope of a by-reference keyword.
+        
+        The referenced schema's URI is then returned by :attr:`absolute_uri`,
+        instead of calculating the absolute URI using the containing schema.
+        """
+        self._refschema = schema
+
     @property
     def valid(self) -> bool:
         """Return the validation result of the scope.
@@ -434,6 +443,9 @@ class Scope:
 
     @property
     def absolute_uri(self) -> Optional[URI]:
+        if self._refschema is not None:
+            return self._refschema.canonical_uri
+
         if (schema_uri := self.schema.canonical_uri) is not None:
             if fragment := schema_uri.fragment:
                 relpath = JSONPointer.parse_uri_fragment(fragment) / self.relpath

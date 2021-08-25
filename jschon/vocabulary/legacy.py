@@ -44,6 +44,7 @@ class RecursiveRefKeyword_2019_09(Keyword):
                 target_scope = target_scope.parent
 
         refschema.evaluate(instance, scope)
+        scope.refschema(refschema)
 
 
 class RecursiveAnchorKeyword_2019_09(Keyword):
