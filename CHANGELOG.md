@@ -1,5 +1,12 @@
 # Change log
 
+## v0.7.2 (2021-08-28)
+### Bug fixes
+* Fixed "absoluteKeywordLocation" output for "$ref", "$dynamicRef" and "$recursiveRef" nodes (#15)
+### Documentation
+* Restructured examples; example outputs are now verified by unit tests
+* Added examples of loading schemas from files
+
 ## v0.7.1 (2021-08-08)
 ### Breaking changes
 * Renamed Catalogue to Catalog
