@@ -239,7 +239,7 @@ def test_contains_if_output(input, output):
     ({}, True),
     ({"not": {}}, False),
 ])
-def test_absolute_ref_location(foo_schema, valid):
+def test_ref_absolute_uri(foo_schema, valid):
     schema = JSONSchema({
         "$id": "http://example.com",
         "$ref": "#/$defs/foo",
@@ -252,7 +252,7 @@ def test_absolute_ref_location(foo_schema, valid):
     assert result[key][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
 
 
-def test_absolute_dynamic_ref_location():
+def test_dynamic_ref_absolute_uri():
     schema = JSONSchema({
         "$id": "http://example.com",
         "$dynamicRef": "#item",
@@ -266,7 +266,7 @@ def test_absolute_dynamic_ref_location():
     assert result['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
 
 
-def test_absolute_recursive_ref_location():
+def test_recursive_ref_absolute_uri():
     schema = JSONSchema({
         "$id": "http://example.com",
         "$recursiveAnchor": True,
@@ -277,3 +277,17 @@ def test_absolute_recursive_ref_location():
     }, metaschema_uri=metaschema_uri_2019_09)
     result = schema.evaluate(JSON([["foo"]])).output('verbose')
     assert result['annotations'][0]['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com'
+
+
+def test_chained_ref_absolute_uri():
+    schema = JSONSchema({
+        "$id": "http://example.com",
+        "$ref": "#/$defs/foo",
+        "$defs": {
+            "foo": {"$ref": "#/$defs/bar"},
+            "bar": True
+        }
+    }, metaschema_uri=metaschema_uri_2020_12)
+    result = schema.evaluate(JSON({})).output('verbose')
+    assert result['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
+    assert result['annotations'][0]['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/bar'
