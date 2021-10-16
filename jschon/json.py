@@ -64,6 +64,10 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             constructor
         """
 
+        self.type: str
+        """The JSON type of the instance. One of
+        ``"null"``, ``"boolean"``, ``"number"``, ``"string"``, ``"array"``, ``"object"``."""
+
         self.data: Union[None, bool, int, Decimal, str, List[JSON], Dict[str, JSON]]
         """The instance data.
         
@@ -78,10 +82,6 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         object      dict[str, JSON]
         =========   ===============
         """
-
-        self.type: str
-        """The JSON type of the instance. One of
-        ``"null"``, ``"boolean"``, ``"number"``, ``"string"``, ``"array"``, ``"object"``."""
 
         self.parent: Optional[JSON] = parent
         """The containing JSON instance."""

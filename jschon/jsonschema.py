@@ -91,6 +91,9 @@ class JSONSchema(JSON):
         # do not call super().__init__
         # all inherited attributes are initialized here:
 
+        self.type: str
+        """The JSON type of the schema. One of ``"boolean"``, ``"object"``."""
+
         self.data: Union[bool, Dict[str, JSON]]
         """The schema data.
         
@@ -101,9 +104,6 @@ class JSONSchema(JSON):
         object      dict[str, JSON]
         =========   ===============
         """
-
-        self.type: str
-        """The JSON type of the schema. One of ``"boolean"``, ``"object"``."""
 
         self.parent: Optional[JSON] = parent
         """The containing :class:`~jschon.json.JSON` or :class:`JSONSchema` node."""
