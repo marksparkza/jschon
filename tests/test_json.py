@@ -10,6 +10,7 @@ from jschon import JSON, JSONPointer
 from jschon.json import AnyJSONCompatible
 from tests.strategies import json, json_nodecimal
 from tests.test_jsonpointer import jsonpointer_escape
+from tests.test_validators import isequal
 
 
 def assert_json_node(
@@ -23,6 +24,7 @@ def assert_json_node(
     assert inst.parent == parent
     assert inst.key == key
     assert inst.path == JSONPointer(ptr)
+    assert isequal(inst.value, val)
 
     if val is None:
         assert inst.type == "null"

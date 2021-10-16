@@ -141,6 +141,15 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             node = node.parent
         return JSONPointer(keys)
 
+    @property
+    def value(self) -> AnyJSONCompatible:
+        """Return the instance data as a JSON-compatible Python object."""
+        if isinstance(self.data, list):
+            return [item.value for item in self.data]
+        if isinstance(self.data, dict):
+            return {key: item.value for key, item in self.data.items()}
+        return self.data
+
     def __repr__(self) -> str:
         # ugly but useful!
         return f'{self.__class__.__name__}({json.loads(str(self))!r})'

@@ -73,16 +73,16 @@ A leaf node's :attr:`~jschon.json.JSON.data` is the value from which it was cons
 >>> document["1a"]["2a"].data
 'foo'
 
-The :attr:`~jschon.json.JSON.parent` attribute gives the containing instance:
-
->>> document["1a"]["2b"].parent
-JSON({'2a': 'foo', '2b': 'bar'})
-
 The :attr:`~jschon.json.JSON.path` property returns a :class:`~jschon.jsonpointer.JSONPointer`
 instance representing the path to the node from the document root:
 
 >>> document["1b"][0]["3a"].path
 JSONPointer('/1b/0/3a')
+
+The :attr:`~jschon.json.JSON.parent` attribute gives the containing instance:
+
+>>> document["1a"]["2b"].parent
+JSON({'2a': 'foo', '2b': 'bar'})
 
 The :attr:`~jschon.json.JSON.key` is the index of the node within its parent:
 
@@ -105,6 +105,12 @@ An ``"array"`` node's :attr:`~jschon.json.JSON.data` is a :obj:`list[JSON]`:
 
 >>> document["1b"].data
 [JSON({'3a': 'baz'}), JSON({'3b': 'quux'})]
+
+The :attr:`~jschon.json.JSON.value` property returns the instance data as a
+JSON-compatible Python object:
+
+>>> document["1b"].value
+[{'3a': 'baz'}, {'3b': 'quux'}]
 
 Equality testing strictly follows the JSON data model. So, whereas the
 following two Python lists compare equal:
