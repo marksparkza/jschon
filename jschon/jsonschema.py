@@ -91,11 +91,11 @@ class JSONSchema(JSON):
         # do not call super().__init__
         # all inherited attributes are initialized here:
 
-        self.value: Union[bool, Mapping[str, JSON]]
+        self.data: Union[bool, Dict[str, JSON]]
         """The schema data.
         
         =========   ===============
-        JSON type   value type
+        JSON type   data type
         =========   ===============
         boolean     bool
         object      dict[str, JSON]
@@ -113,11 +113,11 @@ class JSONSchema(JSON):
 
         if isinstance(value, bool):
             self.type = "boolean"
-            self.value = value
+            self.data = value
 
         elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
             self.type = "object"
-            self.value = {}
+            self.data = {}
 
             if self.parent is None and self.uri is None:
                 self.uri = URI(f'urn:uuid:{uuid4()}')
@@ -133,7 +133,7 @@ class JSONSchema(JSON):
             for kwclass in self._resolve_dependencies(kwclasses):
                 kw = kwclass(self, value[(key := kwclass.key)])
                 self.keywords[key] = kw
-                self.value[key] = kw.json
+                self.data[key] = kw.json
 
             if self.parent is None:
                 self._resolve_references()
@@ -152,7 +152,7 @@ class JSONSchema(JSON):
             if key in value:
                 kw = kwclass(self, value[key])
                 self.keywords[key] = kw
-                self.value[key] = kw.json
+                self.data[key] = kw.json
 
     def _resolve_references(self) -> None:
         for kw in self.keywords.values():
@@ -205,10 +205,10 @@ class JSONSchema(JSON):
         if scope is None:
             scope = Scope(self)
 
-        if self.value is True:
+        if self.data is True:
             pass
 
-        elif self.value is False:
+        elif self.data is False:
             scope.fail("The instance is disallowed by a boolean false schema")
 
         else:

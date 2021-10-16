@@ -19,7 +19,7 @@ def assert_json_node(
         key: Optional[str],
         ptr: str,
 ):
-    assert inst.value == (Decimal(f'{val}') if isinstance(val, float) else val)
+    assert inst.data == (Decimal(f'{val}') if isinstance(val, float) else val)
     assert inst.parent == parent
     assert inst.key == key
     assert inst.path == JSONPointer(ptr)

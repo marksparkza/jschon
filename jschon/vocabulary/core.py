@@ -93,7 +93,7 @@ class RefKeyword(Keyword):
         self.refschema = None
 
     def resolve(self) -> None:
-        uri = URI(self.json.value)
+        uri = URI(self.json.data)
         if not uri.has_absolute_base():
             if (base_uri := self.parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
@@ -142,7 +142,7 @@ class DynamicRefKeyword(Keyword):
         self.dynamic = False
 
     def resolve(self) -> None:
-        uri = URI(self.json.value)
+        uri = URI(self.json.data)
         if not uri.has_absolute_base():
             if (base_uri := self.parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
@@ -152,7 +152,7 @@ class DynamicRefKeyword(Keyword):
         self.refschema = self.parentschema.catalog.get_schema(
             uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
         )
-        if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.value == self.fragment:
+        if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.data == self.fragment:
             self.dynamic = True
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -171,7 +171,7 @@ class DynamicRefKeyword(Keyword):
                             target_uri, session=self.parentschema.session
                         )
                         if (dynamic_anchor := found_schema.get("$dynamicAnchor")) and \
-                                dynamic_anchor.value == self.fragment:
+                                dynamic_anchor.data == self.fragment:
                             refschema = found_schema
                     except CatalogError:
                         pass

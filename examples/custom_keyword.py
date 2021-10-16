@@ -34,7 +34,7 @@ class EnumRefKeyword(Keyword):
         super().__init__(parentschema, value)
 
         # get the keyword's value as it appears in the JSON schema
-        self.enum_id = self.json.value
+        self.enum_id = self.json.data
         try:
             # retrieve the enumeration from the remote enumeration service
             self.enum = remote_enum_cache[self.enum_id]
@@ -43,7 +43,7 @@ class EnumRefKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         # test the value of the current JSON instance node against the enumeration
-        if instance.value in self.enum:
+        if instance.data in self.enum:
             # (optionally) on success, set an annotation on the current scope node
             scope.annotate(self.enum_id)
         else:

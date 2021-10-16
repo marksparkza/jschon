@@ -33,12 +33,12 @@ class RecursiveRefKeyword_2019_09(Keyword):
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         refschema = self.refschema
         if (recursive_anchor := refschema.get("$recursiveAnchor")) and \
-                recursive_anchor.value is True:
+                recursive_anchor.data is True:
 
             target_scope = scope
             while target_scope is not None:
                 if (base_anchor := target_scope.schema.get("$recursiveAnchor")) and \
-                        base_anchor.value is True:
+                        base_anchor.data is True:
                     refschema = target_scope.schema
 
                 target_scope = target_scope.parent
@@ -62,7 +62,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
         if len(instance) == 0:
             return
 
-        elif isinstance(self.json.value, bool):
+        elif isinstance(self.json.data, bool):
             self.json.evaluate(instance, scope)
 
         elif isinstance(self.json, JSONSchema):

@@ -68,9 +68,9 @@ working with complex JSON structures. Consider the following example:
 ...     ]
 ... })
 
-A leaf node's :attr:`~jschon.json.JSON.value` is the value from which it was constructed:
+A leaf node's :attr:`~jschon.json.JSON.data` is the value from which it was constructed:
 
->>> document["1a"]["2a"].value
+>>> document["1a"]["2a"].data
 'foo'
 
 The :attr:`~jschon.json.JSON.parent` attribute gives the containing instance:
@@ -96,14 +96,14 @@ Notice that, although an array item's sequential index is an integer, its
 >>> document["1b"][1].key
 '1'
 
-The :attr:`~jschon.json.JSON.value` of an ``"object"`` node is a :obj:`dict[str, JSON]`:
+An ``"object"`` node's :attr:`~jschon.json.JSON.data` is a :obj:`dict[str, JSON]`:
 
->>> document["1a"].value
+>>> document["1a"].data
 {'2a': JSON('foo'), '2b': JSON('bar')}
 
-The :attr:`~jschon.json.JSON.value` of an ``"array"`` node is a :obj:`list[JSON]`:
+An ``"array"`` node's :attr:`~jschon.json.JSON.data` is a :obj:`list[JSON]`:
 
->>> document["1b"].value
+>>> document["1b"].data
 [JSON({'3a': 'baz'}), JSON({'3b': 'quux'})]
 
 Equality testing strictly follows the JSON data model. So, whereas the
@@ -159,8 +159,8 @@ To ensure reliable operation of the JSON Schema ``"multipleOf"`` keyword, :class
 values are converted to :class:`decimal.Decimal` by the :class:`~jschon.json.JSON`
 constructor, and parsed as :class:`decimal.Decimal` during deserialization:
 
->>> JSON(5.1).value
+>>> JSON(5.1).data
 Decimal('5.1')
 
->>> JSON.loads('{"pi": 3.14159}')["pi"].value
+>>> JSON.loads('{"pi": 3.14159}')["pi"].data
 Decimal('3.14159')

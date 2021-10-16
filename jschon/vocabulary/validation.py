@@ -34,11 +34,11 @@ class TypeKeyword(Keyword):
     key = "type"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        types = tuplify(self.json.value)
+        types = tuplify(self.json.data)
         if instance.type in types:
             valid = True
         elif instance.type == "number" and "integer" in types:
-            valid = instance.value == int(instance.value)
+            valid = instance.data == int(instance.data)
         else:
             valid = False
 
@@ -68,7 +68,7 @@ class MultipleOfKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
-            if instance.value % self.json.value != 0:
+            if instance.data % self.json.data != 0:
                 scope.fail(f"The value must be a multiple of {self.json}")
         except decimal.InvalidOperation:
             scope.fail(f"Invalid operation: {instance} % {self.json}")
@@ -137,7 +137,7 @@ class PatternKeyword(Keyword):
         self.regex = re.compile(value)
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if self.regex.search(instance.value) is None:
+        if self.regex.search(instance.data) is None:
             scope.fail(f"The text must match the regular expression {self.json}")
 
 
@@ -164,7 +164,7 @@ class UniqueItemsKeyword(Keyword):
     types = "array"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if not self.json.value:
+        if not self.json.data:
             return
 
         uniquified = []
@@ -234,7 +234,7 @@ class RequiredKeyword(Keyword):
     types = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        missing = [name for name in self.json if name.value not in instance]
+        missing = [name for name in self.json if name.data not in instance]
         if missing:
             scope.fail(f"The object is missing required properties {missing}")
 
@@ -247,7 +247,7 @@ class DependentRequiredKeyword(Keyword):
         missing = {}
         for name, dependents in self.json.items():
             if name in instance:
-                missing_deps = [dep for dep in dependents if dep.value not in instance]
+                missing_deps = [dep for dep in dependents if dep.data not in instance]
                 if missing_deps:
                     missing[name] = missing_deps
 

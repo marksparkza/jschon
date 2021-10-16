@@ -85,7 +85,7 @@ class Keyword:
             return True
 
         if instance.type == "number" and "integer" in types:
-            return instance.value == int(instance.value)
+            return instance.data == int(instance.data)
 
         return False
 

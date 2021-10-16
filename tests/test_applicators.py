@@ -23,7 +23,7 @@ def test_applicator(example, valid_json, invalid_json):
     for applicator_key, applicator_val in example.items():
         assert schema.keywords[applicator_key].applicator_cls is Applicator
         assert isinstance(schema[applicator_key], JSONSchema)
-        assert schema[applicator_key].value == applicator_val
+        assert schema[applicator_key].data == applicator_val
 
     assert schema.evaluate(JSON(valid_json)).valid is True
     assert schema.evaluate(JSON(invalid_json)).valid is False
@@ -41,7 +41,7 @@ def test_array_applicator(example, valid_json, invalid_json):
         assert schema.keywords[applicator_key].applicator_cls is ArrayApplicator
         for i, item in enumerate(applicator_val):
             assert isinstance(schema[applicator_key][i], JSONSchema)
-            assert schema[applicator_key][i].value == item
+            assert schema[applicator_key][i].data == item
 
     assert schema.evaluate(JSON(valid_json)).valid is True
     assert schema.evaluate(JSON(invalid_json)).valid is False
@@ -63,7 +63,7 @@ def test_property_applicator(example, valid_json, invalid_json):
         assert schema.keywords[applicator_key].applicator_cls is PropertyApplicator
         for prop_key, prop_val in applicator_val.items():
             assert isinstance(schema[applicator_key][prop_key], JSONSchema)
-            assert schema[applicator_key][prop_key].value == prop_val
+            assert schema[applicator_key][prop_key].data == prop_val
 
     assert schema.evaluate(JSON(valid_json)).valid is True
     assert schema.evaluate(JSON(invalid_json)).valid is False

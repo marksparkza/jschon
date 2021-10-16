@@ -24,7 +24,7 @@ json2 = JSON(example_invalid)
 def test_schema_examples(example, json1_valid, json2_valid):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
     assert schema.validate().valid is True
-    assert schema.value == example
+    assert schema.data == example
     assert schema.type == "boolean" if isinstance(example, bool) else "object"
     assert schema.parent is None
     assert schema.key is None

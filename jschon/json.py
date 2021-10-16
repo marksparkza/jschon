@@ -4,7 +4,7 @@ import json
 from collections import deque
 from decimal import Decimal
 from os import PathLike
-from typing import Sequence, Mapping, TypeVar, Type, Optional, Iterator, Union, Any
+from typing import Sequence, Mapping, TypeVar, Type, Optional, Iterator, Union, Any, List, Dict
 
 from jschon.jsonpointer import JSONPointer
 from jschon.utils import json_loadf, json_loads
@@ -64,13 +64,13 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             constructor
         """
 
-        self.value: AnyJSONCompatible
+        self.data: Union[None, bool, int, Decimal, str, List[JSON], Dict[str, JSON]]
         """The instance data.
         
         =========   ===============
-        JSON type   value type
+        JSON type   data type
         =========   ===============
-        null        type(None)
+        null        None
         boolean     bool
         number      int | Decimal
         string      str
@@ -91,41 +91,41 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
         if value is None:
             self.type = "null"
-            self.value = None
+            self.data = None
 
         elif isinstance(value, bool):
             self.type = "boolean"
-            self.value = value
+            self.data = value
 
         elif isinstance(value, (int, Decimal)):
             self.type = "number"
-            self.value = value
+            self.data = value
 
         elif isinstance(value, float):
             self.type = "number"
-            self.value = Decimal(f'{value}')
+            self.data = Decimal(f'{value}')
 
         elif isinstance(value, str):
             self.type = "string"
-            self.value = value
+            self.data = value
 
         elif isinstance(value, Sequence):
             self.type = "array"
-            self.value = []
+            self.data = []
             itemclass = itemclass or JSON
             for i, v in enumerate(value):
                 if isinstance(v, JSON):
-                    v = v.value
-                self.value += [itemclass(v, parent=self, key=str(i), **itemkwargs)]
+                    v = v.data
+                self.data += [itemclass(v, parent=self, key=str(i), **itemkwargs)]
 
         elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
             self.type = "object"
-            self.value = {}
+            self.data = {}
             itemclass = itemclass or JSON
             for k, v in value.items():
                 if isinstance(v, JSON):
-                    v = v.value
-                self.value[k] = itemclass(v, parent=self, key=k, **itemkwargs)
+                    v = v.data
+                self.data[k] = itemclass(v, parent=self, key=k, **itemkwargs)
 
         else:
             raise TypeError(f"{value=} is not JSON-compatible")
@@ -148,29 +148,29 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
     def __str__(self) -> str:
         def default(o):
             if isinstance(o, JSON):
-                return o.value
+                return o.data
             if isinstance(o, Decimal):
                 return float(o)
             raise TypeError
 
-        return json.dumps(self.value, default=default,
+        return json.dumps(self.data, default=default,
                           ensure_ascii=False, allow_nan=False)
 
     def __bool__(self) -> bool:
-        return bool(self.value)
+        return bool(self.data)
 
     def __len__(self) -> int:
-        return len(self.value)
+        return len(self.data)
 
     def __iter__(self) -> Iterator:
         if self.type in ("array", "object"):
-            return iter(self.value)
+            return iter(self.data)
         raise TypeError(f"{self!r} is not iterable")
 
     def __getitem__(self, index: Union[int, slice, str]) -> JSON:
         if isinstance(index, (int, slice)) and self.type == "array" or \
                 isinstance(index, str) and self.type == "object":
-            return self.value[index]
+            return self.data[index]
         raise TypeError(f"{self!r} is not subscriptable")
 
     def __eq__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
@@ -183,33 +183,33 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             if self.type == "object":
                 return self.keys() == other.keys() and \
                        all(item == other[k] for k, item in self.items())
-            return self.value == other.value
+            return self.data == other.data
         return NotImplemented
 
     def __ge__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
-            return self.value >= other.value
+            return self.data >= other.data
         return NotImplemented
 
     def __gt__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
-            return self.value > other.value
+            return self.data > other.data
         return NotImplemented
 
     def __le__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
-            return self.value <= other.value
+            return self.data <= other.data
         return NotImplemented
 
     def __lt__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
-            return self.value < other.value
+            return self.data < other.data
         return NotImplemented
