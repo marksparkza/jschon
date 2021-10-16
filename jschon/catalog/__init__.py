@@ -30,7 +30,7 @@ class Catalog:
     
     A :class:`Catalog` instance is typically initialized by providing one or
     more JSON Schema version identifiers. Each such identifier triggers the
-    construction of a corresponding :class:`~jschon.vocabulary.Metaschema` object,
+    compilation of a corresponding :class:`~jschon.vocabulary.Metaschema` object,
     which in turn provides any referencing schema with all of the :class:`~jschon.vocabulary.Keyword`
     class implementations for that version of the JSON Schema vocabulary.
 
