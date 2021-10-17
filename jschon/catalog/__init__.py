@@ -4,7 +4,7 @@ import pathlib
 import uuid
 from contextlib import contextmanager
 from os import PathLike
-from typing import Dict, Mapping, Optional, Hashable, ContextManager
+from typing import Dict, Mapping, Optional, Hashable, ContextManager, Any
 
 from jschon.catalog import _2019_09, _2020_12
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
@@ -164,23 +164,36 @@ class Catalog:
 
     def create_metaschema(
             self,
-            metaschema_uri: URI,
+            uri: URI,
             core_vocabulary_uri: URI,
             *default_vocabulary_uris: URI,
+            **kwargs: Any,
     ) -> None:
         """Create, cache and validate a :class:`~jschon.vocabulary.Metaschema`.
 
-        :param metaschema_uri: the URI identifying the metaschema
+        :param uri: the URI identifying the metaschema
         :param core_vocabulary_uri: the URI identifying the metaschema's
             core :class:`~jschon.vocabulary.Vocabulary`
         :param default_vocabulary_uris: default :class:`~jschon.vocabulary.Vocabulary`
             URIs, used in the absence of a ``"$vocabulary"`` keyword in the
             metaschema JSON file
+        :param kwargs: additional keyword arguments to pass through to the
+            :class:`~jschon.jsonschema.JSONSchema` constructor
         """
-        metaschema_doc = self.load_json(metaschema_uri)
+        metaschema_doc = self.load_json(uri)
         core_vocabulary = self.get_vocabulary(core_vocabulary_uri)
-        default_vocabularies = [self.get_vocabulary(vocab_uri) for vocab_uri in default_vocabulary_uris]
-        metaschema = Metaschema(self, metaschema_doc, core_vocabulary, *default_vocabularies)
+        default_vocabularies = [
+            self.get_vocabulary(vocab_uri)
+            for vocab_uri in default_vocabulary_uris
+        ]
+        metaschema = Metaschema(
+            self,
+            metaschema_doc,
+            core_vocabulary,
+            *default_vocabularies,
+            **kwargs,
+            uri=uri,
+        )
         if not metaschema.validate().valid:
             raise CatalogError("The metaschema is invalid against itself")
 
