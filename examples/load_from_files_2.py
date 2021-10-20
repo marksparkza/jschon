@@ -3,7 +3,7 @@ from jschon import create_catalog, JSON, JSONSchema, URI
 
 data_dir = pathlib.Path(__file__).parent / 'data'
 
-catalog = create_catalog('2020-12', default=True)
+catalog = create_catalog('2020-12')
 catalog.add_directory(URI("https://example.com/"), data_dir)
 
 org_schema = JSONSchema.loadf(data_dir / 'org-schema.json')

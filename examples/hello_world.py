@@ -3,7 +3,7 @@ import pprint
 from jschon import create_catalog, JSON, JSONSchema
 
 # initialize the catalog, with JSON Schema 2020-12 vocabulary support
-create_catalog('2020-12', default=True)
+create_catalog('2020-12')
 
 # create a schema to validate a JSON greeting object
 schema = JSONSchema({

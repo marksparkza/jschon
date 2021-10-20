@@ -14,7 +14,7 @@ def validate_hostname(value):
 
 
 # create a catalog with support for JSON Schema version 2020-12
-catalog = create_catalog('2020-12', default=True)
+catalog = create_catalog('2020-12')
 
 # register IP address and hostname format validators
 catalog.add_format_validators({

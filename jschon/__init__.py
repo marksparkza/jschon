@@ -21,7 +21,7 @@ __all__ = [
 __version__ = '0.7.3'
 
 
-def create_catalog(*versions: str, default: bool = False) -> Catalog:
+def create_catalog(*versions: str, default: bool = True) -> Catalog:
     """Create and return a new :class:`~jschon.catalog.Catalog` instance,
     optionally pre-populated with :class:`~jschon.vocabulary.Metaschema` objects
     supporting one or more versions of the JSON Schema vocabulary.

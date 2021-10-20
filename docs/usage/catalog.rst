@@ -16,33 +16,25 @@ A :class:`~jschon.catalog.Catalog` object is typically created once per
 application, using the :func:`~jschon.create_catalog` function:
 
 >>> from jschon import create_catalog
->>> create_catalog('2020-12', default=True)
+>>> create_catalog('2020-12')
 
 :func:`~jschon.create_catalog` accepts a variable argument list indicating which
 versions of the JSON Schema vocabulary to support. For example, the following
 initialization call will enable our application to work with both 2019-09 and
 2020-12 schemas:
 
->>> create_catalog('2019-09', '2020-12', default=True)
-
-The `default` parameter (which is ``False`` by default) indicates that the created
-:class:`~jschon.catalog.Catalog` instance should be used by any new
-:class:`~jschon.jsonschema.JSONSchema` objects that our application creates.
-To be precise, setting `default` to ``True`` means that the `catalog` parameter
-of the :class:`~jschon.jsonschema.JSONSchema` constructor can be omitted, in which
-case it implicitly takes the value of the default :class:`~jschon.catalog.Catalog`
-instance.
+>>> create_catalog('2019-09', '2020-12')
 
 If our application requires distinct :class:`~jschon.catalog.Catalog`
 instances with different configurations, then our setup might look something
 like this:
 
->>> cat201909 = create_catalog('2019-09')
->>> cat202012 = create_catalog('2020-12')
+>>> cat201909 = create_catalog('2019-09', default=False)
+>>> cat202012 = create_catalog('2020-12', default=False)
 
-Then, when we create :class:`~jschon.jsonschema.JSONSchema` objects, we must
-pass the relevant :class:`~jschon.catalog.Catalog` instance via the
-`catalog` parameter. For example:
+When `default` is set to ``False``, then the relevant :class:`~jschon.catalog.Catalog`
+instance must be specified when creating new :class:`~jschon.jsonschema.JSONSchema`
+objects:
 
 >>> schema201909 = JSONSchema({"type": "object", ...}, catalog=cat201909)
 >>> schema202012 = JSONSchema.loadf('/path/to/schema.json', catalog=cat202012)
@@ -66,7 +58,7 @@ If our schemas share a common base URI, say ``"https://example.com/schema/"``,
 then we can configure a base URI-to-directory mapping on the catalog:
 
 >>> from jschon import create_catalog
->>> catalog = create_catalog('2020-12', default=True)
+>>> catalog = create_catalog('2020-12')
 >>> catalog.add_directory(URI("https://example.com/schema/"), '/path/to/schema/')
 
 Now, we can retrieve :class:`~jschon.jsonschema.JSONSchema` objects with the
@@ -114,7 +106,7 @@ Our catalog setup looks like this:
 ...     if not hostname_regex.match(value):
 ...         raise ValueError(f"'{value}' is not a valid hostname")
 ...
->>> catalog = create_catalog('2020-12', default=True)
+>>> catalog = create_catalog('2020-12')
 >>> catalog.add_format_validators({
 ...     "ipv4": ipaddress.IPv4Address,
 ...     "ipv6": ipaddress.IPv6Address,

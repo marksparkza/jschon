@@ -151,7 +151,7 @@ def test_session_independence(catalog):
 
 
 def test_metaschema_isolation():
-    new_catalog = create_catalog('2019-09', '2020-12')
+    new_catalog = create_catalog('2019-09', '2020-12', default=False)
     assert new_catalog._schema_cache.keys() == {'__meta__'}
 
     # mask the metaschema with a boolean false schema, in the fubar session

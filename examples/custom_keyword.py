@@ -52,7 +52,7 @@ class EnumRefKeyword(Keyword):
 
 
 # initialize the catalog, with JSON Schema 2020-12 vocabulary support
-catalog = create_catalog('2020-12', default=True)
+catalog = create_catalog('2020-12')
 
 # add a base URI-to-directory mapping to enable loading of the
 # enumRef metaschema and vocabulary definition files
