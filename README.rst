@@ -33,7 +33,9 @@ Installation
 
 Usage
 -----
-Create a JSON schema::
+Create a JSON schema:
+
+.. code-block:: python
 
     from jschon import create_catalog, JSON, JSONSchema
 
@@ -57,7 +59,9 @@ Create a JSON schema::
         }
     })
 
-Validate JSON data::
+Validate JSON data:
+
+.. code-block:: python
 
     result = demo_schema.evaluate(
         JSON([12, "Monkeys"])
