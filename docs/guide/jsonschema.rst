@@ -10,8 +10,8 @@ fully loaded, compiled and ready for use and re-use.
 
 :class:`~jschon.jsonschema.JSONSchema` is a specialization of the :class:`~jschon.json.JSON`
 class, and provides all the capabilities of its ancestor, as described in the
-:doc:`json` guide. Only its JSON type is limited - to one of ``"object"`` and
-``"boolean"`` - in accordance with the JSON Schema specification. As we might
+:doc:`json` guide. Only its JSON type is limited -- to one of ``"object"`` and
+``"boolean"`` -- in accordance with the JSON Schema specification. As we might
 expect, :class:`~jschon.jsonschema.JSONSchema` introduces several new properties
 and behaviours, which we'll explore in the following sections.
 

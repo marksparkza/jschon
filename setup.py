@@ -4,7 +4,7 @@ import re
 from setuptools import setup, find_packages
 
 HERE = pathlib.Path(__file__).parent.resolve()
-README = (HERE / 'README.md').read_text(encoding='utf-8')
+README = (HERE / 'README.rst').read_text(encoding='utf-8')
 VERSION = eval(re.search(
     '^__version__ = (.*)$',
     (HERE / 'jschon' / '__init__.py').read_text(encoding='utf-8'),
@@ -16,7 +16,7 @@ setup(
     version=VERSION,
     description='A pythonic, extensible JSON Schema implementation.',
     long_description=README,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     url='https://github.com/marksparkza/jschon',
     author='Mark Jacobson',
     author_email='mark@saeon.ac.za',

@@ -3,7 +3,7 @@ Catalog
 The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
 
 #. It acts as a schema cache, enabling schemas and subschemas to be indexed,
-   re-used, and cross-referenced by URI - allowing for the definition of multiple,
+   re-used, and cross-referenced by URI -- allowing for the definition of multiple,
    cooperative schemas that work together to evaluate :class:`~jschon.json.JSON`
    documents.
 #. It provides the infrastructure required for constructing
@@ -78,15 +78,15 @@ Format validators
 jschon does not provide built-in support for validating any
 `formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
 defined in the JSON Schema specification. By default, any occurrence of the
-``"format"`` keyword in a schema passes, with its value - its *format attribute* -
+``"format"`` keyword in a schema passes, with its value -- its *format attribute* --
 simply collected as an annotation. However, we can assign *format validators*
-to any format attributes - including custom format attributes - that we wish
+to any format attributes -- including custom format attributes -- that we wish
 to validate.
 
 The :meth:`~jschon.catalog.Catalog.add_format_validators` method accepts a
 dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed
 by format attribute. A :class:`~jschon.vocabulary.format.FormatValidator`
-is simply a callable that accepts a single argument - the value to be validated -
+is simply a callable that accepts a single argument -- the value to be validated --
 and raises a :exc:`ValueError` if a supplied value is invalid.
 
 For example, suppose that we'd like to validate that any occurrence of an IP address

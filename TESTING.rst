@@ -1,13 +1,13 @@
+.. highlight:: none
+
 Running the tests
 =================
-jschon has been extensively tested, using the
+jschon is tested using the
 `JSON Schema Test Suite <https://github.com/marksparkza/JSON-Schema-Test-Suite>`_
 (excluding optional and format tests), along with custom unit tests that make
 use of the `Hypothesis <https://hypothesis.readthedocs.io/>`_ testing library.
 
-To run the tests, install jschon in editable mode, including testing dependencies:
-
-.. code-block:: sh
+To run the tests, install jschon in editable mode, including testing dependencies::
 
     pip install -e git+https://github.com/marksparkza/jschon.git#egg=jschon[test]
 

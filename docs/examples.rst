@@ -1,6 +1,6 @@
 Examples
 ========
 .. toctree::
-   :glob:
+    :glob:
 
-   ../examples/*
+    examples/*

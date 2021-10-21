@@ -5,7 +5,7 @@ The :class:`~jschon.jsonpointer.JSONPointer` class is an implementation of the
 is commonly used to represent paths to nodes within :class:`~jschon.json.JSON`
 and :class:`~jschon.jsonschema.JSONSchema` documents, and to extract nodes from
 those documents. But :class:`~jschon.jsonpointer.JSONPointer` is designed to work
-with *any* JSON-compatible Python object - including, for example, native :class:`dict`
+with *any* JSON-compatible Python object -- including, for example, native :class:`dict`
 and :class:`list` objects.
 
 Let's see how :class:`~jschon.jsonpointer.JSONPointer` works. We begin with an import:
@@ -94,10 +94,10 @@ JSONPointer('/a/b/c/d')
 JSONPointer('/a/b/c/d')
 
 As you can see, the :class:`~jschon.jsonpointer.JSONPointer` constructor accepts
-- and concatenates - any number of arguments. Each argument can be either:
+-- and concatenates -- any number of arguments. Each argument can be either:
 
 - an :rfc:`6901` JSON pointer string (with reserved characters escaped); or
-- an iterable of unescaped keys or array indices - which may itself be a
+- an iterable of unescaped keys or array indices -- which may itself be a
   :class:`~jschon.jsonpointer.JSONPointer` instance.
 
 A special case is the :class:`~jschon.jsonpointer.JSONPointer` constructed without

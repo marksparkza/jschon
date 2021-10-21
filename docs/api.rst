@@ -1,5 +1,5 @@
-jschon
-======
+API Reference
+=============
 The following classes may be imported directly from the top-level
 :mod:`jschon` package:
 
