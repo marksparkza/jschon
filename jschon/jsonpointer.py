@@ -141,9 +141,9 @@ class JSONPointer(Sequence[str]):
     def evaluate(self, document: Any) -> Any:
         """Return the value within `document` at the location referenced by `self`.
 
-        `document` may be of any type, though if neither JSON-compatible nor
-        a :class:`Mapping` or :class:`Sequence`, evaluation by any non-empty
-        :class:`JSONPointer` will always fail.
+        `document` may be of any type, though if neither a :class:`Mapping` nor
+        a :class:`Sequence`, evaluation by any non-empty :class:`JSONPointer`
+        will always fail.
 
         :param document: any Python object
         :raise JSONPointerError: if `self` references a non-existent location

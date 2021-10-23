@@ -1,6 +1,8 @@
 User Guide
 ==========
 .. toctree::
-    :glob:
 
-    guide/*
+    guide/json
+    guide/jsonpointer
+    guide/jsonschema
+    guide/catalog

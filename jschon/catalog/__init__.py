@@ -33,9 +33,6 @@ class Catalog:
     compilation of a corresponding :class:`~jschon.vocabulary.Metaschema` object,
     which in turn provides any referencing schema with all of the :class:`~jschon.vocabulary.Keyword`
     class implementations for that version of the JSON Schema vocabulary.
-
-    A :class:`Catalog` instance may additionally be configured with base
-    URI-to-directory mappings and format attribute validators.
     """
 
     _version_initializers = {

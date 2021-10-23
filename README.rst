@@ -12,7 +12,7 @@ Features
 
   * Format assertion supported via plug-in callables
   * Schema compilation and indexing
-  * Automatic resource retrieval from local and (coming soon!) remote sources
+  * $ref loading from local and (coming soon!) remote sources
   * Support for custom keywords, vocabularies and meta-schemas
 
 * JSON class implementing the JSON data model

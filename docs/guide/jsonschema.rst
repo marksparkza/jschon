@@ -1,5 +1,5 @@
-JSONSchema
-==========
+JSON Schema
+===========
 The :class:`~jschon.jsonschema.JSONSchema` class represents a *compiled* JSON
 schema document. Once instantiated, a :class:`~jschon.jsonschema.JSONSchema`
 object contains all the structural information and executable code it requires
@@ -146,4 +146,4 @@ Finally, a :class:`~jschon.jsonschema.JSONSchema` object may be instantiated imp
 when retrieving it by URI from the :class:`~jschon.catalog.Catalog`. If the schema is not
 already cached, it is loaded from disk and compiled on the fly. This approach requires
 the catalog to be configured with an appropriate base URI-to-directory mapping. For
-more information, see :ref:`catalog-uri-directory-mapping`.
+more information, see :ref:`catalog-reference-loading`.

@@ -18,12 +18,12 @@ Submodules
 ----------
 The project uses git submodules to incorporate the
 `JSON Schema Test Suite <https://github.com/json-schema-org/JSON-Schema-Test-Suite>`_,
-as well as supported branches of
+as well as supported branches of the
 `JSON Schema Specification <https://github.com/json-schema-org/json-schema-spec>`_
-(which provide the metaschema and vocabulary definition files).
+repository which provides the meta-schema and vocabulary definition files.
 
-Run the following command in your local copy of the jschon repository
-to check out all of the submodules' files::
+Run the following command in your local copy of jschon to check out all
+the submodule files::
 
     git submodule update --init --recursive
 
@@ -37,8 +37,7 @@ mode along with development dependencies::
 Benchmarking
 ------------
 Before starting any new work, you might want to run an initial benchmarking
-test in *autosave* mode. This will give you a baseline for performance testing
-of your changes::
+test. This will give you a baseline for performance testing of your changes::
 
     pytest tests/test_benchmarks.py --benchmark-autosave
 
@@ -58,17 +57,14 @@ spec -- simply type::
 
     pytest
 
-jschon defines a few additional pytest command line options relating to the JSON
-Schema Test Suite::
+jschon provides the following pytest command line options::
 
-    --testsuite-version=VERSION     Only run tests for the specified version
-    --testsuite-optionals           Include optional tests
-    --testsuite-formats             Include format tests
+    --testsuite-version={2019-09,2020-12}  Only run tests for the specified version
+    --testsuite-optionals                  Include optional tests
+    --testsuite-formats                    Include format tests
 
 So, for example, you can run the full 2020-12 test suite, including optional and format
 tests (which jschon does not currently support), by typing::
 
     pytest tests/test_suite.py --testsuite-version=2020-12 --testsuite-optionals --testsuite-formats
 
-Typing ``pytest --help`` will show the above options, including the available ``VERSION``
-identifiers.

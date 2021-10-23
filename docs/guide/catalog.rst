@@ -1,5 +1,5 @@
-Catalog
-=======
+The Catalog
+===========
 The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
 
 #. It acts as a schema cache, enabling schemas and subschemas to be indexed,
@@ -7,10 +7,9 @@ The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
    cooperative schemas that work together to evaluate :class:`~jschon.json.JSON`
    documents.
 #. It provides the infrastructure required for constructing
-   :class:`~jschon.jsonschema.JSONSchema` objects. This includes metaschemas,
-   vocabularies and keyword implementations, format validation functions, and
-   base URI-to-directory mappings that enable URI-identified schemas to be
-   located on disk.
+   :class:`~jschon.jsonschema.JSONSchema` objects. This can include metaschemas,
+   vocabularies and keyword implementations, format validators, and URI-to-directory
+   mappings enabling URI-identified schemas to be located on disk.
 
 A :class:`~jschon.catalog.Catalog` object is typically created once per
 application, using the :func:`~jschon.create_catalog` function:
@@ -36,52 +35,44 @@ When `default` is set to ``False``, then the relevant :class:`~jschon.catalog.Ca
 instance must be specified when creating new :class:`~jschon.jsonschema.JSONSchema`
 objects:
 
->>> schema201909 = JSONSchema({"type": "object", ...}, catalog=cat201909)
->>> schema202012 = JSONSchema.loadf('/path/to/schema.json', catalog=cat202012)
+>>> schema19 = JSONSchema({"type": "object", ...}, catalog=cat201909)
+>>> schema20 = JSONSchema.loadf('/path/to/schema.json', catalog=cat202012)
 
-.. _catalog-uri-directory-mapping:
+.. _catalog-reference-loading:
 
-URI-to-directory mappings
--------------------------
-Suppose that we have a number of schemas stored locally in JSON text files,
-in a directory hierarchy such as the following::
+Reference loading
+-----------------
+With jschon, schema references can be resolved to files on disk, by configuring
+a base URI-to-directory mapping on the catalog:
 
-    /path/to/schema/
-        v1/
-            foo.json
-            bar.json
-        v2/
-            foo.json
-            bar.json
-
-If our schemas share a common base URI, say ``"https://example.com/schema/"``,
-then we can configure a base URI-to-directory mapping on the catalog:
-
->>> from jschon import create_catalog
+>>> from jschon import create_catalog, URI
 >>> catalog = create_catalog('2020-12')
->>> catalog.add_directory(URI("https://example.com/schema/"), '/path/to/schema/')
+>>> catalog.add_directory(URI("https://example.com/schemas/"), '/path/to/schemas/')
 
-Now, we can retrieve :class:`~jschon.jsonschema.JSONSchema` objects with the
-:meth:`~jschon.catalog.Catalog.get_schema` method:
+Now, the ``"$ref"`` in the following schema resolves to the local file
+``/path/to/schemas/my/schema.json``::
 
->>> foo1_schema = catalog.get_schema(URI("https://example.com/schema/v1/foo.json"))
+    {
+        "$ref": "https://example.com/schemas/my/schema",
+        "$schema": "https://json-schema.org/draft/2020-12/schema"
+    }
 
-The ``".json"`` part of the filename may be omitted:
+We can also retrieve :class:`~jschon.jsonschema.JSONSchema` objects by URI
+directly from the catalog:
 
->>> bar2_schema = catalog.get_schema(URI("https://example.com/schema/v2/bar"))
+>>> my_schema = catalog.get_schema(URI("https://example.com/schemas/my/schema"))
 
-Further examples demonstrating the usage of URI-to-directory mappings are
-given in :doc:`../examples/file_based_schemas`.
+See :doc:`../examples/file_based_schemas` for further examples of loading
+schemas from disk.
 
 Format validators
 -----------------
-jschon does not provide built-in support for validating any
-`formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_
-defined in the JSON Schema specification. By default, any occurrence of the
-``"format"`` keyword in a schema passes, with its value -- its *format attribute* --
-simply collected as an annotation. However, we can assign *format validators*
-to any format attributes -- including custom format attributes -- that we wish
-to validate.
+jschon does not provide built-in support for validating JSON Schema
+`formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_.
+By default, any occurrence of the ``"format"`` keyword in a schema simply passes,
+with its value -- its *format attribute* -- collected as an annotation.
+
+To validate a given format attribute, we can define a *format validator*.
 
 The :meth:`~jschon.catalog.Catalog.add_format_validators` method accepts a
 dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed
