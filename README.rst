@@ -18,13 +18,6 @@ Features
 * JSON class implementing the JSON data model
 * JSON pointer implementation (`RFC 6901 <https://tools.ietf.org/html/rfc6901>`_)
 
-Links
------
-* Documentation: https://jschon.readthedocs.io
-* GitHub repository: https://github.com/marksparkza/jschon
-* PyPI package: https://pypi.org/project/jschon
-* Online validator: https://jschon.dev
-
 Installation
 ------------
 ::
@@ -93,6 +86,13 @@ Generate JSON Schema-conformant output:
         }
     ]
 }
+
+Links
+-----
+* Documentation: https://jschon.readthedocs.io
+* GitHub repository: https://github.com/marksparkza/jschon
+* PyPI package: https://pypi.org/project/jschon
+* Online validator: https://jschon.dev
 
 .. |tests| image:: https://github.com/marksparkza/jschon/actions/workflows/tests.yml/badge.svg
     :target: https://github.com/marksparkza/jschon/actions/workflows/tests.yml

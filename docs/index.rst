@@ -1,8 +1,7 @@
 .. include:: ../README.rst
 
 .. toctree::
-    :caption: Contents
-    :maxdepth: 1
+    :hidden:
 
     guide
     api
