@@ -17,10 +17,10 @@ read on!
 Submodules
 ----------
 The project uses git submodules to incorporate the
-`JSON-Schema-Test-Suite <https://github.com/marksparkza/JSON-Schema-Test-Suite>`_,
+`JSON Schema Test Suite <https://github.com/json-schema-org/JSON-Schema-Test-Suite>`_,
 as well as supported branches of
-`json-schema-spec <https://github.com/json-schema-org/json-schema-spec>`_
-(which provides the metaschema and vocabulary definition files).
+`JSON Schema Specification <https://github.com/json-schema-org/json-schema-spec>`_
+(which provide the metaschema and vocabulary definition files).
 
 Run the following command in your local copy of the jschon repository
 to check out all of the submodules' files::

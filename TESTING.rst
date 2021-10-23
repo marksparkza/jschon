@@ -3,7 +3,7 @@
 Running the tests
 =================
 jschon is tested using the
-`JSON Schema Test Suite <https://github.com/marksparkza/JSON-Schema-Test-Suite>`_
+`JSON Schema Test Suite <https://github.com/json-schema-org/JSON-Schema-Test-Suite>`_
 (excluding optional and format tests), along with custom unit tests that make
 use of the `Hypothesis <https://hypothesis.readthedocs.io/>`_ testing library.
 
