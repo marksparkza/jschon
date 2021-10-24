@@ -14,7 +14,7 @@ Miscellaneous:
 * Allow "$id" and "$schema" to be omitted from meta-schema documents
 * Renamed JSON.value to JSON.data; JSON.value now returns the instance data as a
   JSON-compatible Python object (#18)
-* Switched to reStructuredText across the board - top-level *.rst files are now
+* Switched to reStructuredText across the board - top-level ``*.rst`` files are now
   included in the docs and in the published package
 
 
