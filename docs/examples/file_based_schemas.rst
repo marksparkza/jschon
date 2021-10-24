@@ -21,8 +21,6 @@ found in ``data/org-data.json``:
 There are several different ways to ensure that all our schemas are loaded
 and available as needed.
 
-Load all schemas explicitly
----------------------------
 The first way is to load all of our schemas up front. In this case, when
 the ``"$ref"`` keyword is encountered in the org schema, the target (person)
 schema is found already cached in the catalog.
@@ -32,8 +30,6 @@ schema is found already cached in the catalog.
 Note that, when using this approach, the schemas *must* be loaded in
 ``"$ref"`` dependency order.
 
-Create a URI-to-directory mapping and load the primary schema explicitly
-------------------------------------------------------------------------
 Another way is to set up a base URI-to-directory mapping on the catalog.
 In this case, when the ``"$ref"`` keyword is encountered in the org schema,
 the catalog knows where to find the person schema on disk, and loads it on
@@ -41,15 +37,13 @@ the fly.
 
 .. literalinclude:: ../../examples/load_from_files_2.py
 
-Create a URI-to-directory mapping and retrieve the primary schema from the catalog
-----------------------------------------------------------------------------------
 Finally, yet another way is again to set up a base URI-to-directory mapping
 on the catalog, but this time we retrieve our primary schema from the catalog
 rather than loading it explicitly.
 
 .. literalinclude:: ../../examples/load_from_files_3.py
 
-This approach is well-suited to schema re-use, in which JSON document evaluations
-are done independently with knowledge only of a schema's URI. The schema is
-loaded and compiled the first time it is retrieved; thereafter, it is simply
-read from the cache.
+This last approach is well-suited to schema re-use, in which JSON document
+evaluations are done independently with knowledge only of a schema's URI.
+The schema is loaded and compiled the first time it is retrieved; thereafter,
+it is simply read from the cache.
