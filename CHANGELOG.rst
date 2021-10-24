@@ -1,6 +1,23 @@
 Changelog
 =========
 
+v0.7.3 (2021-10-24)
+-------------------
+Documentation:
+
+* Added example of extending JSON Schema with a custom keyword, vocab and meta-schema
+* Various improvements to wording and structuring of docs
+
+Miscellaneous:
+
+* The `default` param of create_catalog() now defaults to True
+* Allow "$id" and "$schema" to be omitted from meta-schema documents
+* Renamed JSON.value to JSON.data; JSON.value now returns the instance data as a
+  JSON-compatible Python object (#18)
+* Switched to reStructuredText across the board - top-level *.rst files are now
+  included in the docs and in the published package
+
+
 v0.7.2 (2021-08-28)
 -------------------
 Bug fixes:
