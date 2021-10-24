@@ -7,7 +7,7 @@ from jschon.vocabulary import Keyword
 
 data_dir = pathlib.Path(__file__).parent / 'data'
 
-# create a simple mapping to emulate a remote enumeration service
+# cache of enumeration values obtained from remote terminology services
 remote_enum_cache = {
     "https://example.com/remote-enum-colours": [
         "red",
@@ -30,25 +30,22 @@ class EnumRefKeyword(Keyword):
     # string instances are ignored by this keyword
     types = "string"
 
-    def __init__(self, parentschema: JSONSchema, value: str):
-        super().__init__(parentschema, value)
-
-        # get the keyword's value as it appears in the JSON schema
-        self.enum_id = self.json.data
-        try:
-            # retrieve the enumeration from the remote enumeration service
-            self.enum = remote_enum_cache[self.enum_id]
-        except KeyError:
-            raise JSONSchemaError(f"Unknown remote enumeration {self.enum_id}")
-
     def evaluate(self, instance: JSON, scope: Scope) -> None:
+        # get the keyword's value as it appears in the JSON schema
+        enum_id = self.json.data
+        try:
+            # retrieve the enumeration from the remote enumeration cache
+            enum = remote_enum_cache[enum_id]
+        except KeyError:
+            raise JSONSchemaError(f"Unknown remote enumeration {enum_id}")
+
         # test the value of the current JSON instance node against the enumeration
-        if instance.data in self.enum:
+        if instance.data in enum:
             # (optionally) on success, set an annotation on the current scope node
-            scope.annotate(self.enum_id)
+            scope.annotate(enum_id)
         else:
             # on failure, flag the scope as failed, with an (optional) error message
-            scope.fail(f"The instance is not a member of the {self.enum_id} enumeration")
+            scope.fail(f"The instance is not a member of the {enum_id} enumeration")
 
 
 # initialize the catalog, with JSON Schema 2020-12 vocabulary support

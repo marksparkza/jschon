@@ -1,5 +1,5 @@
 {
-    "title": "A meta-schema describing the syntax of a vocabulary supporting remote enumerations",
+    "title": "A meta-schema describing the syntax of a vocabulary that supports remote enumerations",
     "$id": "https://example.com/enumRef/enumRef-vocabulary",
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$vocabulary": {
