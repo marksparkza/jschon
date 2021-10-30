@@ -1,7 +1,7 @@
 from typing import Callable
 
 from jschon.exceptions import CatalogError
-from jschon.json import AnyJSONCompatible, JSON
+from jschon.json import JSONCompatible, JSON
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.vocabulary import Keyword
 
@@ -10,7 +10,7 @@ __all__ = [
     'FormatValidator',
 ]
 
-FormatValidator = Callable[[AnyJSONCompatible], None]
+FormatValidator = Callable[[JSONCompatible], None]
 """The type of a ``"format"`` keyword validator.
 
 A :class:`~jschon.vocabulary.format.FormatValidator` is a

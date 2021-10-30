@@ -7,7 +7,7 @@ import pytest
 from hypothesis import given
 
 from jschon import JSON, JSONPointer
-from jschon.json import AnyJSONCompatible
+from jschon.json import JSONCompatible
 from tests.strategies import json, json_nodecimal
 from tests.test_jsonpointer import jsonpointer_escape
 from tests.test_validators import isequal
@@ -15,7 +15,7 @@ from tests.test_validators import isequal
 
 def assert_json_node(
         inst: JSON,
-        val: AnyJSONCompatible,
+        val: JSONCompatible,
         parent: Optional[JSON],
         key: Optional[str],
         ptr: str,

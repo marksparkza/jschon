@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from jschon.json import AnyJSONCompatible
+from jschon.json import JSONCompatible
 from jschon.jsonschema import Scope
 
 __all__ = [
@@ -13,13 +13,13 @@ __all__ = [
 class OutputFormatter:
 
     @staticmethod
-    def flag(scope: Scope) -> Dict[str, AnyJSONCompatible]:
+    def flag(scope: Scope) -> Dict[str, JSONCompatible]:
         return {
             "valid": scope.valid
         }
 
     @staticmethod
-    def basic(scope: Scope) -> Dict[str, AnyJSONCompatible]:
+    def basic(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             if node.valid is valid:
                 if (msgval := getattr(node, msgkey)) is not None:
@@ -42,7 +42,7 @@ class OutputFormatter:
         }
 
     @staticmethod
-    def detailed(scope: Scope) -> Dict[str, AnyJSONCompatible]:
+    def detailed(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             result = {
                 "instanceLocation": str(node.instpath),
@@ -74,7 +74,7 @@ class OutputFormatter:
         }
 
     @staticmethod
-    def verbose(scope: Scope) -> Dict[str, AnyJSONCompatible]:
+    def verbose(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             result = {
                 "valid": (valid := node.valid),

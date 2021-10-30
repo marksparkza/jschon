@@ -16,7 +16,7 @@ from typing import (
 from uuid import uuid4
 
 from jschon.exceptions import JSONSchemaError
-from jschon.json import JSON, AnyJSONCompatible
+from jschon.json import JSON, JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
 from jschon.utils import tuplify
@@ -37,7 +37,7 @@ class JSONSchema(JSON):
 
     def __init__(
             self,
-            value: Union[bool, Mapping[str, AnyJSONCompatible]],
+            value: Union[bool, Mapping[str, JSONCompatible]],
             *,
             catalog: Catalog = None,
             session: Hashable = 'default',
@@ -141,7 +141,7 @@ class JSONSchema(JSON):
         else:
             raise TypeError(f"{value=} is not JSONSchema-compatible")
 
-    def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
+    def _bootstrap(self, value: Mapping[str, JSONCompatible]) -> None:
         from jschon.vocabulary.core import IdKeyword, SchemaKeyword, VocabularyKeyword
         boostrap_kwclasses = {
             "$id": IdKeyword,
@@ -343,7 +343,7 @@ class Scope:
         self.instpath: JSONPointer = instpath or JSONPointer()
         self.parent: Optional[Scope] = parent
         self.children: Dict[JSONPointer, Dict[str, Scope]] = {}
-        self.annotation: AnyJSONCompatible = None
+        self.annotation: JSONCompatible = None
         self.error: Optional[str] = None
         self._valid = True
         self._assert = True
@@ -384,7 +384,7 @@ class Scope:
         except KeyError:
             return None
 
-    def annotate(self, value: AnyJSONCompatible) -> None:
+    def annotate(self, value: JSONCompatible) -> None:
         """Set an annotation on the scope."""
         self.annotation = value
 
@@ -460,7 +460,7 @@ class Scope:
             if instance is None or instance.path == instance_path:
                 yield from keyword_scopes.values()
 
-    def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[AnyJSONCompatible]:
+    def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[JSONCompatible]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
         if self._valid and not self._discard:
@@ -471,7 +471,7 @@ class Scope:
             for child in self.iter_children():
                 yield from child.collect_annotations(instance, key)
 
-    def output(self, format: OutputFormat) -> Dict[str, AnyJSONCompatible]:
+    def output(self, format: OutputFormat) -> Dict[str, JSONCompatible]:
         """Return an output dictionary formatted in accordance with the
         JSON Schema specification of the given output `format`."""
         from jschon.output import OutputFormatter

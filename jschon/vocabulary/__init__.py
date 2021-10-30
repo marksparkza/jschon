@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, Optional, Union, Tuple, Sequence, Mapping, Type, Any, TYPE_CHECKING
 
-from jschon.json import JSON, AnyJSONCompatible
+from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.uri import URI
 from jschon.utils import tuplify
@@ -33,7 +33,7 @@ class Metaschema(JSONSchema):
     def __init__(
             self,
             catalog: Catalog,
-            value: Mapping[str, AnyJSONCompatible],
+            value: Mapping[str, JSONCompatible],
             core_vocabulary: Vocabulary,
             *default_vocabularies: Vocabulary,
             **kwargs: Any,
@@ -43,7 +43,7 @@ class Metaschema(JSONSchema):
         self.kwclasses: Dict[str, KeywordClass] = {}
         super().__init__(value, catalog=catalog, session='__meta__', **kwargs)
 
-    def _bootstrap(self, value: Mapping[str, AnyJSONCompatible]) -> None:
+    def _bootstrap(self, value: Mapping[str, JSONCompatible]) -> None:
         super()._bootstrap(value)
         self.kwclasses.update(self.core_vocabulary.kwclasses)
         if "$vocabulary" not in value:
@@ -68,7 +68,7 @@ class Keyword:
     types: Optional[Union[str, Tuple[str, ...]]] = None
     depends: Optional[Union[str, Tuple[str, ...]]] = None
 
-    def __init__(self, parentschema: JSONSchema, value: AnyJSONCompatible):
+    def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
         self.applicator_cls = None
         for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
             if isinstance(self, applicator_cls):
@@ -110,7 +110,7 @@ class Applicator:
     an applicator keyword."""
 
     @classmethod
-    def jsonify(cls, parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSONSchema]:
+    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSONSchema]:
         if _is_schema_compatible(value):
             return JSONSchema(
                 value,
@@ -126,7 +126,7 @@ class ArrayApplicator:
     for an applicator keyword."""
 
     @classmethod
-    def jsonify(cls, parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
+    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
         if isinstance(value, Sequence) and all(_is_schema_compatible(v) for v in value):
             return JSON(
                 value,
@@ -143,7 +143,7 @@ class PropertyApplicator:
     for an applicator keyword."""
 
     @classmethod
-    def jsonify(cls, parentschema: JSONSchema, key: str, value: AnyJSONCompatible) -> Optional[JSON]:
+    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
         if isinstance(value, Mapping) and all(
                 isinstance(k, str) and _is_schema_compatible(v)
                 for k, v in value.items()

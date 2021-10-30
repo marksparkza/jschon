@@ -8,7 +8,7 @@ from typing import Dict, Mapping, Optional, Hashable, ContextManager, Any
 
 from jschon.catalog import _2019_09, _2020_12
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
-from jschon.json import AnyJSONCompatible
+from jschon.json import JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
@@ -94,7 +94,7 @@ class Catalog:
 
         self._directories[base_uri] = base_dir
 
-    def load_json(self, uri: URI) -> AnyJSONCompatible:
+    def load_json(self, uri: URI) -> JSONCompatible:
         """Load a JSON-compatible object from the file corresponding to `uri`.
         
         The file path is determined by selecting the most specific matching

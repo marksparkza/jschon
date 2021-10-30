@@ -4,17 +4,17 @@ import json
 from collections import deque
 from decimal import Decimal
 from os import PathLike
-from typing import Sequence, Mapping, TypeVar, Type, Optional, Iterator, Union, Any, List, Dict
+from typing import Sequence, Mapping, Type, Optional, Iterator, Union, Any, List, Dict
 
 from jschon.jsonpointer import JSONPointer
 from jschon.utils import json_loadf, json_loads
 
 __all__ = [
     'JSON',
-    'AnyJSONCompatible',
+    'JSONCompatible',
 ]
 
-AnyJSONCompatible = TypeVar('AnyJSONCompatible', 'None', bool, int, float, Decimal, str, Sequence, Mapping)
+JSONCompatible = Union[None, bool, int, float, Decimal, str, Sequence[Any], Mapping[str, Any]]
 """Type hint for a JSON-compatible Python object."""
 
 
@@ -41,7 +41,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
     def __init__(
             self,
-            value: AnyJSONCompatible,
+            value: JSONCompatible,
             *,
             parent: JSON = None,
             key: str = None,
@@ -141,7 +141,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return JSONPointer(keys)
 
     @property
-    def value(self) -> AnyJSONCompatible:
+    def value(self) -> JSONCompatible:
         """Return the instance data as a JSON-compatible Python object."""
         if isinstance(self.data, list):
             return [item.value for item in self.data]
@@ -181,7 +181,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             return self.data[index]
         raise TypeError(f"{self!r} is not subscriptable")
 
-    def __eq__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+    def __eq__(self, other: Union[JSON, JSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
@@ -194,28 +194,28 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             return self.data == other.data
         return NotImplemented
 
-    def __ge__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+    def __ge__(self, other: Union[JSON, JSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
             return self.data >= other.data
         return NotImplemented
 
-    def __gt__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+    def __gt__(self, other: Union[JSON, JSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
             return self.data > other.data
         return NotImplemented
 
-    def __le__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+    def __le__(self, other: Union[JSON, JSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
             return self.data <= other.data
         return NotImplemented
 
-    def __lt__(self, other: Union[JSON, AnyJSONCompatible]) -> bool:
+    def __lt__(self, other: Union[JSON, JSONCompatible]) -> bool:
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
