@@ -1,6 +1,6 @@
 import pytest
 
-from jschon import create_catalog
+from jschon import Catalog
 
 
 def pytest_addoption(parser):
@@ -12,4 +12,4 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope='module', autouse=True)
 def catalog():
-    return create_catalog('2019-09', '2020-12', default=True)
+    return Catalog('2019-09', '2020-12')

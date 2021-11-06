@@ -1,6 +1,18 @@
 Changelog
 =========
 
+v0.8.0 (in development)
+-----------------------
+Breaking changes:
+
+* Dropped the create_catalog function
+
+Miscellaneous:
+
+* Implemented a Catalog instance registry, replacing the default instance approach
+* Replaced the AnyJSONCompatible type variable with a JSONCompatible type alias
+
+
 v0.7.3 (2021-10-24)
 -------------------
 Documentation:

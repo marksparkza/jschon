@@ -12,31 +12,31 @@ The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
    mappings enabling URI-identified schemas to be located on disk.
 
 A :class:`~jschon.catalog.Catalog` object is typically created once per
-application, using the :func:`~jschon.create_catalog` function:
+application:
 
->>> from jschon import create_catalog
->>> create_catalog('2020-12')
+>>> from jschon import Catalog
+>>> catalog = Catalog('2020-12')
 
-:func:`~jschon.create_catalog` accepts a variable argument list indicating which
-versions of the JSON Schema vocabulary to support. For example, the following
-initialization call will enable our application to work with both 2019-09 and
-2020-12 schemas:
+The :class:`~jschon.catalog.Catalog` constructor accepts a variable argument list
+indicating which versions of the JSON Schema vocabulary to support. For example,
+the following initialization call will enable our application to work with both
+2019-09 and 2020-12 schemas:
 
->>> create_catalog('2019-09', '2020-12')
+>>> catalog = Catalog('2019-09', '2020-12')
 
 If our application requires distinct :class:`~jschon.catalog.Catalog`
 instances with different configurations, then our setup might look something
 like this:
 
->>> cat201909 = create_catalog('2019-09', default=False)
->>> cat202012 = create_catalog('2020-12', default=False)
+>>> catalog_1 = Catalog('2019-09', name='Catalog 1')
+>>> catalog_2 = Catalog('2020-12', name='Catalog 2')
 
-When `default` is set to ``False``, then the relevant :class:`~jschon.catalog.Catalog`
-instance must be specified when creating new :class:`~jschon.jsonschema.JSONSchema`
-objects:
+The relevant :class:`~jschon.catalog.Catalog` instance - or name - can be
+specified when creating new :class:`~jschon.jsonschema.JSONSchema` objects:
 
->>> schema19 = JSONSchema({"type": "object", ...}, catalog=cat201909)
->>> schema20 = JSONSchema.loadf('/path/to/schema.json', catalog=cat202012)
+>>> from jschon import JSONSchema
+>>> schema_1 = JSONSchema({"type": "object", ...}, catalog=catalog_1)
+>>> schema_2 = JSONSchema.loadf('/path/to/schema.json', catalog='Catalog 2')
 
 .. _catalog-reference-loading:
 
@@ -45,8 +45,8 @@ Reference loading
 With jschon, schema references can be resolved to files on disk, by configuring
 a base URI-to-directory mapping on the catalog:
 
->>> from jschon import create_catalog, URI
->>> catalog = create_catalog('2020-12')
+>>> from jschon import Catalog, URI
+>>> catalog = Catalog('2020-12')
 >>> catalog.add_directory(URI("https://example.com/schemas/"), '/path/to/schemas/')
 
 Now, the ``"$ref"`` in the following schema resolves to the local file
@@ -90,14 +90,14 @@ Our catalog setup looks like this:
 
 >>> import ipaddress
 >>> import re
->>> from jschon import create_catalog
+>>> from jschon import Catalog
 ...
 >>> def validate_hostname(value):
 ...     hostname_regex = re.compile(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
 ...     if not hostname_regex.match(value):
 ...         raise ValueError(f"'{value}' is not a valid hostname")
 ...
->>> catalog = create_catalog('2020-12')
+>>> catalog = Catalog('2020-12')
 >>> catalog.add_format_validators({
 ...     "ipv4": ipaddress.IPv4Address,
 ...     "ipv6": ipaddress.IPv6Address,
@@ -108,6 +108,7 @@ Now, we can define a schema that returns a validation failure for any JSON docum
 that contains incorrectly formatted IP addresses or hostnames. The following
 simple example validates a single string instance:
 
+>>> from jschon import JSONSchema
 >>> schema = JSONSchema({
 ...     "$schema": "https://json-schema.org/draft/2020-12/schema",
 ...     "type": "string",

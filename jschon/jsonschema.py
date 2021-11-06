@@ -39,7 +39,7 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, JSONCompatible]],
             *,
-            catalog: Catalog = None,
+            catalog: Union[Hashable, Catalog] = 'catalog',
             session: Hashable = 'default',
             uri: URI = None,
             metaschema_uri: URI = None,
@@ -50,10 +50,7 @@ class JSONSchema(JSON):
         schema-compatible `value`.
 
         :param value: a schema-compatible Python object
-        :param catalog: the catalog in which the schema is cached;
-            omitting this parameter has the same effect as setting it
-            to the default catalog, i.e. that created by
-            `jschon.create_catalog(..., default=True)`
+        :param catalog: the catalog in which the schema is cached
         :param session: a session identifier, identifying which session
             cache to put the schema in
         :param uri: the URI identifying the schema; an ``"$id"`` keyword
@@ -67,12 +64,8 @@ class JSONSchema(JSON):
         """
         from jschon.catalog import Catalog
 
-        if catalog is None:
-            if (catalog := Catalog.get_default()) is None:
-                raise JSONSchemaError("catalog not given and default catalog not found")
-
-        if uri is not None:
-            catalog.add_schema(uri, self, session=session)
+        if not isinstance(catalog, Catalog):
+            catalog = Catalog.get_catalog(catalog)
 
         self.catalog: Catalog = catalog
         """The catalog in which the schema is cached."""
@@ -80,6 +73,9 @@ class JSONSchema(JSON):
         self.session: Hashable = session
         """A session identifier, identifying which session
         cache to use for the schema."""
+
+        if uri is not None:
+            catalog.add_schema(uri, self, session=session)
 
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri

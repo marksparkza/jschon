@@ -1,10 +1,11 @@
 import json
 import pathlib
 import tempfile
+import uuid
 
 import pytest
 
-from jschon import Catalog, CatalogError, URI, JSONPointer, JSONSchema, JSON, create_catalog
+from jschon import Catalog, CatalogError, URI, JSONPointer, JSONSchema, JSON
 from tests import example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
@@ -12,7 +13,7 @@ json_example = {"foo": "bar"}
 
 @pytest.fixture
 def new_catalog():
-    return Catalog(default=False)
+    return Catalog(name=uuid.uuid4())
 
 
 def test_new_catalog(new_catalog):
@@ -151,7 +152,7 @@ def test_session_independence(catalog):
 
 
 def test_metaschema_isolation():
-    new_catalog = create_catalog('2019-09', '2020-12', default=False)
+    new_catalog = Catalog('2019-09', '2020-12', name=uuid.uuid4())
     assert new_catalog._schema_cache.keys() == {'__meta__'}
 
     # mask the metaschema with a boolean false schema, in the fubar session

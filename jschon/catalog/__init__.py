@@ -4,7 +4,7 @@ import pathlib
 import uuid
 from contextlib import contextmanager
 from os import PathLike
-from typing import Dict, Mapping, Optional, Hashable, ContextManager, Any
+from typing import Dict, Mapping, Hashable, ContextManager, Any
 
 from jschon.catalog import _2019_09, _2020_12
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
@@ -39,21 +39,27 @@ class Catalog:
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
     }
-    _default_catalog: Catalog = None
+    _catalog_registry: Dict[Hashable, Catalog] = {}
 
     @classmethod
-    def get_default(cls) -> Optional[Catalog]:
-        """Get the default :class:`Catalog` instance, if there is one."""
-        return cls._default_catalog
+    def get_catalog(cls, name: Hashable = 'catalog') -> Catalog:
+        try:
+            return cls._catalog_registry[name]
+        except KeyError:
+            raise CatalogError(f'Catalog name "{name}" not found.')
 
-    def __init__(self, *versions: str, default: bool):
+    def __init__(self, *versions: str, name: Hashable = 'catalog'):
         """Initialize a :class:`Catalog` instance.
-        
+
         :param versions: any of ``'2019-09'``, ``'2020-12'``
-        :param default: if True, new :class:`~jschon.jsonschema.JSONSchema`
-            instances are by default cached in this catalog
+        :param name: a unique name for this :class:`Catalog` instance
         :raise CatalogError: if a supplied version parameter is not recognized
         """
+        self.__class__._catalog_registry[name] = self
+
+        self.name: Hashable = name
+        """The unique name of this catalog."""
+
         self._directories: Dict[URI, PathLike] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
         self._format_validators: Dict[str, FormatValidator] = {}
@@ -65,9 +71,6 @@ class Catalog:
 
         for initializer in initializers:
             initializer(self)
-
-        if default:
-            Catalog._default_catalog = self
 
     def add_directory(self, base_uri: URI, base_dir: PathLike) -> None:
         """Register a base URI-to-directory mapping.

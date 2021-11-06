@@ -1,9 +1,9 @@
 import pathlib
-from jschon import create_catalog, JSON, JSONSchema
+from jschon import Catalog, JSON, JSONSchema
 
 data_dir = pathlib.Path(__file__).parent / 'data'
 
-catalog = create_catalog('2020-12')
+catalog = Catalog('2020-12')
 
 person_schema = JSONSchema.loadf(data_dir / 'person-schema.json')
 org_schema = JSONSchema.loadf(data_dir / 'org-schema.json')

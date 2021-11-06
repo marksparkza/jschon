@@ -30,9 +30,9 @@ Create a JSON schema:
 
 .. code-block:: python
 
-    from jschon import create_catalog, JSON, JSONSchema
+    from jschon import Catalog, JSON, JSONSchema
 
-    create_catalog('2020-12')
+    catalog = Catalog('2020-12')
 
     demo_schema = JSONSchema({
         "$id": "https://example.com/demo",
