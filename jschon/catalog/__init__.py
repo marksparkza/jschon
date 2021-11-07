@@ -6,7 +6,6 @@ from contextlib import contextmanager
 from os import PathLike
 from typing import Dict, Mapping, Hashable, ContextManager, Any
 
-from jschon.catalog import _2019_09, _2020_12
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
 from jschon.json import JSONCompatible
 from jschon.jsonpointer import JSONPointer
@@ -18,66 +17,61 @@ from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
     'Catalog',
+    'Source',
+    'LocalSource',
 ]
 
 
-class Catalog:
-    """The :class:`Catalog` acts primarily as a schema cache, enabling schemas
-    and subschemas to be indexed, re-used, and cross-referenced by URI. The cache
-    is transparently partitioned by (arbitrary) session identifiers, which may
-    optionally be provided when creating :class:`~jschon.jsonschema.JSONSchema`
-    objects.
-    
-    A :class:`Catalog` instance is typically initialized by providing one or
-    more JSON Schema version identifiers. Each such identifier triggers the
-    compilation of a corresponding :class:`~jschon.vocabulary.Metaschema` object,
-    which in turn provides any referencing schema with all of the :class:`~jschon.vocabulary.Keyword`
-    class implementations for that version of the JSON Schema vocabulary.
-    """
+class Source:
+    def __call__(self, relative_path: str) -> JSONCompatible:
+        raise NotImplementedError
 
-    _version_initializers = {
-        '2019-09': _2019_09.initialize,
-        '2020-12': _2020_12.initialize,
-    }
+
+class LocalSource(Source):
+    def __init__(self, base_dir: PathLike) -> None:
+        self.base_dir = base_dir
+
+    def __call__(self, relative_path: str) -> JSONCompatible:
+        filepath = pathlib.Path(self.base_dir) / relative_path
+        try:
+            return json_loadf(filepath)
+        except FileNotFoundError as e:
+            return json_loadf(filepath.with_suffix('.json'))
+
+
+class Catalog:
+    """The :class:`Catalog` acts as a schema cache, enabling schemas and subschemas
+    to be indexed, re-used, and cross-referenced by URI. The cache is transparently
+    partitioned by (arbitrary) session identifiers, which may optionally be provided
+    when creating :class:`~jschon.jsonschema.JSONSchema` objects."""
+
     _catalog_registry: Dict[Hashable, Catalog] = {}
 
     @classmethod
-    def get_catalog(cls, name: Hashable = 'catalog') -> Catalog:
+    def get_catalog(cls, name: str = 'catalog') -> Catalog:
         try:
             return cls._catalog_registry[name]
         except KeyError:
             raise CatalogError(f'Catalog name "{name}" not found.')
 
-    def __init__(self, *versions: str, name: Hashable = 'catalog'):
+    def __init__(self, name: str = 'catalog') -> None:
         """Initialize a :class:`Catalog` instance.
 
-        :param versions: any of ``'2019-09'``, ``'2020-12'``
         :param name: a unique name for this :class:`Catalog` instance
-        :raise CatalogError: if a supplied version parameter is not recognized
         """
         self.__class__._catalog_registry[name] = self
 
-        self.name: Hashable = name
-        """The unique name of this catalog."""
+        self.name: str = name
+        """The unique name of this :class:`Catalog` instance."""
 
-        self._directories: Dict[URI, PathLike] = {}
+        self._sources: Dict[URI, Source] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
         self._format_validators: Dict[str, FormatValidator] = {}
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
-        try:
-            initializers = [self._version_initializers[version] for version in versions]
-        except KeyError as e:
-            raise CatalogError(f'Unrecognized version "{e.args[0]}"')
 
-        for initializer in initializers:
-            initializer(self)
-
-    def add_directory(self, base_uri: URI, base_dir: PathLike) -> None:
-        """Register a base URI-to-directory mapping.
-        
-        This enables JSON objects identified by URIs with a given base URI
-        to be loaded from files within a corresponding directory hierarchy,
-        as described under :meth:`load_json`.
+    def add_local_source(self, base_uri: URI, base_dir: PathLike) -> None:
+        """Register a local directory as a source for loading URI-identified
+        JSON resources.
 
         :param base_uri: a normalized, absolute URI - including scheme, without
             a fragment, and ending with ``'/'``
@@ -90,24 +84,23 @@ class Catalog:
             raise CatalogError from e
 
         if not base_uri.path or not base_uri.path.endswith('/'):
-            raise CatalogError("base_uri must end with '/'")
+            raise CatalogError('base_uri must end with "/"')
 
         if not pathlib.Path(base_dir).is_dir():
-            raise CatalogError(f"'{base_dir}' is not a directory")
+            raise CatalogError(f'"{base_dir}" is not a directory')
 
-        self._directories[base_uri] = base_dir
+        self._sources[base_uri] = LocalSource(base_dir)
 
     def load_json(self, uri: URI) -> JSONCompatible:
-        """Load a JSON-compatible object from the file corresponding to `uri`.
-        
-        The file path is determined by selecting the most specific matching
-        base URI that was registered with :meth:`add_directory`, and resolving
-        the remainder of `uri` against the corresponding base directory.
+        """Load a JSON-compatible object from the source for `uri`.
+
+        If there are multiple candidate base URIs for `uri`, the most specific
+        match (i.e. the longest one) is selected.
 
         :param uri: a normalized, absolute URI - including scheme, without
             a fragment
-        :raise CatalogError: if `uri` is invalid, or if a corresponding
-            file cannot be found
+        :raise CatalogError: if `uri` is invalid, a source is not available
+            for `uri`, or if a loading error occurs
         """
         try:
             uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
@@ -116,29 +109,20 @@ class Catalog:
 
         uristr = str(uri)
         candidates = [
-            (base_uristr, base_dir)
-            for base_uri, base_dir in self._directories.items()
+            (base_uristr, source)
+            for base_uri, source in self._sources.items()
             if uristr.startswith(base_uristr := str(base_uri))
         ]
         if candidates:
-            # if there is more than one candidate base URI, we consider
-            # only the longest one to be a match: it represents a mount
-            # of a directory at a sub-path of a parent candidate, and
-            # we shouldn't fall back to trying to find the file in the
-            # parent's directory hierarchy
             candidates.sort(key=lambda c: len(c[0]), reverse=True)
-            base_uristr, base_dir = candidates[0]
-            filepath = pathlib.Path(base_dir) / uristr[len(base_uristr):]
+            base_uristr, source = candidates[0]
+            relative_path = uristr[len(base_uristr):]
             try:
-                return json_loadf(filepath)
-            except FileNotFoundError:
-                pass
-            try:
-                return json_loadf(filepath.with_suffix('.json'))
-            except FileNotFoundError:
-                pass
+                return source(relative_path)
+            except Exception as e:
+                raise CatalogError from e
 
-        raise CatalogError(f"File not found for '{uri}'")
+        raise CatalogError(f'A source is not available for "{uri}"')
 
     def create_vocabulary(self, uri: URI, *kwclasses: KeywordClass) -> None:
         """Create a :class:`~jschon.vocabulary.Vocabulary` object, which

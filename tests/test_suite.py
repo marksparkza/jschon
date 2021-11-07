@@ -11,7 +11,7 @@ testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
 @pytest.fixture(scope='module', autouse=True)
 def configure_catalog(catalog):
-    catalog.add_directory(
+    catalog.add_local_source(
         base_uri=URI('http://localhost:1234/'),
         base_dir=testsuite_dir / 'remotes',
     )

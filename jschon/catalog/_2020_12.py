@@ -9,7 +9,7 @@ from jschon.vocabulary.validation import *
 
 
 def initialize(catalog):
-    catalog.add_directory(
+    catalog.add_local_source(
         URI('https://json-schema.org/draft/2020-12/'),
         pathlib.Path(__file__).parent / 'json-schema-spec-2020-12',
     )

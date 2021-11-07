@@ -2,7 +2,7 @@ import ipaddress
 import pprint
 import re
 
-from jschon import Catalog, JSON, JSONSchema
+from jschon import create_catalog, JSON, JSONSchema
 
 
 # define a "hostname" format validation function
@@ -14,7 +14,7 @@ def validate_hostname(value):
 
 
 # create a catalog with support for JSON Schema version 2020-12
-catalog = Catalog('2020-12')
+catalog = create_catalog('2020-12')
 
 # register IP address and hostname format validators
 catalog.add_format_validators({

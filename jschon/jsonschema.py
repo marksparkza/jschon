@@ -39,7 +39,7 @@ class JSONSchema(JSON):
             self,
             value: Union[bool, Mapping[str, JSONCompatible]],
             *,
-            catalog: Union[Hashable, Catalog] = 'catalog',
+            catalog: Union[str, Catalog] = 'catalog',
             session: Hashable = 'default',
             uri: URI = None,
             metaschema_uri: URI = None,

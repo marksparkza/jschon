@@ -13,6 +13,10 @@ The following classes may be imported directly from the top-level
 * :class:`~jschon.uri.URI`
 * :class:`~jschon.exceptions.URIError`
 
+The package additionally defines the catalog initialization function:
+
+.. autofunction:: jschon.create_catalog
+
 .. toctree::
     :caption: Module Reference
     :glob:

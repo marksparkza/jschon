@@ -1,10 +1,10 @@
 import pathlib
-from jschon import Catalog, JSON, URI
+from jschon import create_catalog, JSON, URI
 
 data_dir = pathlib.Path(__file__).parent / 'data'
 
-catalog = Catalog('2020-12')
-catalog.add_directory(URI("https://example.com/"), data_dir)
+catalog = create_catalog('2020-12')
+catalog.add_local_source(URI("https://example.com/"), data_dir)
 
 org_schema = catalog.get_schema(URI("https://example.com/org-schema"))
 org_data = JSON.loadf(data_dir / 'org-data.json')

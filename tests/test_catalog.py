@@ -5,7 +5,7 @@ import uuid
 
 import pytest
 
-from jschon import Catalog, CatalogError, URI, JSONPointer, JSONSchema, JSON
+from jschon import Catalog, CatalogError, URI, JSONPointer, JSONSchema, JSON, create_catalog
 from tests import example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
@@ -13,11 +13,11 @@ json_example = {"foo": "bar"}
 
 @pytest.fixture
 def new_catalog():
-    return Catalog(name=uuid.uuid4())
+    return Catalog(name=str(uuid.uuid4()))
 
 
 def test_new_catalog(new_catalog):
-    assert not new_catalog._directories
+    assert not new_catalog._sources
     assert not new_catalog._vocabularies
     assert not new_catalog._format_validators
     assert not new_catalog._schema_cache
@@ -43,9 +43,9 @@ def setup_tmpdir():
     'http://example.com/foo/',
     'http://example.com/foo/bar/',
 ])
-def test_add_directory_and_load_json(base_uri, setup_tmpdir, new_catalog):
+def test_local_source(base_uri, setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    new_catalog.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
+    new_catalog.add_local_source(URI(base_uri), pathlib.Path(tmpdir_path))
     json_doc = new_catalog.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
     assert json_doc == json_example
     # incorrect base URI
@@ -63,20 +63,20 @@ def test_add_directory_and_load_json(base_uri, setup_tmpdir, new_catalog):
     'http://example.com/foo/#bar',  # contains non-empty fragment
     'http://example.com/foo/bar',  # does not end with '/'
 ])
-def test_add_directory_invalid_uri(base_uri, setup_tmpdir, new_catalog):
+def test_local_source_invalid_uri(base_uri, setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
     with pytest.raises(CatalogError):
-        new_catalog.add_directory(URI(base_uri), pathlib.Path(tmpdir_path))
+        new_catalog.add_local_source(URI(base_uri), pathlib.Path(tmpdir_path))
 
 
-def test_add_directory_invalid_dir(setup_tmpdir, new_catalog):
+def test_local_source_invalid_dir(setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
     # base_dir is a file
     with pytest.raises(CatalogError):
-        new_catalog.add_directory(URI('http://example.com/'), pathlib.Path(tmpdir_path) / subdir_name / jsonfile_name)
+        new_catalog.add_local_source(URI('http://example.com/'), pathlib.Path(tmpdir_path) / subdir_name / jsonfile_name)
     # base_dir does not exist
     with pytest.raises(CatalogError):
-        new_catalog.add_directory(URI('http://example.com/'), pathlib.Path(tmpdir_path) / 'foo')
+        new_catalog.add_local_source(URI('http://example.com/'), pathlib.Path(tmpdir_path) / 'foo')
 
 
 @pytest.mark.parametrize('uri', [
@@ -152,7 +152,7 @@ def test_session_independence(catalog):
 
 
 def test_metaschema_isolation():
-    new_catalog = Catalog('2019-09', '2020-12', name=uuid.uuid4())
+    new_catalog = create_catalog('2019-09', '2020-12', name=str(uuid.uuid4()))
     assert new_catalog._schema_cache.keys() == {'__meta__'}
 
     # mask the metaschema with a boolean false schema, in the fubar session

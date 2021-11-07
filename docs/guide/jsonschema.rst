@@ -20,8 +20,8 @@ Initializing the catalog
 Before we can begin creating and working with schemas, we must set up a catalog.
 For the examples shown on the remainder of this page, we'll use the following:
 
->>> from jschon import Catalog
->>> catalog = Catalog('2020-12')
+>>> from jschon import create_catalog
+>>> catalog = create_catalog('2020-12')
 
 Creating a schema
 -----------------

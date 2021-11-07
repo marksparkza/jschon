@@ -11,25 +11,25 @@ The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
    vocabularies and keyword implementations, format validators, and URI-to-directory
    mappings enabling URI-identified schemas to be located on disk.
 
-A :class:`~jschon.catalog.Catalog` object is typically created once per
-application:
+A :class:`~jschon.catalog.Catalog` object is typically created and configured
+at startup:
 
->>> from jschon import Catalog
->>> catalog = Catalog('2020-12')
+>>> from jschon import create_catalog
+>>> catalog = create_catalog('2020-12')
 
-The :class:`~jschon.catalog.Catalog` constructor accepts a variable argument list
+The :func:`~jschon.create_catalog` function accepts a variable argument list
 indicating which versions of the JSON Schema vocabulary to support. For example,
 the following initialization call will enable our application to work with both
 2019-09 and 2020-12 schemas:
 
->>> catalog = Catalog('2019-09', '2020-12')
+>>> catalog = create_catalog('2019-09', '2020-12')
 
 If our application requires distinct :class:`~jschon.catalog.Catalog`
 instances with different configurations, then our setup might look something
 like this:
 
->>> catalog_1 = Catalog('2019-09', name='Catalog 1')
->>> catalog_2 = Catalog('2020-12', name='Catalog 2')
+>>> catalog_1 = create_catalog('2019-09', name='Catalog 1')
+>>> catalog_2 = create_catalog('2020-12', name='Catalog 2')
 
 The relevant :class:`~jschon.catalog.Catalog` instance - or name - can be
 specified when creating new :class:`~jschon.jsonschema.JSONSchema` objects:
@@ -43,11 +43,11 @@ specified when creating new :class:`~jschon.jsonschema.JSONSchema` objects:
 Reference loading
 -----------------
 With jschon, schema references can be resolved to files on disk, by configuring
-a base URI-to-directory mapping on the catalog:
+a local directory source for a given base URI:
 
->>> from jschon import Catalog, URI
->>> catalog = Catalog('2020-12')
->>> catalog.add_directory(URI("https://example.com/schemas/"), '/path/to/schemas/')
+>>> from jschon import create_catalog, URI
+>>> catalog = create_catalog('2020-12')
+>>> catalog.add_local_source(URI("https://example.com/schemas/"), '/path/to/schemas/')
 
 Now, the ``"$ref"`` in the following schema resolves to the local file
 ``/path/to/schemas/my/schema.json``::
@@ -97,7 +97,7 @@ Our catalog setup looks like this:
 ...     if not hostname_regex.match(value):
 ...         raise ValueError(f"'{value}' is not a valid hostname")
 ...
->>> catalog = Catalog('2020-12')
+>>> catalog = create_catalog('2020-12')
 >>> catalog.add_format_validators({
 ...     "ipv4": ipaddress.IPv4Address,
 ...     "ipv6": ipaddress.IPv6Address,
