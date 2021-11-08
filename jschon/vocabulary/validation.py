@@ -234,7 +234,7 @@ class RequiredKeyword(Keyword):
     types = "object"
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        missing = [name for name in self.json if name.data not in instance]
+        missing = [name.value for name in self.json if name.data not in instance]
         if missing:
             scope.fail(f"The object is missing required properties {missing}")
 
