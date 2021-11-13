@@ -2,37 +2,31 @@ import sys
 from decimal import Decimal
 
 import pytest
-from pytest import param as p
+from pytest import param
 
 from jschon import JSON, JSONSchema
 from tests import metaschema_uri_2020_12, example_schema, example_valid, example_invalid
 
 
-@pytest.mark.parametrize('value', (
-        p(None, id='null'),
-        p(True, id='bool'),
-        p(sys.maxsize, id='int'),
-        p(1.1111111111, id='float'),
-        p(sys.float_info.max, id='max float'),
-        p(Decimal('100.00'), id='decimal int'),
-        p(Decimal('99.9999'), id='decimal float'),
-        p('Hello, World!', id='string'),
-        p([], id='empty array'),
-        p([1] * 10, id='10x int array'),
-        p([1] * 100, id='100x int array'),
-        p({}, id='empty object'),
-        p(dict(zip(map(str, range(10)), [1] * 10)), id='10x int object'),
-        p(dict(zip(map(str, range(100)), [1] * 100)), id='100x int object'),
-        p(example_valid, id='simple example'),
-        p(example_schema, id='complex example'),
-))
-def test_create_json(benchmark, value):
-    benchmark(JSON, value)
+def test_create_json(benchmark):
+    benchmark(
+        JSON, {
+            'null': None,
+            'bool': True,
+            'int': sys.maxsize,
+            'float': 1.234,
+            'decimal': Decimal('99.99'),
+            'string': 'Hello, World!',
+            'array': list(map(chr, range(10))),
+            'object': dict(zip(map(str, range(10)), map(chr, range(10)))),
+            'schema': example_schema,
+        }
+    )
 
 
 @pytest.mark.parametrize('value', (
-        p(example_valid, id='valid'),
-        p(example_invalid, id='invalid'),
+        param(example_valid, id='valid'),
+        param(example_invalid, id='invalid'),
 ))
 def test_evaluate_json(benchmark, request, value):
     json = JSON(value)
@@ -41,20 +35,10 @@ def test_evaluate_json(benchmark, request, value):
     assert scope.valid is (True if '[valid]' in request.node.name else False)
 
 
-schema_tests = (
-    p(True, id='bool'),
-    p({}, id='empty'),
-    p({"const": "foo"}, id='simple'),
-    p(example_schema, id='complex'),
-)
+def test_create_schema(benchmark):
+    benchmark(JSONSchema, example_schema, metaschema_uri=metaschema_uri_2020_12)
 
 
-@pytest.mark.parametrize('value', schema_tests)
-def test_create_schema(benchmark, value):
-    benchmark(JSONSchema, value, metaschema_uri=metaschema_uri_2020_12)
-
-
-@pytest.mark.parametrize('value', schema_tests)
-def test_validate_schema(benchmark, value):
-    schema = JSONSchema(value, metaschema_uri=metaschema_uri_2020_12)
+def test_validate_schema(benchmark):
+    schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri_2020_12)
     benchmark(schema.validate)
