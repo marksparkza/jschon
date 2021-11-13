@@ -51,7 +51,8 @@ class EnumKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance not in self.json:
-            scope.fail(f"The value must be one of {self.json}")
+            scope.fail("The instance value must be equal to one of the elements "
+                       "in the defined enumeration")
 
 
 class ConstKeyword(Keyword):
@@ -59,7 +60,7 @@ class ConstKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance != self.json:
-            scope.fail(f"The value must be equal to {self.json}")
+            scope.fail(f"The instance value must be equal to the defined constant")
 
 
 class MultipleOfKeyword(Keyword):
