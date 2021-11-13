@@ -100,18 +100,13 @@ class Keyword:
 KeywordClass = Type[Keyword]
 
 
-def _is_schema_compatible(value: Any) -> bool:
-    return (isinstance(value, bool) or
-            isinstance(value, Mapping) and all(isinstance(k, str) for k in value))
-
-
 class Applicator:
     """A :class:`~Keyword` class mixin that sets up a subschema for
     an applicator keyword."""
 
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSONSchema]:
-        if _is_schema_compatible(value):
+        if isinstance(value, (bool, Mapping)):
             return JSONSchema(
                 value,
                 parent=parentschema,
@@ -127,7 +122,7 @@ class ArrayApplicator:
 
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
-        if isinstance(value, Sequence) and all(_is_schema_compatible(v) for v in value):
+        if isinstance(value, Sequence):
             return JSON(
                 value,
                 parent=parentschema,
@@ -144,10 +139,7 @@ class PropertyApplicator:
 
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
-        if isinstance(value, Mapping) and all(
-                isinstance(k, str) and _is_schema_compatible(v)
-                for k, v in value.items()
-        ):
+        if isinstance(value, Mapping):
             return JSON(
                 value,
                 parent=parentschema,

@@ -111,7 +111,7 @@ class JSONSchema(JSON):
             self.type = "boolean"
             self.data = value
 
-        elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
+        elif isinstance(value, Mapping):
             self.type = "object"
             self.data = {}
 

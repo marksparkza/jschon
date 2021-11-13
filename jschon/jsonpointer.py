@@ -76,7 +76,7 @@ class JSONPointer(Sequence[str]):
             elif isinstance(value, JSONPointer):
                 self._keys.extend(value._keys)
 
-            elif isinstance(value, Iterable) and all(isinstance(k, str) for k in value):
+            elif isinstance(value, Iterable):
                 self._keys.extend(value)
 
             else:

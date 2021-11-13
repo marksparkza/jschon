@@ -118,7 +118,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
                     v = v.data
                 self.data += [itemclass(v, parent=self, key=str(i), **itemkwargs)]
 
-        elif isinstance(value, Mapping) and all(isinstance(k, str) for k in value):
+        elif isinstance(value, Mapping):
             self.type = "object"
             self.data = {}
             itemclass = itemclass or JSON
