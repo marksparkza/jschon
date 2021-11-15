@@ -38,7 +38,10 @@ setup(
     packages=find_packages(exclude=['tests']),
     include_package_data=True,
     python_requires='~=3.8',
-    install_requires=['rfc3986'],
+    install_requires=[
+        'rfc3986',
+        'requests',
+    ],
     extras_require={
         'test': [
             'tox',
@@ -48,6 +51,7 @@ setup(
             'coverage',
             'hypothesis',
             'pytest-benchmark',
+            'pytest-httpserver',
         ],
         'doc': [
             'sphinx',

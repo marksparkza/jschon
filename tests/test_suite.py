@@ -2,7 +2,7 @@ import pathlib
 
 import pytest
 
-from jschon import JSON, JSONSchema, URI
+from jschon import JSON, JSONSchema, URI, Catalog, LocalSource
 from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 
@@ -10,10 +10,10 @@ testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
 
 @pytest.fixture(scope='module', autouse=True)
-def configure_catalog(catalog):
-    catalog.add_local_source(
-        base_uri=URI('http://localhost:1234/'),
-        base_dir=testsuite_dir / 'remotes',
+def configure_catalog(catalog: Catalog):
+    catalog.add_uri_source(
+        URI('http://localhost:1234/'),
+        LocalSource(testsuite_dir / 'remotes'),
     )
     catalog.create_metaschema(
         URI('http://localhost:1234/draft2019-09/metaschema-no-validation.json'),

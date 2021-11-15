@@ -1,7 +1,7 @@
 import pathlib
 import pprint
 
-from jschon import create_catalog, URI, JSON, JSONSchema, JSONSchemaError
+from jschon import create_catalog, URI, JSON, JSONSchema, JSONSchemaError, LocalSource
 from jschon.jsonschema import Scope
 from jschon.vocabulary import Keyword
 
@@ -53,9 +53,9 @@ catalog = create_catalog('2020-12')
 
 # add a local source for loading the enumRef meta-schema and vocabulary
 # definition files
-catalog.add_local_source(
+catalog.add_uri_source(
     URI("https://example.com/enumRef/"),
-    data_dir,
+    LocalSource(data_dir, suffix='.json'),
 )
 
 # implement the enumRef vocabulary using the EnumRefKeyword class

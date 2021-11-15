@@ -1,5 +1,6 @@
 import pathlib
 
+from jschon.catalog import Catalog, LocalSource
 from jschon.uri import URI
 from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
@@ -8,10 +9,10 @@ from jschon.vocabulary.format import *
 from jschon.vocabulary.validation import *
 
 
-def initialize(catalog):
-    catalog.add_local_source(
+def initialize(catalog: Catalog):
+    catalog.add_uri_source(
         URI('https://json-schema.org/draft/2020-12/'),
-        pathlib.Path(__file__).parent / 'json-schema-spec-2020-12',
+        LocalSource(pathlib.Path(__file__).parent / 'json-schema-spec-2020-12', suffix='.json'),
     )
 
     catalog.create_vocabulary(

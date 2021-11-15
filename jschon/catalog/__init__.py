@@ -4,14 +4,14 @@ import pathlib
 import uuid
 from contextlib import contextmanager
 from os import PathLike
-from typing import Dict, Mapping, Hashable, ContextManager, Any
+from typing import Dict, Mapping, Hashable, ContextManager, Any, Union
 
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
 from jschon.json import JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
-from jschon.utils import json_loadf
+from jschon.utils import json_loadf, json_loadr
 from jschon.vocabulary import Vocabulary, KeywordClass, Metaschema
 from jschon.vocabulary.format import FormatValidator
 
@@ -19,24 +19,42 @@ __all__ = [
     'Catalog',
     'Source',
     'LocalSource',
+    'RemoteSource',
 ]
 
 
 class Source:
+    def __init__(self, suffix: str = None) -> None:
+        self.suffix = suffix
+
     def __call__(self, relative_path: str) -> JSONCompatible:
         raise NotImplementedError
 
 
 class LocalSource(Source):
-    def __init__(self, base_dir: PathLike) -> None:
+    def __init__(self, base_dir: Union[str, PathLike], **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self.base_dir = base_dir
 
     def __call__(self, relative_path: str) -> JSONCompatible:
         filepath = pathlib.Path(self.base_dir) / relative_path
-        try:
-            return json_loadf(filepath)
-        except FileNotFoundError as e:
-            return json_loadf(filepath.with_suffix('.json'))
+        if self.suffix:
+            filepath = filepath.with_suffix(self.suffix)
+
+        return json_loadf(filepath)
+
+
+class RemoteSource(Source):
+    def __init__(self, base_url: URI, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.base_url = base_url
+
+    def __call__(self, relative_path: str) -> JSONCompatible:
+        url = str(URI(relative_path).resolve(self.base_url))
+        if self.suffix:
+            url += self.suffix
+
+        return json_loadr(url)
 
 
 class Catalog:
@@ -64,19 +82,18 @@ class Catalog:
         self.name: str = name
         """The unique name of this :class:`Catalog` instance."""
 
-        self._sources: Dict[URI, Source] = {}
+        self._uri_sources: Dict[URI, Source] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
         self._format_validators: Dict[str, FormatValidator] = {}
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
 
-    def add_local_source(self, base_uri: URI, base_dir: PathLike) -> None:
-        """Register a local directory as a source for loading URI-identified
-        JSON resources.
+    def add_uri_source(self, base_uri: URI, source: Source):
+        """Register a source for URI-identified JSON resources.
 
         :param base_uri: a normalized, absolute URI - including scheme, without
             a fragment, and ending with ``'/'``
-        :param base_dir: a directory path accessible on the file system
-        :raise CatalogError: if either `base_uri` or `base_dir` is invalid
+        :param source: a :class:`Source` object
+        :raise CatalogError: if `base_uri` is invalid
         """
         try:
             base_uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
@@ -86,10 +103,7 @@ class Catalog:
         if not base_uri.path or not base_uri.path.endswith('/'):
             raise CatalogError('base_uri must end with "/"')
 
-        if not pathlib.Path(base_dir).is_dir():
-            raise CatalogError(f'"{base_dir}" is not a directory')
-
-        self._sources[base_uri] = LocalSource(base_dir)
+        self._uri_sources[base_uri] = source
 
     def load_json(self, uri: URI) -> JSONCompatible:
         """Load a JSON-compatible object from the source for `uri`.
@@ -110,7 +124,7 @@ class Catalog:
         uristr = str(uri)
         candidates = [
             (base_uristr, source)
-            for base_uri, source in self._sources.items()
+            for base_uri, source in self._uri_sources.items()
             if uristr.startswith(base_uristr := str(base_uri))
         ]
         if candidates:

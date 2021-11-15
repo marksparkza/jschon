@@ -5,19 +5,29 @@ import uuid
 
 import pytest
 
-from jschon import Catalog, CatalogError, URI, JSONPointer, JSONSchema, JSON, create_catalog
+from jschon import (
+    Catalog,
+    CatalogError,
+    URI,
+    JSONPointer,
+    JSONSchema,
+    JSON,
+    create_catalog,
+    LocalSource,
+    RemoteSource,
+)
 from tests import example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
 
 
 @pytest.fixture
-def new_catalog():
+def new_catalog() -> Catalog:
     return Catalog(name=str(uuid.uuid4()))
 
 
 def test_new_catalog(new_catalog):
-    assert not new_catalog._sources
+    assert not new_catalog._uri_sources
     assert not new_catalog._vocabularies
     assert not new_catalog._format_validators
     assert not new_catalog._schema_cache
@@ -45,7 +55,7 @@ def setup_tmpdir():
 ])
 def test_local_source(base_uri, setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    new_catalog.add_local_source(URI(base_uri), pathlib.Path(tmpdir_path))
+    new_catalog.add_uri_source(URI(base_uri), LocalSource(pathlib.Path(tmpdir_path)))
     json_doc = new_catalog.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
     assert json_doc == json_example
     # incorrect base URI
@@ -57,26 +67,33 @@ def test_local_source(base_uri, setup_tmpdir, new_catalog):
 
 
 @pytest.mark.parametrize('base_uri', [
+    'http://example.com/',
+    'http://example.com/foo/',
+    'http://example.com/foo/bar/',
+])
+def test_remote_source(base_uri, httpserver, new_catalog):
+    new_catalog.add_uri_source(URI(base_uri), RemoteSource(URI(httpserver.url_for(''))))
+    httpserver.expect_request('/baz/quux').respond_with_json(json_example)
+    json_doc = new_catalog.load_json(URI(f'{base_uri}baz/quux'))
+    assert json_doc == json_example
+    # incorrect base URI
+    with pytest.raises(CatalogError):
+        new_catalog.load_json(URI('http://example.net/baz/quux'))
+    # incorrect path
+    with pytest.raises(CatalogError):
+        new_catalog.load_json(URI(f'{base_uri}baz/quuz'))
+
+
+@pytest.mark.parametrize('base_uri', [
     '//example.com/foo/bar/',  # no scheme
     'http://Example.com/foo/bar/',  # not normalized
     'http://example.com/foo/#',  # contains empty fragment
     'http://example.com/foo/#bar',  # contains non-empty fragment
     'http://example.com/foo/bar',  # does not end with '/'
 ])
-def test_local_source_invalid_uri(base_uri, setup_tmpdir, new_catalog):
-    tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
+def test_uri_source_invalid_uri(base_uri, new_catalog):
     with pytest.raises(CatalogError):
-        new_catalog.add_local_source(URI(base_uri), pathlib.Path(tmpdir_path))
-
-
-def test_local_source_invalid_dir(setup_tmpdir, new_catalog):
-    tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    # base_dir is a file
-    with pytest.raises(CatalogError):
-        new_catalog.add_local_source(URI('http://example.com/'), pathlib.Path(tmpdir_path) / subdir_name / jsonfile_name)
-    # base_dir does not exist
-    with pytest.raises(CatalogError):
-        new_catalog.add_local_source(URI('http://example.com/'), pathlib.Path(tmpdir_path) / 'foo')
+        new_catalog.add_uri_source(URI(base_uri), LocalSource('/'))
 
 
 @pytest.mark.parametrize('uri', [

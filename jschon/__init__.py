@@ -1,4 +1,4 @@
-from .catalog import Catalog
+from .catalog import Catalog, LocalSource, RemoteSource
 from .exceptions import CatalogError, JSONSchemaError, JSONPointerError, URIError
 from .json import JSON
 from .jsonpointer import JSONPointer
@@ -16,6 +16,8 @@ __all__ = [
     'URI',
     'URIError',
     'create_catalog',
+    'LocalSource',
+    'RemoteSource',
 ]
 
 __version__ = '0.8.0'
