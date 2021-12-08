@@ -12,4 +12,4 @@ with cProfile.Profile() as pr:
 
 ps = pstats.Stats(pr)
 ps.sort_stats('calls')
-ps.print_stats('/jschon/jschon/', .2)
+ps.print_stats('/jschon/jschon/', .5)

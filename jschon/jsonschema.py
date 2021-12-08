@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from enum import Enum
+from functools import cached_property
 from typing import (
     Mapping,
     Union,
@@ -221,7 +222,7 @@ class JSONSchema(JSON):
 
         return scope
 
-    @property
+    @cached_property
     def parentschema(self) -> Optional[JSONSchema]:
         """The containing :class:`JSONSchema` instance.
         
