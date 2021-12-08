@@ -5,7 +5,7 @@ import pytest
 from pytest import param
 
 from jschon import JSON, JSONSchema
-from tests import metaschema_uri_2020_12, example_schema, example_valid, example_invalid
+from tests import example_schema, example_valid, example_invalid
 
 
 def test_create_json(benchmark):
@@ -30,15 +30,15 @@ def test_create_json(benchmark):
 ))
 def test_evaluate_json(benchmark, request, value):
     json = JSON(value)
-    schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri_2020_12)
+    schema = JSONSchema(example_schema)
     scope = benchmark(schema.evaluate, json)
     assert scope.valid is (True if '[valid]' in request.node.name else False)
 
 
 def test_create_schema(benchmark):
-    benchmark(JSONSchema, example_schema, metaschema_uri=metaschema_uri_2020_12)
+    benchmark(JSONSchema, example_schema)
 
 
 def test_validate_schema(benchmark):
-    schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri_2020_12)
+    schema = JSONSchema(example_schema)
     benchmark(schema.validate)

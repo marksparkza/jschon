@@ -128,7 +128,7 @@ def test_get_vocabulary(uri, is_known, catalog):
 
 @pytest.fixture
 def example_schema_uri():
-    schema = JSONSchema(example_schema, metaschema_uri=metaschema_uri_2020_12)
+    schema = JSONSchema(example_schema)
     return schema.uri
 
 
