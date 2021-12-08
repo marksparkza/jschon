@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections import deque
 from decimal import Decimal
+from functools import cached_property
 from os import PathLike
 from typing import Sequence, Mapping, Type, Optional, Iterator, Union, Any, List, Dict
 
@@ -130,7 +131,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         else:
             raise TypeError(f"{value=} is not JSON-compatible")
 
-    @property
+    @cached_property
     def path(self) -> JSONPointer:
         """Return the path to the instance from the document root."""
         keys = deque()
@@ -140,7 +141,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             node = node.parent
         return JSONPointer(keys)
 
-    @property
+    @cached_property
     def value(self) -> JSONCompatible:
         """Return the instance data as a JSON-compatible Python object."""
         if isinstance(self.data, list):
