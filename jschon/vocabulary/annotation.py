@@ -53,18 +53,18 @@ class ExamplesKeyword(AnnotationKeyword):
 
 class ContentMediaTypeKeyword(AnnotationKeyword):
     key = "contentMediaType"
-    types = "string"
+    types = "string",
 
 
 class ContentEncodingKeyword(AnnotationKeyword):
     key = "contentEncoding"
-    types = "string"
+    types = "string",
 
 
 class ContentSchemaKeyword(AnnotationKeyword):
     key = "contentSchema"
-    types = "string"
-    depends = "contentMediaType"
+    types = "string",
+    depends = "contentMediaType",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if scope.sibling(instance, "contentMediaType"):

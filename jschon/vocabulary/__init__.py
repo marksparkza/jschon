@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Union, Tuple, Sequence, Mapping, Type, Any, TYPE_CHECKING
+from typing import Dict, Optional, Tuple, Sequence, Mapping, Type, Any, TYPE_CHECKING
 
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.uri import URI
-from jschon.utils import tuplify
 
 if TYPE_CHECKING:
     from jschon.catalog import Catalog
@@ -65,8 +64,8 @@ class Vocabulary:
 
 class Keyword:
     key: str = ...
-    types: Optional[Union[str, Tuple[str, ...]]] = None
-    depends: Optional[Union[str, Tuple[str, ...]]] = None
+    types: Tuple[str, ...] = ()
+    depends: Tuple[str, ...] = ()
 
     def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
         self.applicator_cls = None
@@ -82,10 +81,10 @@ class Keyword:
         self.parentschema: JSONSchema = parentschema
 
     def can_evaluate(self, instance: JSON) -> bool:
-        if self.types is None or instance.type in (types := tuplify(self.types)):
+        if not self.types or instance.type in self.types:
             return True
 
-        if instance.type == "number" and "integer" in types:
+        if instance.type == "number" and "integer" in self.types:
             return instance.data == int(instance.data)
 
         return False

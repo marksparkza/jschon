@@ -20,7 +20,6 @@ from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI
-from jschon.utils import tuplify
 
 if TYPE_CHECKING:
     from jschon.catalog import Catalog
@@ -169,7 +168,7 @@ class JSONSchema(JSON):
     @staticmethod
     def _resolve_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
         dependencies = {
-            kwclass: [depclass for dep in tuplify(kwclass.depends)
+            kwclass: [depclass for dep in kwclass.depends
                       if (depclass := kwclasses.get(dep))]
             for kwclass in kwclasses.values()
         }

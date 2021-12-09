@@ -28,7 +28,7 @@ class EnumRefKeyword(Keyword):
     # if "enumRef" is only intended for use with string instances, then its
     # applicability may be constrained with `types`, in which case any non-
     # string instances are ignored by this keyword
-    types = "string"
+    types = "string",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         # get the keyword's value as it appears in the JSON schema
