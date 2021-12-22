@@ -111,22 +111,20 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             self.data = value
 
         elif isinstance(value, Sequence):
-            self.type = "array"
-            self.data = []
             itemclass = itemclass or JSON
-            for i, v in enumerate(value):
-                if isinstance(v, JSON):
-                    v = v.data
-                self.data += [itemclass(v, parent=self, key=str(i), **itemkwargs)]
+            self.type = "array"
+            self.data = [
+                itemclass(v, parent=self, key=str(i), **itemkwargs)
+                for i, v in enumerate(value)
+            ]
 
         elif isinstance(value, Mapping):
-            self.type = "object"
-            self.data = {}
             itemclass = itemclass or JSON
-            for k, v in value.items():
-                if isinstance(v, JSON):
-                    v = v.data
-                self.data[k] = itemclass(v, parent=self, key=k, **itemkwargs)
+            self.type = "object"
+            self.data = {
+                k: itemclass(v, parent=self, key=k, **itemkwargs)
+                for k, v in value.items()
+            }
 
         else:
             raise TypeError(f"{value=} is not JSON-compatible")
