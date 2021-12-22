@@ -3,7 +3,6 @@ import tempfile
 from decimal import Decimal
 from typing import Optional
 
-import pytest
 from hypothesis import given
 
 from jschon import JSON, JSONPointer
@@ -37,14 +36,25 @@ def assert_json_node(
         assert inst.type == "number"
     elif isinstance(val, str):
         assert inst.type == "string"
+
     elif isinstance(val, list):
         assert inst.type == "array"
         for i, el in enumerate(val):
+            # test __getitem__
             assert_json_node(inst[i], el, inst, str(i), f'{ptr}/{i}')
+        # test __iter___
+        for n, item in enumerate(inst):
+            assert_json_node(item, val[n], inst, str(n), f'{ptr}/{n}')
+
     elif isinstance(val, dict):
         assert inst.type == "object"
         for k, v in val.items():
+            # test __getitem__
             assert_json_node(inst[k], v, inst, k, f'{ptr}/{jsonpointer_escape(k)}')
+        # test __iter___
+        for key, item in inst.items():
+            assert_json_node(item, val[key], inst, key, f'{ptr}/{jsonpointer_escape(key)}')
+
     else:
         assert False
 
@@ -52,21 +62,6 @@ def assert_json_node(
 
     if isinstance(val, (str, list, dict)):
         assert len(inst) == len(val)
-    else:
-        with pytest.raises(TypeError):
-            len(inst)
-
-    if not isinstance(val, (list, dict)):
-        with pytest.raises(TypeError):
-            iter(inst)
-
-    if not isinstance(val, list):
-        with pytest.raises(TypeError):
-            _ = inst[0]
-
-    if not isinstance(val, dict):
-        with pytest.raises(TypeError):
-            _ = inst['']
 
 
 @given(json)

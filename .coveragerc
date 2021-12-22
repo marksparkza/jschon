@@ -5,6 +5,8 @@ branch = True
 [report]
 exclude_lines =
     pragma: no cover
+    return NotImplemented
     raise NotImplementedError
+    raise TypeError
     # ignore @overload-decorated definitions:
     ^\s+\.\.\.$
