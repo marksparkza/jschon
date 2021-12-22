@@ -14,7 +14,10 @@ from tests.test_validators import isequal
 
 
 def assert_json_node(
+        # actual:
         inst: JSON,
+
+        # expected:
         val: JSONCompatible,
         parent: Optional[JSON],
         key: Optional[str],
@@ -37,11 +40,11 @@ def assert_json_node(
     elif isinstance(val, list):
         assert inst.type == "array"
         for i, el in enumerate(val):
-            assert_json_node(inst[i], el, inst, str(i), f'{inst.path}/{i}')
+            assert_json_node(inst[i], el, inst, str(i), f'{ptr}/{i}')
     elif isinstance(val, dict):
         assert inst.type == "object"
         for k, v in val.items():
-            assert_json_node(inst[k], v, inst, k, f'{inst.path}/{jsonpointer_escape(k)}')
+            assert_json_node(inst[k], v, inst, k, f'{ptr}/{jsonpointer_escape(k)}')
     else:
         assert False
 
