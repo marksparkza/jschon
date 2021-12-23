@@ -149,10 +149,11 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return self.data
 
     def __repr__(self) -> str:
-        # ugly but useful!
+        """Return `repr(self)`."""
         return f'{self.__class__.__name__}({json.loads(str(self))!r})'
 
     def __str__(self) -> str:
+        """Return `str(self)`."""
         def default(o):
             if isinstance(o, JSON):
                 return o.data
@@ -164,23 +165,29 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
                           ensure_ascii=False, allow_nan=False)
 
     def __bool__(self) -> bool:
+        """Return `bool(self)`."""
         return bool(self.data)
 
     def __len__(self) -> int:
+        """Return `len(self)` for an instance of type ``"string"``, ``"array"``
+        or ``"object"``."""
         return len(self.data)
 
     def __iter__(self) -> Iterator:
+        """Return `iter(self)` for an instance of type ``"array"`` or ``"object"``."""
         if self.type in ("array", "object"):
             return iter(self.data)
         raise TypeError(f"{self!r} is not iterable")
 
     def __getitem__(self, index: Union[int, slice, str]) -> JSON:
+        """Return `self[index]` for an instance of type ``"array"`` or ``"object"``."""
         if isinstance(index, (int, slice)) and self.type == "array" or \
                 isinstance(index, str) and self.type == "object":
             return self.data[index]
-        raise TypeError(f"{self!r} is not subscriptable")
+        raise TypeError(f"{self!r} is not subscriptable by {index!r}")
 
     def __eq__(self, other: Union[JSON, JSONCompatible]) -> bool:
+        """Return `self == other`."""
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
@@ -193,28 +200,32 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             return self.data == other.data
         return NotImplemented
 
-    def __ge__(self, other: Union[JSON, JSONCompatible]) -> bool:
+    def __ge__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+        """Return `self >= other`, for instances of type ``"number"`` or ``"string"``."""
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
             return self.data >= other.data
         return NotImplemented
 
-    def __gt__(self, other: Union[JSON, JSONCompatible]) -> bool:
+    def __gt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+        """Return `self > other`, for instances of type ``"number"`` or ``"string"``."""
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
             return self.data > other.data
         return NotImplemented
 
-    def __le__(self, other: Union[JSON, JSONCompatible]) -> bool:
+    def __le__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+        """Return `self <= other`, for instances of type ``"number"`` or ``"string"``."""
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:
             return self.data <= other.data
         return NotImplemented
 
-    def __lt__(self, other: Union[JSON, JSONCompatible]) -> bool:
+    def __lt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+        """Return `self < other`, for instances of type ``"number"`` or ``"string"``."""
         if not isinstance(other, JSON):
             other = JSON(other)
         if self.type == other.type:

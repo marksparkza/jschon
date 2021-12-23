@@ -7,7 +7,7 @@ from hypothesis import given
 
 from jschon import JSON, JSONPointer
 from jschon.json import JSONCompatible
-from tests.strategies import json, json_nodecimal
+from tests.strategies import json, json_nodecimal, jsonnumber, jsonstring
 from tests.test_jsonpointer import jsonpointer_escape
 from tests.test_validators import isequal
 
@@ -42,7 +42,7 @@ def assert_json_node(
         for i, el in enumerate(val):
             # test __getitem__
             assert_json_node(inst[i], el, inst, str(i), f'{ptr}/{i}')
-        # test __iter___
+        # test __iter__
         for n, item in enumerate(inst):
             assert_json_node(item, val[n], inst, str(n), f'{ptr}/{n}')
 
@@ -51,7 +51,7 @@ def assert_json_node(
         for k, v in val.items():
             # test __getitem__
             assert_json_node(inst[k], v, inst, k, f'{ptr}/{jsonpointer_escape(k)}')
-        # test __iter___
+        # test __iter__
         for key, item in inst.items():
             assert_json_node(item, val[key], inst, key, f'{ptr}/{jsonpointer_escape(key)}')
 
@@ -85,3 +85,24 @@ def test_load_json_from_file(value):
         f.flush()
         instance = JSON.loadf(f.name)
     assert_json_node(instance, value, None, None, '')
+
+
+@given(json, json)
+def test_json_equality(value1, value2):
+    assert (value1 == value2) is (value1 == JSON(value2)) is (JSON(value1) == JSON(value2)) is (JSON(value1) == value2)
+
+
+@given(jsonnumber, jsonnumber)
+def test_jsonnumber_inequality(value1, value2):
+    assert (value1 < value2) is (value1 < JSON(value2)) is (JSON(value1) < JSON(value2)) is (JSON(value1) < value2)
+    assert (value1 <= value2) is (value1 <= JSON(value2)) is (JSON(value1) <= JSON(value2)) is (JSON(value1) <= value2)
+    assert (value1 >= value2) is (value1 >= JSON(value2)) is (JSON(value1) >= JSON(value2)) is (JSON(value1) >= value2)
+    assert (value1 > value2) is (value1 > JSON(value2)) is (JSON(value1) > JSON(value2)) is (JSON(value1) > value2)
+
+
+@given(jsonstring, jsonstring)
+def test_jsonstring_inequality(value1, value2):
+    assert (value1 < value2) is (value1 < JSON(value2)) is (JSON(value1) < JSON(value2)) is (JSON(value1) < value2)
+    assert (value1 <= value2) is (value1 <= JSON(value2)) is (JSON(value1) <= JSON(value2)) is (JSON(value1) <= value2)
+    assert (value1 >= value2) is (value1 >= JSON(value2)) is (JSON(value1) >= JSON(value2)) is (JSON(value1) >= value2)
+    assert (value1 > value2) is (value1 > JSON(value2)) is (JSON(value1) > JSON(value2)) is (JSON(value1) > value2)
