@@ -202,32 +202,32 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
     def __ge__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
         """Return `self >= other`, for instances of type ``"number"`` or ``"string"``."""
-        if not isinstance(other, JSON):
-            other = JSON(other)
-        if self.type == other.type:
+        if isinstance(other, JSON):
             return self.data >= other.data
-        return NotImplemented
+        if isinstance(other, float):
+            return self.data >= Decimal(f'{other}')
+        return self.data >= other
 
     def __gt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
         """Return `self > other`, for instances of type ``"number"`` or ``"string"``."""
-        if not isinstance(other, JSON):
-            other = JSON(other)
-        if self.type == other.type:
+        if isinstance(other, JSON):
             return self.data > other.data
-        return NotImplemented
+        if isinstance(other, float):
+            return self.data > Decimal(f'{other}')
+        return self.data > other
 
     def __le__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
         """Return `self <= other`, for instances of type ``"number"`` or ``"string"``."""
-        if not isinstance(other, JSON):
-            other = JSON(other)
-        if self.type == other.type:
+        if isinstance(other, JSON):
             return self.data <= other.data
-        return NotImplemented
+        if isinstance(other, float):
+            return self.data <= Decimal(f'{other}')
+        return self.data <= other
 
     def __lt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
         """Return `self < other`, for instances of type ``"number"`` or ``"string"``."""
-        if not isinstance(other, JSON):
-            other = JSON(other)
-        if self.type == other.type:
+        if isinstance(other, JSON):
             return self.data < other.data
-        return NotImplemented
+        if isinstance(other, float):
+            return self.data < Decimal(f'{other}')
+        return self.data < other
