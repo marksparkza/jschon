@@ -2,11 +2,15 @@ class CatalogError(Exception):
     pass
 
 
-class JSONSchemaError(Exception):
+class JSONPatchError(Exception):
     pass
 
 
 class JSONPointerError(Exception):
+    pass
+
+
+class JSONSchemaError(Exception):
     pass
 
 
