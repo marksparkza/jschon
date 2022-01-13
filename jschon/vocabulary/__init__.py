@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple, Sequence, Mapping, Type, Any, TYPE_CHECKING
+import inspect
+from typing import Any, Dict, Mapping, Optional, Sequence, TYPE_CHECKING, Tuple, Type
 
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Scope
@@ -14,6 +15,7 @@ __all__ = [
     'Vocabulary',
     'Keyword',
     'KeywordClass',
+    'ApplicatorMixin',
     'Applicator',
     'ArrayApplicator',
     'PropertyApplicator',
@@ -68,11 +70,9 @@ class Keyword:
     depends: Tuple[str, ...] = ()
 
     def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
-        self.applicator_cls = None
-        for applicator_cls in (Applicator, ArrayApplicator, PropertyApplicator):
-            if isinstance(self, applicator_cls):
-                if (kwjson := applicator_cls.jsonify(parentschema, self.key, value)) is not None:
-                    self.applicator_cls = applicator_cls
+        for base_cls in inspect.getmro(self.__class__):
+            if issubclass(base_cls, ApplicatorMixin):
+                if (kwjson := base_cls.jsonify(parentschema, self.key, value)) is not None:
                     break
         else:
             kwjson = JSON(value, parent=parentschema, key=self.key)
@@ -99,12 +99,18 @@ class Keyword:
 KeywordClass = Type[Keyword]
 
 
-class Applicator:
+class ApplicatorMixin:
+    @classmethod
+    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
+        raise NotImplementedError
+
+
+class Applicator(ApplicatorMixin):
     """A :class:`~Keyword` class mixin that sets up a subschema for
     an applicator keyword."""
 
     @classmethod
-    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSONSchema]:
+    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
         if isinstance(value, (bool, Mapping)):
             return JSONSchema(
                 value,
@@ -115,7 +121,7 @@ class Applicator:
             )
 
 
-class ArrayApplicator:
+class ArrayApplicator(ApplicatorMixin):
     """A :class:`~Keyword` class mixin that sets up an array of subschemas
     for an applicator keyword."""
 
@@ -132,7 +138,7 @@ class ArrayApplicator:
             )
 
 
-class PropertyApplicator:
+class PropertyApplicator(ApplicatorMixin):
     """A :class:`~Keyword` class mixin that sets up property-based subschemas
     for an applicator keyword."""
 

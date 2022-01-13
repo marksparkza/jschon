@@ -21,7 +21,6 @@ from tests import metaschema_uri_2020_12
 def test_applicator(example, valid_json, invalid_json):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
     for applicator_key, applicator_val in example.items():
-        assert schema.keywords[applicator_key].applicator_cls is Applicator
         assert isinstance(schema[applicator_key], JSONSchema)
         assert schema[applicator_key].data == applicator_val
 
@@ -38,7 +37,6 @@ def test_applicator(example, valid_json, invalid_json):
 def test_array_applicator(example, valid_json, invalid_json):
     schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
     for applicator_key, applicator_val in example.items():
-        assert schema.keywords[applicator_key].applicator_cls is ArrayApplicator
         for i, item in enumerate(applicator_val):
             assert isinstance(schema[applicator_key][i], JSONSchema)
             assert schema[applicator_key][i].data == item
@@ -60,7 +58,6 @@ def test_property_applicator(example, valid_json, invalid_json):
     for applicator_key, applicator_val in example.items():
         if applicator_key == '$ref':
             continue
-        assert schema.keywords[applicator_key].applicator_cls is PropertyApplicator
         for prop_key, prop_val in applicator_val.items():
             assert isinstance(schema[applicator_key][prop_key], JSONSchema)
             assert schema[applicator_key][prop_key].data == prop_val
