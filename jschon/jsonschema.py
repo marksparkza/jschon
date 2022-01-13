@@ -4,16 +4,7 @@ from collections import deque
 from contextlib import contextmanager
 from enum import Enum
 from functools import cached_property
-from typing import (
-    Mapping,
-    Union,
-    Optional,
-    Dict,
-    Iterator,
-    ContextManager,
-    Hashable,
-    TYPE_CHECKING,
-)
+from typing import ContextManager, Dict, Hashable, Iterator, Mapping, Optional, TYPE_CHECKING, Type, Union
 from uuid import uuid4
 
 from jschon.exceptions import JSONSchemaError
@@ -199,7 +190,7 @@ class JSONSchema(JSON):
             when invoking this method recursively
         """
         if scope is None:
-            scope = Scope(self)
+            scope = Scope(self, instance)
 
         if self.data is True:
             pass
@@ -325,19 +316,15 @@ class Scope:
     def __init__(
             self,
             schema: JSONSchema,
+            instance: JSON,
             *,
-            key: str = None,
-            path: JSONPointer = None,
-            relpath: JSONPointer = None,
-            instpath: JSONPointer = None,
             parent: Scope = None,
+            key: str = None,
     ):
         self.schema: JSONSchema = schema
-        self.key: Optional[str] = key
-        self.path: JSONPointer = path or JSONPointer()
-        self.relpath: JSONPointer = relpath or JSONPointer()
-        self.instpath: JSONPointer = instpath or JSONPointer()
+        self.instance: JSON = instance
         self.parent: Optional[Scope] = parent
+        self.key: Optional[str] = key
         self.children: Dict[JSONPointer, Dict[str, Scope]] = {}
         self.annotation: JSONCompatible = None
         self.error: Optional[str] = None
@@ -346,26 +333,38 @@ class Scope:
         self._discard = False
         self._refschema: Optional[JSONSchema] = None
 
+        if parent is None:
+            self.path = JSONPointer()
+            self.relpath = JSONPointer()
+        else:
+            self.path = parent.path / key
+            self.relpath = parent.relpath / key if schema is parent.schema else JSONPointer((key,))
+
     @contextmanager
-    def __call__(self, instance: JSON, key: str, schema: JSONSchema = None) -> ContextManager[Scope]:
+    def __call__(
+            self,
+            instance: JSON,
+            key: str,
+            schema: JSONSchema = None,
+            *,
+            cls: Type[Scope] = None,
+    ) -> ContextManager[Scope]:
         """Yield a subscope of the current scope, for evaluating `instance`.
         Descend down the evaluation path by `key`, into `schema` if given, or
-        within the schema of the current scope otherwise."""
-        path = self.path / key
-        schema = schema or self.schema
-        if schema is self.schema:
-            relpath = self.relpath / key
-        else:
-            relpath = JSONPointer((key,))
+        within the schema of the current scope otherwise.
+
+        Extension keywords may provide a custom Scope class via `cls`, which
+        is applied to all nodes within the yielded subtree.
+        """
+        if schema is None:
+            schema = self.schema
 
         self.children.setdefault(instance_path := instance.path, {})
-        self.children[instance_path][key] = (child := Scope(
+        self.children[instance_path][key] = (child := (cls or self.__class__)(
             schema,
-            key=key,
-            path=path,
-            relpath=relpath,
-            instpath=instance_path,
+            instance,
             parent=self,
+            key=key,
         ))
 
         try:
@@ -462,7 +461,7 @@ class Scope:
         if self._valid and not self._discard:
             if self.annotation is not None and \
                     (key is None or key == self.key) and \
-                    (instance is None or instance.path == self.instpath):
+                    (instance is None or instance.path == self.instance.path):
                 yield self.annotation
             for child in self.iter_children():
                 yield from child.collect_annotations(instance, key)

@@ -24,7 +24,7 @@ class OutputFormatter:
             if node.valid is valid:
                 if (msgval := getattr(node, msgkey)) is not None:
                     yield {
-                        "instanceLocation": str(node.instpath),
+                        "instanceLocation": str(node.instance.path),
                         "keywordLocation": str(node.path),
                         "absoluteKeywordLocation": str(node.absolute_uri),
                         msgkey: msgval,
@@ -45,7 +45,7 @@ class OutputFormatter:
     def detailed(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             result = {
-                "instanceLocation": str(node.instpath),
+                "instanceLocation": str(node.instance.path),
                 "keywordLocation": str(node.path),
                 "absoluteKeywordLocation": str(node.absolute_uri),
                 childkey: [visit(child) for child in node.iter_children()
@@ -66,7 +66,7 @@ class OutputFormatter:
 
         return {
             "valid": valid,
-            "instanceLocation": str(scope.instpath),
+            "instanceLocation": str(scope.instance.path),
             "keywordLocation": str(scope.path),
             "absoluteKeywordLocation": str(scope.absolute_uri),
             childkey: [visit(child) for child in scope.iter_children()
@@ -78,7 +78,7 @@ class OutputFormatter:
         def visit(node: Scope):
             result = {
                 "valid": (valid := node.valid),
-                "instanceLocation": str(node.instpath),
+                "instanceLocation": str(node.instance.path),
                 "keywordLocation": str(node.path),
                 "absoluteKeywordLocation": str(node.absolute_uri),
             }
