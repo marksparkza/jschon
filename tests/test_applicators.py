@@ -1,8 +1,7 @@
 import pytest
 
 from jschon.json import JSON
-from jschon.jsonschema import *
-from jschon.vocabulary import *
+from jschon.jsonschema import JSONSchema
 from tests import metaschema_uri_2020_12
 
 
@@ -64,3 +63,24 @@ def test_property_applicator(example, valid_json, invalid_json):
 
     assert schema.evaluate(JSON(valid_json)).valid is True
     assert schema.evaluate(JSON(invalid_json)).valid is False
+
+
+@pytest.mark.parametrize('example, expected_error_paths', [
+    ({"additionalProperties": False}, {"/additionalProperties"}),
+    ({"properties": {"foo": False},
+      "additionalProperties": False}, {"/properties", "/properties/foo"}),
+    ({"properties": {"oof": False},
+      "additionalProperties": False}, {"/additionalProperties"}),
+    ({"patternProperties": {"o+": False},
+      "additionalProperties": False}, {"/patternProperties", "/patternProperties/o+"}),
+    ({"patternProperties": {"n+": False},
+      "additionalProperties": False}, {"/additionalProperties"}),
+])
+def test_additional_properties(example, expected_error_paths):
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+    data = JSON({"foo": "bar"})
+    result = schema.evaluate(data)
+    actual_error_paths = {
+        error['keywordLocation'] for error in result.output('basic')['errors']
+    }
+    assert actual_error_paths == expected_error_paths

@@ -292,18 +292,21 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
     depends = "properties", "patternProperties",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        evaluated_names = set()
-        if (properties := scope.sibling(instance, "properties")) and \
-                properties.annotation is not None:
-            evaluated_names |= set(properties.annotation)
+        if properties := scope.sibling(instance, "properties"):
+            known_property_names = properties.schema_node.keys()
+        else:
+            known_property_names = ()
 
-        if (pattern_properties := scope.sibling(instance, "patternProperties")) and \
-                pattern_properties.annotation is not None:
-            evaluated_names |= set(pattern_properties.annotation)
+        if pattern_properties := scope.sibling(instance, "patternProperties"):
+            known_property_patterns = pattern_properties.schema_node.keys()
+        else:
+            known_property_patterns = ()
 
         annotation = []
         for name, item in instance.items():
-            if name not in evaluated_names:
+            if name not in known_property_names and not any(
+                re.search(regex, name) for regex in known_property_patterns
+            ):
                 if self.json.evaluate(item, scope).passed:
                     annotation += [name]
 

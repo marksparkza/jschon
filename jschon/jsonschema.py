@@ -373,6 +373,11 @@ class Scope:
             if child._discard:
                 del self.children[instance_path][key]
 
+    @property
+    def schema_node(self) -> JSON:
+        """Return the schema node associated with this scope."""
+        return self.relpath.evaluate(self.schema)
+
     def sibling(self, instance: JSON, key: str) -> Optional[Scope]:
         try:
             return self.parent.children[instance.path][key] if self.parent else None
