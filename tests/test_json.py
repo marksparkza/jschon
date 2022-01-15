@@ -89,7 +89,7 @@ def test_load_json_from_file(value):
 
 @given(json, json)
 def test_json_equality(value1, value2):
-    assert (value1 == value2) is (value1 == JSON(value2)) is (JSON(value1) == JSON(value2)) is (JSON(value1) == value2)
+    assert isequal(value1, value2) is (value1 == JSON(value2)) is (JSON(value1) == JSON(value2)) is (JSON(value1) == value2)
 
 
 @given(jsonnumber, jsonnumber)
