@@ -84,3 +84,18 @@ def test_additional_properties(example, expected_error_paths):
         error['keywordLocation'] for error in result.output('basic')['errors']
     }
     assert actual_error_paths == expected_error_paths
+
+
+@pytest.mark.parametrize('example, expected_error_paths', [
+    ({"items": False}, {"/items"}),
+    ({"items": False,
+      "prefixItems": [False]}, {"/prefixItems", "/prefixItems/0"}),
+])
+def test_items(example, expected_error_paths):
+    schema = JSONSchema(example, metaschema_uri=metaschema_uri_2020_12)
+    data = JSON(["foo"])
+    result = schema.evaluate(data)
+    actual_error_paths = {
+        error['keywordLocation'] for error in result.output('basic')['errors']
+    }
+    assert actual_error_paths == expected_error_paths

@@ -167,12 +167,8 @@ class ItemsKeyword(Keyword, Applicator):
     depends = "prefixItems",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (prefix_items := scope.sibling(instance, "prefixItems")) and \
-                prefix_items.annotation is not None:
-            if prefix_items.annotation is True:
-                return
-            else:
-                start_index = prefix_items.annotation + 1
+        if prefix_items := scope.sibling(instance, "prefixItems"):
+            start_index = len(prefix_items.schema_node)
         else:
             start_index = 0
 
