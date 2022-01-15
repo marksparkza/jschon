@@ -1,6 +1,7 @@
 from .catalog import Catalog, LocalSource, RemoteSource
-from .exceptions import CatalogError, JSONSchemaError, JSONPointerError, URIError
+from .exceptions import CatalogError, JSONPatchError, JSONPointerError, JSONSchemaError, URIError
 from .json import JSON
+from .jsonpatch import JSONPatch, JSONPatchOperation
 from .jsonpointer import JSONPointer
 from .jsonschema import JSONSchema
 from .uri import URI
@@ -9,15 +10,18 @@ __all__ = [
     'Catalog',
     'CatalogError',
     'JSON',
+    'JSONPatch',
+    'JSONPatchError',
+    'JSONPatchOperation',
     'JSONPointer',
     'JSONPointerError',
     'JSONSchema',
     'JSONSchemaError',
+    'LocalSource',
+    'RemoteSource',
     'URI',
     'URIError',
     'create_catalog',
-    'LocalSource',
-    'RemoteSource',
 ]
 
 __version__ = '0.8.0'

@@ -1,4 +1,5 @@
 import pathlib
+from copy import deepcopy
 
 import pytest
 
@@ -27,8 +28,11 @@ def test_example(document, patch, result):
     json_patch = JSONPatch(*patch)
     assert json_patch == JSONPatch(*json_patch_ops)
 
+    original_doc = deepcopy(document)
     if result is not None:
         assert json_patch.evaluate(document) == result
     else:
         with pytest.raises(JSONPatchError):
             json_patch.evaluate(document)
+
+    assert document == original_doc

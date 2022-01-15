@@ -5,11 +5,7 @@
             "foo": "bar"
         },
         "patch": [
-            {
-                "op": "add",
-                "path": "/baz",
-                "value": "qux"
-            }
+            {"op": "add", "path": "/baz", "value": "qux"}
         ],
         "result": {
             "baz": "qux",
@@ -19,24 +15,13 @@
     {
         "description": "Adding an Array Element",
         "document": {
-            "foo": [
-                "bar",
-                "baz"
-            ]
+            "foo": ["bar", "baz"]
         },
         "patch": [
-            {
-                "op": "add",
-                "path": "/foo/1",
-                "value": "qux"
-            }
+            {"op": "add", "path": "/foo/1", "value": "qux"}
         ],
         "result": {
-            "foo": [
-                "bar",
-                "qux",
-                "baz"
-            ]
+            "foo": ["bar", "qux", "baz"]
         }
     },
     {
@@ -46,10 +31,7 @@
             "foo": "bar"
         },
         "patch": [
-            {
-                "op": "remove",
-                "path": "/baz"
-            }
+            {"op": "remove", "path": "/baz"}
         ],
         "result": {
             "foo": "bar"
@@ -58,23 +40,13 @@
     {
         "description": "Removing an Array Element",
         "document": {
-            "foo": [
-                "bar",
-                "qux",
-                "baz"
-            ]
+            "foo": ["bar", "qux", "baz"]
         },
         "patch": [
-            {
-                "op": "remove",
-                "path": "/foo/1"
-            }
+            {"op": "remove", "path": "/foo/1"}
         ],
         "result": {
-            "foo": [
-                "bar",
-                "baz"
-            ]
+            "foo": ["bar", "baz"]
         }
     },
     {
@@ -84,11 +56,7 @@
             "foo": "bar"
         },
         "patch": [
-            {
-                "op": "replace",
-                "path": "/baz",
-                "value": "boo"
-            }
+            {"op": "replace", "path": "/baz", "value": "boo"}
         ],
         "result": {
             "baz": "boo",
@@ -107,11 +75,7 @@
             }
         },
         "patch": [
-            {
-                "op": "move",
-                "from": "/foo/waldo",
-                "path": "/qux/thud"
-            }
+            {"op": "move", "from": "/foo/waldo", "path": "/qux/thud"}
         ],
         "result": {
             "foo": {
@@ -126,58 +90,28 @@
     {
         "description": "Moving an Array Element",
         "document": {
-            "foo": [
-                "all",
-                "grass",
-                "cows",
-                "eat"
-            ]
+            "foo": ["all", "grass", "cows", "eat"]
         },
         "patch": [
-            {
-                "op": "move",
-                "from": "/foo/1",
-                "path": "/foo/3"
-            }
+            {"op": "move", "from": "/foo/1", "path": "/foo/3"}
         ],
         "result": {
-            "foo": [
-                "all",
-                "cows",
-                "eat",
-                "grass"
-            ]
+            "foo": ["all", "cows", "eat", "grass"]
         }
     },
     {
         "description": "Testing a Value: Success",
         "document": {
             "baz": "qux",
-            "foo": [
-                "a",
-                2,
-                "c"
-            ]
+            "foo": ["a", 2, "c"]
         },
         "patch": [
-            {
-                "op": "test",
-                "path": "/baz",
-                "value": "qux"
-            },
-            {
-                "op": "test",
-                "path": "/foo/1",
-                "value": 2
-            }
+            {"op": "test", "path": "/baz", "value": "qux"},
+            {"op": "test", "path": "/foo/1", "value": 2}
         ],
         "result": {
             "baz": "qux",
-            "foo": [
-                "a",
-                2,
-                "c"
-            ]
+            "foo": ["a", 2, "c"]
         }
     },
     {
@@ -186,11 +120,7 @@
             "baz": "qux"
         },
         "patch": [
-            {
-                "op": "test",
-                "path": "/baz",
-                "value": "bar"
-            }
+            {"op": "test", "path": "/baz", "value": "bar"}
         ],
         "result": null
     },
@@ -200,13 +130,7 @@
             "foo": "bar"
         },
         "patch": [
-            {
-                "op": "add",
-                "path": "/child",
-                "value": {
-                    "grandchild": {}
-                }
-            }
+            {"op": "add", "path": "/child", "value": {"grandchild": {}}}
         ],
         "result": {
             "foo": "bar",
@@ -221,12 +145,7 @@
             "foo": "bar"
         },
         "patch": [
-            {
-                "op": "add",
-                "path": "/baz",
-                "value": "qux",
-                "xyz": 123
-            }
+            {"op": "add", "path": "/baz", "value": "qux", "xyz": 123}
         ],
         "result": {
             "foo": "bar",
@@ -239,11 +158,7 @@
             "foo": "bar"
         },
         "patch": [
-            {
-                "op": "add",
-                "path": "/baz/bat",
-                "value": "qux"
-            }
+            {"op": "add", "path": "/baz/bat", "value": "qux"}
         ],
         "result": null
     },
@@ -254,11 +169,7 @@
             "~1": 10
         },
         "patch": [
-            {
-                "op": "test",
-                "path": "/~01",
-                "value": 10
-            }
+            {"op": "test", "path": "/~01", "value": 10}
         ],
         "result": {
             "/": 9,
@@ -272,39 +183,20 @@
             "~1": 10
         },
         "patch": [
-            {
-                "op": "test",
-                "path": "/~01",
-                "value": "10"
-            }
+            {"op": "test", "path": "/~01", "value": "10"}
         ],
         "result": null
     },
     {
         "description": "Adding an Array Value",
         "document": {
-            "foo": [
-                "bar"
-            ]
+            "foo": ["bar"]
         },
         "patch": [
-            {
-                "op": "add",
-                "path": "/foo/-",
-                "value": [
-                    "abc",
-                    "def"
-                ]
-            }
+            {"op": "add", "path": "/foo/-", "value": ["abc", "def"]}
         ],
         "result": {
-            "foo": [
-                "bar",
-                [
-                    "abc",
-                    "def"
-                ]
-            ]
+            "foo": ["bar", ["abc", "def"]]
         }
     }
 ]
