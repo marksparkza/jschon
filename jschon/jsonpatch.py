@@ -29,6 +29,9 @@ class PatchOp(str, Enum):
     COPY = 'copy'
     TEST = 'test'
 
+    def __repr__(self) -> str:
+        return f'PatchOp.{self.name}'
+
 
 class JSONPatchOperation:
     """:rfc:`6902`-conformant JSON patch operation object."""
