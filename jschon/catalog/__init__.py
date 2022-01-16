@@ -4,15 +4,16 @@ import pathlib
 import uuid
 from contextlib import contextmanager
 from os import PathLike
-from typing import Dict, Mapping, Hashable, ContextManager, Any, Union
+from typing import Any, ContextManager, Dict, Hashable, Mapping, Union
 
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
 from jschon.json import JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
+from jschon.output import JSONSchemaOutputFormatter, OutputFormatter
 from jschon.uri import URI
 from jschon.utils import json_loadf, json_loadr
-from jschon.vocabulary import Vocabulary, KeywordClass, Metaschema
+from jschon.vocabulary import KeywordClass, Metaschema, Vocabulary
 from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
@@ -81,6 +82,9 @@ class Catalog:
 
         self.name: str = name
         """The unique name of this :class:`Catalog` instance."""
+
+        self.output_formatter: OutputFormatter = JSONSchemaOutputFormatter()
+        """A JSON Schema output formatter."""
 
         self._uri_sources: Dict[URI, Source] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}

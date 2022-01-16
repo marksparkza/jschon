@@ -1,25 +1,40 @@
-from __future__ import annotations
-
-from typing import Dict
+from typing import Any, Dict
 
 from jschon.json import JSONCompatible
 from jschon.jsonschema import Scope
 
 __all__ = [
     'OutputFormatter',
+    'JSONSchemaOutputFormatter',
 ]
 
 
 class OutputFormatter:
 
+    def create_output(self, scope: Scope, format: str, **kwargs: Any) -> JSONCompatible:
+        raise NotImplementedError
+
+
+class JSONSchemaOutputFormatter(OutputFormatter):
+
+    def create_output(self, scope: Scope, format: str, **kwargs: Any) -> JSONCompatible:
+        if format == 'flag':
+            return self._flag(scope)
+        if format == 'basic':
+            return self._basic(scope)
+        if format == 'detailed':
+            return self._detailed(scope)
+        if format == 'verbose':
+            return self._verbose(scope)
+
     @staticmethod
-    def flag(scope: Scope) -> Dict[str, JSONCompatible]:
+    def _flag(scope: Scope) -> Dict[str, JSONCompatible]:
         return {
             "valid": scope.valid
         }
 
     @staticmethod
-    def basic(scope: Scope) -> Dict[str, JSONCompatible]:
+    def _basic(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             if node.valid is valid:
                 if (msgval := getattr(node, msgkey)) is not None:
@@ -42,7 +57,7 @@ class OutputFormatter:
         }
 
     @staticmethod
-    def detailed(scope: Scope) -> Dict[str, JSONCompatible]:
+    def _detailed(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             result = {
                 "instanceLocation": str(node.instance.path),
@@ -74,7 +89,7 @@ class OutputFormatter:
         }
 
     @staticmethod
-    def verbose(scope: Scope) -> Dict[str, JSONCompatible]:
+    def _verbose(scope: Scope) -> Dict[str, JSONCompatible]:
         def visit(node: Scope):
             result = {
                 "valid": (valid := node.valid),
