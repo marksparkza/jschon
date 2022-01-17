@@ -334,9 +334,11 @@ class Scope:
         if parent is None:
             self.path = JSONPointer()
             self.relpath = JSONPointer()
+            self._globals = {}
         else:
             self.path = parent.path / key
             self.relpath = parent.relpath / key if schema is parent.schema else JSONPointer((key,))
+            self._globals = None
 
     @contextmanager
     def __call__(
@@ -371,7 +373,14 @@ class Scope:
             if child._discard:
                 del self.children[instance_path][key]
 
-    @property
+    @cached_property
+    def globals(self) -> Dict:
+        root = self
+        while root.parent is not None:
+            root = root.parent
+        return root._globals
+
+    @cached_property
     def schema_node(self) -> JSON:
         """Return the schema node associated with this scope."""
         return self.relpath.evaluate(self.schema)
