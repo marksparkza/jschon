@@ -225,6 +225,7 @@ class Node:
 
 def apply_add(document: JSONCompatible, path: JSONPointer, value: JSONCompatible) -> JSONCompatible:
     target = Node(document, path)
+    value = deepcopy(value)
     if target.type == NodeType.ROOT:
         return value
 
@@ -253,6 +254,7 @@ def apply_remove(document: JSONCompatible, path: JSONPointer) -> JSONCompatible:
 
 def apply_replace(document: JSONCompatible, path: JSONPointer, value: JSONCompatible) -> JSONCompatible:
     target = Node(document, path)
+    value = deepcopy(value)
     if target.type == NodeType.ROOT:
         return value
 
