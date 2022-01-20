@@ -198,7 +198,7 @@ class JSONSchema(JSON):
 
         else:
             for key, keyword in self.keywords.items():
-                if keyword.can_evaluate(instance):
+                if not keyword.static and keyword.can_evaluate(instance):
                     with scope(instance, key, self) as subscope:
                         keyword.evaluate(instance, subscope)
 

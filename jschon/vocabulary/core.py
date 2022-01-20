@@ -21,6 +21,7 @@ __all__ = [
 
 class SchemaKeyword(Keyword):
     key = "$schema"
+    static = True
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
@@ -32,12 +33,10 @@ class SchemaKeyword(Keyword):
 
         parentschema.metaschema_uri = uri
 
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
-
 
 class VocabularyKeyword(Keyword):
     key = "$vocabulary"
+    static = True
 
     def __init__(self, parentschema: JSONSchema, value: Mapping[str, bool]):
         super().__init__(parentschema, value)
@@ -62,12 +61,10 @@ class VocabularyKeyword(Keyword):
                 if vocab_required:
                     raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
 
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
-
 
 class IdKeyword(Keyword):
     key = "$id"
+    static = True
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
@@ -80,9 +77,6 @@ class IdKeyword(Keyword):
                 raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
 
         parentschema.uri = uri
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
 
 
 class RefKeyword(Keyword):
@@ -111,6 +105,7 @@ class RefKeyword(Keyword):
 
 class AnchorKeyword(Keyword):
     key = "$anchor"
+    static = True
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
@@ -121,9 +116,6 @@ class AnchorKeyword(Keyword):
             raise JSONSchemaError(f'No base URI for "$anchor" value "{value}"')
 
         parentschema.catalog.add_schema(uri, parentschema, session=parentschema.session)
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
 
 
 class DynamicRefKeyword(Keyword):
@@ -184,6 +176,7 @@ class DynamicRefKeyword(Keyword):
 
 class DynamicAnchorKeyword(Keyword):
     key = "$dynamicAnchor"
+    static = True
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
@@ -195,19 +188,12 @@ class DynamicAnchorKeyword(Keyword):
 
         parentschema.catalog.add_schema(uri, parentschema, session=parentschema.session)
 
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
-
 
 class DefsKeyword(Keyword, PropertyApplicator):
     key = "$defs"
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
+    static = True
 
 
 class CommentKeyword(Keyword):
     key = "$comment"
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
+    static = True

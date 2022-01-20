@@ -68,6 +68,7 @@ class Keyword:
     key: str = ...
     types: Tuple[str, ...] = ()
     depends: Tuple[str, ...] = ()
+    static: bool = False
 
     def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
         for base_cls in inspect.getmro(self.__class__):

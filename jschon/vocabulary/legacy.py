@@ -49,9 +49,7 @@ class RecursiveRefKeyword_2019_09(Keyword):
 
 class RecursiveAnchorKeyword_2019_09(Keyword):
     key = "$recursiveAnchor"
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        return False
+    static = True
 
 
 class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
