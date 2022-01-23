@@ -10,6 +10,10 @@ class JSONPointerError(Exception):
     pass
 
 
+class RelativeJSONPointerError(Exception):
+    pass
+
+
 class JSONSchemaError(Exception):
     pass
 

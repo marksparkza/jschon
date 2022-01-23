@@ -3,13 +3,21 @@ from __future__ import annotations
 import collections
 import re
 import urllib.parse
-from typing import Sequence, Union, Iterable, overload, Any, Mapping
+from typing import Any, Iterable, Mapping, Sequence, TYPE_CHECKING, Union, overload
 
-from jschon.exceptions import JSONPointerError
+from jschon.exceptions import JSONPointerError, RelativeJSONPointerError
+
+if TYPE_CHECKING:
+    from jschon.json import JSON
 
 __all__ = [
     'JSONPointer',
+    'RelativeJSONPointer',
 ]
+
+JSON_POINTER_RE = '(/([^~/]|(~[01]))*)*'
+JSON_INDEX_RE = '0|([1-9][0-9]*)'
+RELATIVE_JSON_POINTER_RE = f'(?P<up>{JSON_INDEX_RE})(?P<ref>#|{JSON_POINTER_RE})'
 
 
 class JSONPointer(Sequence[str]):
@@ -52,8 +60,8 @@ class JSONPointer(Sequence[str]):
        and referred to as *keys* in the JSONPointer class.
     """
 
-    _json_pointer_re = re.compile(r'^(/([^~/]|(~[01]))*)*$')
-    _array_index_re = re.compile(r'^0|([1-9][0-9]*)$')
+    _json_pointer_re = re.compile(JSON_POINTER_RE)
+    _array_index_re = re.compile(JSON_INDEX_RE)
 
     def __new__(cls, *values: Union[str, Iterable[str]]) -> JSONPointer:
         """Create and return a new :class:`JSONPointer` instance, constructed by
@@ -69,7 +77,7 @@ class JSONPointer(Sequence[str]):
 
         for value in values:
             if isinstance(value, str):
-                if not self._json_pointer_re.fullmatch(value):
+                if not JSONPointer._json_pointer_re.fullmatch(value):
                     raise JSONPointerError(f"'{value}' is not a valid JSON pointer")
                 self._keys.extend(self.unescape(token) for token in value.split('/')[1:])
 
@@ -164,7 +172,7 @@ class JSONPointer(Sequence[str]):
                 if isjson and value.type == "array" or \
                         not isjson and isinstance(value, Sequence) and \
                         not isinstance(value, str) and \
-                        self._array_index_re.fullmatch(key):
+                        JSONPointer._array_index_re.fullmatch(key):
                     return resolve(value[int(key)], keys)
 
             except (KeyError, IndexError):
@@ -225,3 +233,82 @@ class JSONPointer(Sequence[str]):
         :param token: an RFC 6901 reference token
         """
         return token.replace('~1', '/').replace('~0', '~')
+
+
+class RelativeJSONPointer:
+    _regex = re.compile(RELATIVE_JSON_POINTER_RE)
+
+    def __new__(
+            cls,
+            value: str = None,
+            /,
+            *,
+            up: int = 0,
+            ref: Union[str, JSONPointer] = '',
+    ) -> RelativeJSONPointer:
+        """Create and return a new :class:`RelativeJSONPointer` instance.
+
+        :param value: a relative JSON pointer-conformant string; if `value` is
+            given, keyword args are ignored
+        :param up: the number of levels up from the current referenced JSON node
+            from which to evaluate `ref`
+        :param ref: either the literal ``#``, or a :class:`JSONPointer` instance,
+            or a JSON pointer-conformant string
+        :raise RelativeJSONPointerError: for any invalid arguments
+        """
+        self = object.__new__(cls)
+
+        if value is not None:
+            if not (match := RelativeJSONPointer._regex.fullmatch(value)):
+                raise RelativeJSONPointerError(f"'{value}' is not a valid relative JSON pointer")
+
+            up, ref = match.group('up', 'ref')
+
+        self.up = int(up)
+        self.index = ref == '#'
+
+        if self.index:
+            self.path = None
+        else:
+            self.path = JSONPointer(ref) if isinstance(ref, str) else ref
+
+        return self
+
+    def __eq__(self, other: RelativeJSONPointer) -> bool:
+        """Return `self == other`."""
+        if isinstance(other, RelativeJSONPointer):
+            return (self.up == other.up and
+                    self.index == other.index and
+                    self.path == other.path)
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        """Return `hash(self)`."""
+        return hash((self.up, self.index, self.path))
+
+    def __str__(self) -> str:
+        """Return `str(self)`."""
+        if self.index:
+            return f'{self.up}#'
+        return f'{self.up}{self.path}'
+
+    def __repr__(self) -> str:
+        """Return `repr(self)`."""
+        return f'RelativeJSONPointer({str(self)!r})'
+
+    def evaluate(self, document: JSON) -> Union[int, str, JSON]:
+        node = document
+        for _ in range(self.up):
+            if node.parent is None:
+                raise RelativeJSONPointerError('Up too many levels')
+            node = node.parent
+
+        if self.index:
+            if node.parent is None:
+                raise RelativeJSONPointerError('No containing node')
+            return int(node.key) if node.parent.type == "array" else node.key
+
+        try:
+            return self.path.evaluate(node)
+        except JSONPointerError as e:
+            raise RelativeJSONPointerError from e

@@ -1,0 +1,221 @@
+[
+    {
+        "data": {
+            "foo": ["bar", "baz"],
+            "highly": {
+                "nested": {
+                    "objects": true
+                }
+            }
+        },
+        "tests": [
+            {
+                "start": "/foo/1",
+                "ref": "0",
+                "result": "baz"
+            },
+            {
+                "start": "/foo/1",
+                "ref": "1/0",
+                "result": "bar"
+            },
+            {
+                "start": "/foo/1",
+                "ref": "2/highly/nested/objects",
+                "result": true
+            },
+            {
+                "start": "/foo/1",
+                "ref": "0#",
+                "result": 1
+            },
+            {
+                "start": "/foo/1",
+                "ref": "1#",
+                "result": "foo"
+            },
+            {
+                "start": "/highly/nested",
+                "ref": "0/objects",
+                "result": true
+            },
+            {
+                "start": "/highly/nested",
+                "ref": "1/nested/objects",
+                "result": true
+            },
+            {
+                "start": "/highly/nested",
+                "ref": "2/foo/0",
+                "result": "bar"
+            },
+            {
+                "start": "/highly/nested",
+                "ref": "0#",
+                "result": "nested"
+            },
+            {
+                "start": "/highly/nested",
+                "ref": "1#",
+                "result": "highly"
+            }
+        ]
+    },
+    {
+        "data": {
+            "test": ["foo", "bar"],
+            "child": {
+                "grandchild": 12345
+            },
+            "sibling": "sibling value",
+            "awkwardly/named~variable": true
+        },
+        "tests": [
+            {
+                "start": "/test/1",
+                "ref": "0",
+                "result": "bar"
+            },
+            {
+                "start": "/test/1",
+                "ref": "0#",
+                "result": 1
+            },
+            {
+                "start": "/test/1",
+                "ref": "1",
+                "result": ["foo", "bar"]
+            },
+            {
+                "start": "/test/1",
+                "ref": "1/0",
+                "result": "foo"
+            },
+            {
+                "start": "/test/1",
+                "ref": "1/1",
+                "result": "bar"
+            },
+            {
+                "start": "/test/1",
+                "ref": "1#",
+                "result": "test"
+            },
+            {
+                "start": "/test/1",
+                "ref": "2",
+                "result": "<data>"
+            },
+            {
+                "start": "/test/1",
+                "ref": "2#",
+                "result": "<fail>"
+            },
+            {
+                "start": "/test/1",
+                "ref": "3",
+                "result": "<fail>"
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "0",
+                "result": 12345
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "0#",
+                "result": "grandchild"
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "1",
+                "result": {"grandchild": 12345}
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "1/grandchild",
+                "result": 12345
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "1#",
+                "result": "child"
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "2",
+                "result": "<data>"
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "2/sibling",
+                "result": "sibling value"
+            },
+            {
+                "start": "/child/grandchild",
+                "ref": "2/test/1",
+                "result": "bar"
+            },
+            {
+                "start": "/child",
+                "ref": "0",
+                "result": {"grandchild": 12345}
+            },
+            {
+                "start": "/child",
+                "ref": "0#",
+                "result": "child"
+            },
+            {
+                "start": "/child",
+                "ref": "0/grandchild",
+                "result": 12345
+            },
+            {
+                "start": "/child",
+                "ref": "1/sibling",
+                "result": "sibling value"
+            },
+            {
+                "start": "/child",
+                "ref": "1",
+                "result": "<data>"
+            },
+            {
+                "start": "/child",
+                "ref": "2",
+                "result": "<fail>"
+            },
+            {
+                "start": "/sibling",
+                "ref": "0",
+                "result": "sibling value"
+            },
+            {
+                "start": "/sibling",
+                "ref": "0#",
+                "result": "sibling"
+            },
+            {
+                "start": "/sibling",
+                "ref": "1",
+                "result": "<data>"
+            },
+            {
+                "start": "/sibling",
+                "ref": "1/awkwardly~1named~0variable",
+                "result": true
+            },
+            {
+                "start": "/awkwardly~1named~0variable",
+                "ref": "0",
+                "result": true
+            },
+            {
+                "start": "/awkwardly~1named~0variable",
+                "ref": "0#",
+                "result": "awkwardly/named~variable"
+            }
+        ]
+    }
+]

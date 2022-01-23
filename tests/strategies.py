@@ -42,9 +42,12 @@ propname = hs.characters(min_codepoint=ord('a'), max_codepoint=ord('z'))
 propnames = hs.lists(propname, unique=True, max_size=10)
 jsonproperties = hs.dictionaries(propname, jsonleaf, max_size=10)
 
-jsonpointer_regex = r'^(/([^~/]|(~[01]))*)*$'
+jsonpointer_regex = '(/([^~/]|(~[01]))*)*'
+jsonpointer_index = '0|([1-9][0-9]*)'
 jsonpointer = hs.from_regex(jsonpointer_regex, fullmatch=True)
-jsonpointer_key = hs.text() | hs.sampled_from(['~', '/', '-'])
+jsonpointer_key = hs.text() | hs.sampled_from(['~', '/', '-']) | hs.from_regex(jsonpointer_index, fullmatch=True)
+relative_jsonpointer_regex = f'(?P<up>{jsonpointer_index})(?P<ref>#|{jsonpointer_regex})'
+relative_jsonpointer = hs.from_regex(relative_jsonpointer_regex, fullmatch=True)
 
 interdependent_keywords = hs.lists(hs.sampled_from([
     "properties",

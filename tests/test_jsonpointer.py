@@ -1,10 +1,13 @@
-from typing import Union, List
+import pathlib
+import re
+from typing import List, Union
 
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon import JSON, JSONPointer, JSONPointerError
-from tests.strategies import jsonpointer, jsonpointer_key, json
+from jschon import JSON, JSONPointer, JSONPointerError, RelativeJSONPointer, RelativeJSONPointerError
+from jschon.utils import json_loadf
+from tests.strategies import json, jsonpointer, jsonpointer_key, relative_jsonpointer, relative_jsonpointer_regex
 
 
 @given(hs.lists(jsonpointer | hs.lists(jsonpointer_key)))
@@ -91,3 +94,61 @@ def jsonpointer_escape(key: str):
 
 def jsonpointer_unescape(token: str):
     return token.replace('~1', '/').replace('~0', '~')
+
+
+@given(relative_jsonpointer)
+def test_create_relative_jsonpointer(value):
+    match = re.fullmatch(relative_jsonpointer_regex, value)
+    up, ref = match.group('up', 'ref')
+    r1 = RelativeJSONPointer(value)
+    r2 = RelativeJSONPointer(up=up, ref=ref)
+    assert r1 == r2
+    assert str(r1) == value
+
+    if up == 0:
+        assert r1 == RelativeJSONPointer(ref=ref)
+        if ref == '':
+            assert r1 == RelativeJSONPointer()
+        if ref != '#':
+            assert r1 == RelativeJSONPointer(ref=JSONPointer(ref))
+    if ref == '':
+        assert r1 == RelativeJSONPointer(up=up)
+
+
+# Examples from:
+# https://datatracker.ietf.org/doc/html/draft-handrews-relative-json-pointer-01#section-5.1
+# https://gist.github.com/geraintluff/5911303
+example_file = pathlib.Path(__file__).parent / 'data' / 'relative_jsonpointer.json'
+
+
+def pytest_generate_tests(metafunc):
+    if metafunc.definition.name == 'test_evaluate_relative_jsonpointer':
+        argnames = ('data', 'start', 'ref', 'result')
+        argvalues = []
+        examples = json_loadf(example_file)
+        for example in examples:
+            for test in example['tests']:
+                argvalues += [pytest.param(
+                    example['data'],
+                    test['start'],
+                    test['ref'],
+                    test['result'],
+                )]
+        metafunc.parametrize(argnames, argvalues)
+
+
+def test_evaluate_relative_jsonpointer(data, start, ref, result):
+    data = JSON(data)
+    start = JSONPointer(start)
+    ref = RelativeJSONPointer(ref)
+    node = start.evaluate(data)
+
+    if result == '<data>':
+        result = data
+    elif result == '<fail>':
+        with pytest.raises(RelativeJSONPointerError):
+            ref.evaluate(node)
+        return
+
+    value = ref.evaluate(node)
+    assert value == result
