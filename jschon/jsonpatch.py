@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from enum import Enum
-from typing import Dict, List, Mapping, MutableSequence, Optional, Sequence, Union, overload
+from typing import Dict, Iterable, List, Mapping, MutableSequence, Optional, Sequence, Union, overload
 
 from jschon.exceptions import JSONPatchError, JSONPointerError
 from jschon.json import JSON, JSONCompatible
@@ -94,8 +94,10 @@ class JSONPatchOperation:
 
         return result
 
-    def __eq__(self, other: JSONPatchOperation) -> bool:
+    def __eq__(self, other: Union[JSONPatchOperation, Mapping[str, JSONCompatible]]) -> bool:
         """Return `self == other`."""
+        if not isinstance(other, JSONPatchOperation):
+            other = JSONPatchOperation(**other)
         return (self.op == other.op and
                 self.path == other.path and
                 self.from_ == other.from_ and
@@ -170,8 +172,10 @@ class JSONPatch(MutableSequence[JSONPatchOperation]):
             operation = JSONPatchOperation(**operation)
         self._operations.insert(index, operation)
 
-    def __eq__(self, other: JSONPatch) -> bool:
+    def __eq__(self, other: Union[JSONPatch, Iterable[Union[JSONPatchOperation, Mapping[str, JSONCompatible]]]]) -> bool:
         """Return `self == other`."""
+        if not isinstance(other, JSONPatch):
+            other = JSONPatch(*other)
         return self._operations == other._operations
 
     def __repr__(self) -> str:
