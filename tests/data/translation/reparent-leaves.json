@@ -1,0 +1,148 @@
+{
+    "schema": {
+        "$schema": "https://jschon.dev/ext/translation/schema",
+        "type": "object",
+        "translations": [
+            {
+                "t9nScheme": "scheme1",
+                "t9nTarget": "",
+                "t9nConst": {"t8dList": []}
+            },
+            {
+                "t9nScheme": "scheme2",
+                "t9nTarget": "",
+                "t9nConst": {"t8dDict": {}}
+            }
+        ],
+        "properties": {
+            "none": {
+                "type": "null",
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/t8dList/-"
+                    },
+                    {
+                        "t9nScheme": "scheme2",
+                        "t9nTarget": "/t8dDict/none2"
+                    }
+                ]
+            },
+            "flag": {
+                "type": "boolean",
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/t8dList/-"
+                    },
+                    {
+                        "t9nScheme": "scheme2",
+                        "t9nTarget": "/t8dDict/flag2"
+                    }
+                ]
+            },
+            "int": {
+                "type": "integer",
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/t8dList/-"
+                    },
+                    {
+                        "t9nScheme": "scheme2",
+                        "t9nTarget": "/t8dDict/int2"
+                    }
+                ]
+            },
+            "num": {
+                "type": "number",
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/t8dList/-"
+                    },
+                    {
+                        "t9nScheme": "scheme2",
+                        "t9nTarget": "/t8dDict/num2"
+                    }
+                ]
+            },
+            "str": {
+                "type": "string",
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/t8dList/-"
+                    },
+                    {
+                        "t9nScheme": "scheme2",
+                        "t9nTarget": "/t8dDict/str2"
+                    }
+                ]
+            }
+        }
+    },
+    "tests": [
+        {
+            "data": {},
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": {"t8dList": []}}
+                ],
+                "scheme2": [
+                    {"op": "add", "path": "", "value": {"t8dDict": {}}}
+                ]
+            },
+            "translations": {
+                "scheme1": {
+                    "t8dList": []
+                },
+                "scheme2": {
+                    "t8dDict": {}
+                }
+            }
+        },
+        {
+            "data": {
+                "str": "Hello",
+                "num": 3.14159,
+                "int": 10,
+                "flag": true,
+                "none": null,
+                "foo": "bar"
+            },
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": {"t8dList": []}},
+                    {"op": "add", "path": "/t8dList/-", "value": "Hello"},
+                    {"op": "add", "path": "/t8dList/-", "value": 3.14159},
+                    {"op": "add", "path": "/t8dList/-", "value": 10},
+                    {"op": "add", "path": "/t8dList/-", "value": true},
+                    {"op": "add", "path": "/t8dList/-", "value": null}
+                ],
+                "scheme2": [
+                    {"op": "add", "path": "", "value": {"t8dDict": {}}},
+                    {"op": "add", "path": "/t8dDict/str2", "value": "Hello"},
+                    {"op": "add", "path": "/t8dDict/num2", "value": 3.14159},
+                    {"op": "add", "path": "/t8dDict/int2", "value": 10},
+                    {"op": "add", "path": "/t8dDict/flag2", "value": true},
+                    {"op": "add", "path": "/t8dDict/none2", "value": null}
+                ]
+            },
+            "translations": {
+                "scheme1": {
+                    "t8dList": ["Hello", 3.14159, 10, true, null]
+                },
+                "scheme2": {
+                    "t8dDict": {
+                        "str2": "Hello",
+                        "num2": 3.14159,
+                        "int2": 10,
+                        "flag2": true,
+                        "none2": null
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,88 @@
+{
+    "schema": {
+        "$schema": "https://jschon.dev/ext/translation/schema",
+        "type": "object",
+        "translations": [
+            {
+                "t9nScheme": "scheme1",
+                "t9nTarget": "",
+                "t9nConst": {}
+            }
+        ],
+        "properties": {
+            "part1": {
+                "type": "object",
+                "properties": {
+                    "foo": true,
+                    "bar": true
+                },
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/combo",
+                        "t9nObject": {
+                            "t8dFoo": {"t9nSource": "0/foo"},
+                            "t8dBar": {"t9nSource": "0/bar"}
+                        }
+                    }
+                ]
+            },
+            "part2": {
+                "type": "object",
+                "properties": {
+                    "baz": true,
+                    "qux": true
+                },
+                "translations": [
+                    {
+                        "t9nScheme": "scheme1",
+                        "t9nTarget": "/combo",
+                        "t9nObject": {
+                            "t8dBaz": {"t9nSource": "0/baz"},
+                            "t8dQux": {"t9nSource": "0/qux"}
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "tests": [
+        {
+            "data": {},
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": {}}
+                ]
+            },
+            "translations": {
+                "scheme1": {}
+            }
+        },
+        {
+            "data": {
+                "part1": {"foo": 1, "bar": 2},
+                "part2": {"baz": 3, "qux": 4}
+            },
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": {}},
+                    {"op": "add", "path": "/combo", "value": {}},
+                    {"op": "add", "path": "/combo/t8dFoo", "value": 1},
+                    {"op": "add", "path": "/combo/t8dBar", "value": 2},
+                    {"op": "add", "path": "/combo/t8dBaz", "value": 3},
+                    {"op": "add", "path": "/combo/t8dQux", "value": 4}
+                ]
+            },
+            "translations": {
+                "scheme1": {
+                    "combo": {
+                        "t8dFoo": 1,
+                        "t8dBar": 2,
+                        "t8dBaz": 3,
+                        "t8dQux": 4
+                    }
+                }
+            }
+        }
+    ]
+}

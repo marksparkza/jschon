@@ -29,28 +29,29 @@ __all__ = [
 __version__ = '0.8.0'
 
 
-def create_catalog(*versions: str, name: str = 'catalog') -> Catalog:
-    """Create and return a :class:`Catalog` instance, configured to
-    support the specified versions of the JSON Schema vocabulary.
+def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
+    """Create and return a :class:`Catalog` instance, configured with
+    support for the specified JSON Schema vocabularies.
 
-    :param versions: any of ``'2019-09'``, ``'2020-12'``
+    :param vocabularies: any of ``2019-09``, ``2020-12``, ``translation``
     :param name: a unique name for the :class:`Catalog` instance
-    :raise ValueError: if a supplied version parameter is not recognized
+    :raise ValueError: if a supplied vocabulary parameter is not recognized
     """
-    from .catalog import _2019_09, _2020_12
+    from .catalog import _2019_09, _2020_12, _translation
 
     catalog = Catalog(name=name)
 
-    version_initializers = {
+    vocabulary_initializers = {
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
+        'translation': _translation.initialize,
     }
     try:
-        for version in versions:
-            version_init = version_initializers[version]
-            version_init(catalog)
+        for vocabulary in vocabularies:
+            vocabulary_init = vocabulary_initializers[vocabulary]
+            vocabulary_init(catalog)
 
     except KeyError as e:
-        raise ValueError(f'Unsupported version "{e.args[0]}"')
+        raise ValueError(f'Unsupported vocabulary "{e.args[0]}"')
 
     return catalog

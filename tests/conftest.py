@@ -12,4 +12,4 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope='module', autouse=True)
 def catalog():
-    return create_catalog('2019-09', '2020-12')
+    return create_catalog('2019-09', '2020-12', 'translation')

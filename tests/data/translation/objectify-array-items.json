@@ -1,0 +1,54 @@
+{
+    "schema": {
+        "$schema": "https://jschon.dev/ext/translation/schema",
+        "type": "array",
+        "items": {
+            "enum": ["foo", "bar", "baz"]
+        },
+        "translations": [
+            {
+                "t9nScheme": "scheme1",
+                "t9nTarget": "",
+                "t9nArray": {
+                    "t9nObject": {
+                        "t8dValue": {}
+                    }
+                }
+            }
+        ]
+    },
+    "tests": [
+        {
+            "data": [],
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": []}
+                ]
+            },
+            "translations": {
+                "scheme1": []
+            }
+        },
+        {
+            "data": ["foo", "baz", "foo"],
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": []},
+                    {"op": "add", "path": "/0", "value": {}},
+                    {"op": "add", "path": "/0/t8dValue", "value": "foo"},
+                    {"op": "add", "path": "/1", "value": {}},
+                    {"op": "add", "path": "/1/t8dValue", "value": "baz"},
+                    {"op": "add", "path": "/2", "value": {}},
+                    {"op": "add", "path": "/2/t8dValue", "value": "foo"}
+                ]
+            },
+            "translations": {
+                "scheme1": [
+                    {"t8dValue": "foo"},
+                    {"t8dValue": "baz"},
+                    {"t8dValue": "foo"}
+                ]
+            }
+        }
+    ]
+}
