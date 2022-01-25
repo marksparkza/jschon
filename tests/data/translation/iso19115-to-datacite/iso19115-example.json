@@ -1,0 +1,68 @@
+{
+    "date": "2020-10-29",
+    "responsibleParties": [
+        {
+            "individualName": "Ophelia the Octopus",
+            "organizationName": "The Octopus's Garden",
+            "contactInfo": "Under The Sea",
+            "role": "originator",
+            "onlineResource": {"linkage": "https://orcid.org/0000-0001-2345-6789"}
+        },
+        {
+            "individualName": "Leroy the Limpet",
+            "organizationName": "Rock Pool Inc",
+            "positionName": "Land-Sea Interface Consultant",
+            "contactInfo": "Intertidal Zone, Seashore Business Park",
+            "role": "pointOfContact"
+        },
+        {
+            "organizationName": "Reef Community",
+            "role": "publisher"
+        }
+    ],
+    "extent": {
+        "geographicElements": [
+            {
+                "geographicIdentifier": "Somewhere off the Atlantic coast of Cape Town",
+                "boundingBox": {
+                    "westBoundLongitude": 17.9,
+                    "eastBoundLongitude": 18.3,
+                    "southBoundLatitude": -34.4,
+                    "northBoundLatitude": -34.0
+                },
+                "boundingPolygon": [
+                    {
+                        "polygon": [
+                            {"longitude": 18.19, "latitude": -34.01},
+                            {"longitude": 18.27, "latitude": -34.08},
+                            {"longitude": 18.24, "latitude": -34.18},
+                            {"longitude": 18.11, "latitude": -34.15},
+                            {"longitude": 18.19, "latitude": -34.01}
+                        ]
+                    },
+                    {
+                        "polygon": [
+                            {"longitude": 17.93, "latitude": -34.30},
+                            {"longitude": 18.05, "latitude": -34.22},
+                            {"longitude": 18.06, "latitude": -34.39},
+                            {"longitude": 17.93, "latitude": -34.30}
+                        ]
+                    }
+                ]
+            }
+        ],
+        "verticalElement": {
+            "minimumValue": -50,
+            "maximumValue": -10,
+            "unitOfMeasure": "m",
+            "verticalDatum": "Metres below sea level"
+        },
+        "temporalElement": {
+            "startTime": "2019-11-01T00:00:00+02:00",
+            "endTime": "2019-12-01T00:00:00+02:00"
+        }
+    },
+    "abstract": "Concerning things that'd like to be under the sea, in an octopus's garden, in the shade.",
+    "lineageStatement": "The study was conducted using a tentacles-on approach.",
+    "purpose": "To see if we would be warm, below the storm, in our little hideaway beneath the waves."
+}

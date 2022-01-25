@@ -1,0 +1,275 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "creators": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "nameType": {"$ref": "#/$defs/nameType"},
+                    "givenName": {"type": "string"},
+                    "familyName": {"type": "string"},
+                    "nameIdentifiers": {"$ref": "#/$defs/nameIdentifiers"},
+                    "affiliation": {"$ref": "#/$defs/affiliation"},
+                    "lang": {"type": "string"}
+                },
+                "additionalProperties": false,
+                "required": ["name"]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "publisher": {
+            "type": "string"
+        },
+        "publicationYear": {
+            "type": "integer"
+        },
+        "subjects": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "subject": {"type": "string"},
+                    "subjectScheme": {"type": "string"},
+                    "schemeURI": {"type": "string", "format": "uri"},
+                    "valueURI": {"type": "string", "format": "uri"},
+                    "lang": {"type": "string"}
+                },
+                "additionalProperties": false,
+                "required": ["subject"]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "contributors": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "contributorType": {"$ref": "#/$defs/contributorType"},
+                    "name": {"type": "string"},
+                    "nameType": {"$ref": "#/$defs/nameType"},
+                    "givenName": {"type": "string"},
+                    "familyName": {"type": "string"},
+                    "nameIdentifiers": {"$ref": "#/$defs/nameIdentifiers"},
+                    "affiliation": {"$ref": "#/$defs/affiliation"},
+                    "lang": {"type": "string"}
+                },
+                "additionalProperties": false,
+                "required": ["contributorType", "name"]
+            },
+            "uniqueItems": true
+        },
+        "dates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "date": {"$ref": "#/$defs/date"},
+                    "dateType": {"$ref": "#/$defs/dateType"},
+                    "dateInformation": {"type": "string"}
+                },
+                "additionalProperties": false,
+                "required": ["date", "dateType"]
+            },
+            "uniqueItems": true,
+            "contains": {
+                "properties": {
+                    "dateType": {"const": "Valid"}
+                }
+            }
+        },
+        "descriptions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "description": {"type": "string"},
+                    "descriptionType": {"$ref": "#/$defs/descriptionType"},
+                    "lang": {"type": "string"}
+                },
+                "additionalProperties": false,
+                "required": ["description", "descriptionType"]
+            },
+            "uniqueItems": true,
+            "contains": {
+                "properties": {
+                    "descriptionType": {"const": "Abstract"}
+                }
+            }
+        },
+        "geoLocations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "geoLocationPlace": {"type": "string"},
+                    "geoLocationPoint": {"$ref": "#/$defs/geoLocationPoint"},
+                    "geoLocationBox": {
+                        "type": "object",
+                        "properties": {
+                            "westBoundLongitude": {"$ref": "#/$defs/longitude"},
+                            "eastBoundLongitude": {"$ref": "#/$defs/longitude"},
+                            "southBoundLatitude": {"$ref": "#/$defs/latitude"},
+                            "northBoundLatitude": {"$ref": "#/$defs/latitude"}
+                        },
+                        "additionalProperties": false,
+                        "required": ["westBoundLongitude", "eastBoundLongitude", "southBoundLatitude", "northBoundLatitude"]
+                    },
+                    "geoLocationPolygons": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "polygonPoints": {
+                                    "type": "array",
+                                    "items": {"$ref": "#/$defs/geoLocationPoint"},
+                                    "minItems": 4
+                                },
+                                "inPolygonPoint": {"$ref": "#/$defs/geoLocationPoint"}
+                            },
+                            "required": ["polygonPoints"],
+                            "additionalProperties": false
+                        },
+                        "uniqueItems": true
+                    }
+                },
+                "additionalProperties": false
+            },
+            "uniqueItems": true
+        },
+        "schemaVersion": {
+            "type": "string",
+            "const": "http://datacite.org/schema/kernel-4"
+        }
+    },
+    "$defs": {
+        "nameType": {
+            "type": "string",
+            "enum": [
+                "Organizational",
+                "Personal"
+            ]
+        },
+        "nameIdentifiers": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "nameIdentifier": {"type": "string"},
+                    "nameIdentifierScheme": {"type": "string"},
+                    "schemeURI": {"type": "string", "format": "uri"}
+                },
+                "additionalProperties": false,
+                "required": ["nameIdentifier", "nameIdentifierScheme"]
+            },
+            "uniqueItems": true
+        },
+        "affiliation": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "affiliation": {"type": "string"},
+                    "affiliationIdentifier": {"type": "string"},
+                    "affiliationIdentifierScheme": {"type": "string"},
+                    "schemeURI": {"type": "string", "format": "uri"}
+                },
+                "additionalProperties": false,
+                "required": ["affiliation"],
+                "dependencies": {
+                    "affiliationIdentifier": ["affiliationIdentifierScheme"]
+                }
+            },
+            "uniqueItems": true
+        },
+        "contributorType": {
+            "type": "string",
+            "enum": [
+                "ContactPerson",
+                "DataCollector",
+                "DataCurator",
+                "DataManager",
+                "Distributor",
+                "Editor",
+                "HostingInstitution",
+                "Producer",
+                "ProjectLeader",
+                "ProjectManager",
+                "ProjectMember",
+                "RegistrationAgency",
+                "RegistrationAuthority",
+                "RelatedPerson",
+                "Researcher",
+                "ResearchGroup",
+                "RightsHolder",
+                "Sponsor",
+                "Supervisor",
+                "WorkPackageLeader",
+                "Other"
+            ]
+        },
+        "date": {
+            "type": "string",
+            "anyOf": [
+                {"format": "year"},
+                {"format": "yearmonth"},
+                {"format": "date"},
+                {"format": "datetime"},
+                {"format": "year-range"},
+                {"format": "yearmonth-range"},
+                {"format": "date-range"},
+                {"format": "datetime-range"}
+            ]
+        },
+        "dateType": {
+            "type": "string",
+            "enum": [
+                "Accepted",
+                "Available",
+                "Copyrighted",
+                "Collected",
+                "Created",
+                "Issued",
+                "Submitted",
+                "Updated",
+                "Valid",
+                "Withdrawn",
+                "Other"
+            ]
+        },
+        "descriptionType": {
+            "type": "string",
+            "enum": [
+                "Abstract",
+                "Methods",
+                "SeriesInformation",
+                "TableOfContents",
+                "TechnicalInfo",
+                "Other"
+            ]
+        },
+        "geoLocationPoint": {
+            "type": "object",
+            "properties": {
+                "pointLongitude": {"$ref": "#/$defs/longitude"},
+                "pointLatitude": {"$ref": "#/$defs/latitude"}
+            },
+            "additionalProperties": false,
+            "required": ["pointLongitude", "pointLatitude"]
+        },
+        "longitude": {
+            "type": "number",
+            "minimum": -180,
+            "maximum": 180
+        },
+        "latitude": {
+            "type": "number",
+            "minimum": -90,
+            "maximum": 90
+        }
+    }
+}

@@ -1,0 +1,101 @@
+{
+    "publicationYear": 2020,
+    "publisher": "Reef Community",
+    "creators": [
+        {
+            "name": "Ophelia the Octopus",
+            "nameIdentifiers": [
+                {
+                    "nameIdentifier": "https://orcid.org/0000-0001-2345-6789",
+                    "nameIdentifierScheme": "https://orcid.org",
+                    "schemeURI": "https://orcid.org"
+                }
+            ],
+            "affiliation": [
+                {
+                    "affiliation": "The Octopus's Garden\nUnder The Sea"
+                }
+            ]
+        }
+    ],
+    "contributors": [
+        {
+            "name": "Leroy the Limpet",
+            "affiliation": [
+                {
+                    "affiliation": "Rock Pool Inc\nLand-Sea Interface Consultant\nIntertidal Zone, Seashore Business Park"
+                }
+            ],
+            "contributorType": "ContactPerson"
+        }
+    ],
+    "geoLocations": [
+        {
+            "geoLocationPolygons": [
+                {
+                    "polygonPoints": [
+                        {"pointLongitude": 18.19, "pointLatitude": -34.01},
+                        {"pointLongitude": 18.27, "pointLatitude": -34.08},
+                        {"pointLongitude": 18.24, "pointLatitude": -34.18},
+                        {"pointLongitude": 18.11, "pointLatitude": -34.15},
+                        {"pointLongitude": 18.19, "pointLatitude": -34.01}
+                    ]
+                },
+                {
+                    "polygonPoints": [
+                        {"pointLongitude": 17.93, "pointLatitude": -34.3},
+                        {"pointLongitude": 18.05, "pointLatitude": -34.22},
+                        {"pointLongitude": 18.06, "pointLatitude": -34.39},
+                        {"pointLongitude": 17.93, "pointLatitude": -34.3}
+                    ]
+                }
+            ],
+            "geoLocationPlace": "Somewhere off the Atlantic coast of Cape Town",
+            "geoLocationBox": {
+                "westBoundLongitude": 17.9,
+                "northBoundLatitude": -34.0,
+                "eastBoundLongitude": 18.3,
+                "southBoundLatitude": -34.4
+            }
+        }
+    ],
+    "subjects": [
+        {
+            "subjectScheme": "SANS1878 Vertical Extent: minimumValue",
+            "subject": "-50"
+        },
+        {
+            "subjectScheme": "SANS1878 Vertical Extent: maximumValue",
+            "subject": "-10"
+        },
+        {
+            "subjectScheme": "SANS1878 Vertical Extent: unitOfMeasure",
+            "subject": "m"
+        },
+        {
+            "subjectScheme": "SANS1878 Vertical Extent: verticalDatum",
+            "subject": "Metres below sea level"
+        }
+    ],
+    "dates": [
+        {
+            "date": "2019-11-01T00:00:00+02:00/2019-12-01T00:00:00+02:00",
+            "dateType": "Valid"
+        }
+    ],
+    "descriptions": [
+        {
+            "descriptionType": "Abstract",
+            "description": "Concerning things that'd like to be under the sea, in an octopus's garden, in the shade."
+        },
+        {
+            "descriptionType": "Methods",
+            "description": "The study was conducted using a tentacles-on approach."
+        },
+        {
+            "descriptionType": "Other",
+            "description": "To see if we would be warm, below the storm, in our little hideaway beneath the waves."
+        }
+    ],
+    "schemaVersion": "http://datacite.org/schema/kernel-4"
+}
