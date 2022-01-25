@@ -14,6 +14,8 @@ __all__ = [
     'JSONTranslationSchema',
     'TranslationScope',
     'TranslationOutputFormatter',
+    'TranslationFilter',
+    'translation_filter',
 ]
 
 
