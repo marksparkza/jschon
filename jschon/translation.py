@@ -32,61 +32,65 @@ class JSONTranslationSchema(JSONSchema):
             **kwargs: Any,
     ) -> None:
         self.t9n_scheme: Optional[str] = scheme
+        self.t9n_source: Optional[RelativeJSONPointer] = None
         self.t9n_const: Optional[JSONCompatible] = NoValue
-        self.t9n_sources: Tuple[RelativeJSONPointer, ...] = ()
-        self.t9n_join: Optional[str] = None
+        self.t9n_concat: Optional[Tuple[RelativeJSONPointer, ...]] = None
+        self.t9n_sep: str = ''
         self.t9n_filter: Optional[Union[str, Dict[str, JSONCompatible]]] = None
         self.t9n_cast: Optional[str] = None
         self.t9n_leaf: bool = True
         super().__init__(*args, **kwargs)
 
     def evaluate(self, instance: JSON, scope: TranslationScope = None) -> Scope:
-        super().evaluate(instance, scope)
+        if self.t9n_source is not None:
+            try:
+                source = self.t9n_source.evaluate(instance)
+            except RelativeJSONPointerError:
+                return scope
+        else:
+            source = instance
 
-        if scope.valid and self.t9n_leaf and (
-                (value := self._make_value(instance, self.t9n_sources)) is not NoValue
-        ):
-            scope.add_translation_patch(self.t9n_scheme, scope.t9n_target, value)
+        super().evaluate(source, scope)
+
+        if scope.valid and self.t9n_leaf:
+            if self.t9n_const is not NoValue:
+                value = self.t9n_const
+            elif self.t9n_concat is not None:
+                value = []
+                for item in self.t9n_concat:
+                    try:
+                        value += [self._make_value(item.evaluate(source))]
+                    except RelativeJSONPointerError:
+                        pass
+                if value:
+                    value = self.t9n_sep.join(str(v) for v in value)
+                else:
+                    value = NoValue
+            else:
+                value = self._make_value(source)
+
+            if value is not NoValue:
+                scope.add_translation_patch(self.t9n_scheme, scope.t9n_target, value)
 
         return scope
 
-    def _make_value(self, instance: JSON, sources: Tuple[RelativeJSONPointer, ...] = ()) -> JSONCompatible:
-        if self.t9n_const is not NoValue:
-            return self.t9n_const
+    def _make_value(self, instance: JSON) -> JSONCompatible:
+        result = instance.value
 
-        if sources:
-            result = []
-            for source in sources:
-                try:
-                    if (value := self._make_value(source.evaluate(instance))) is not NoValue:
-                        result += [value]
-                except RelativeJSONPointerError:
-                    pass
-            if not result:
-                result = NoValue
-            elif len(result) == 1:
-                result = result[0]
-            elif self.t9n_join is not None:
-                result = (str(value) for value in result)
-                result = self.t9n_join.join(result)
-        else:
-            result = instance.value
+        if isinstance(self.t9n_filter, str):
+            if filter_fn := _translation_filters.get(self.t9n_filter):
+                result = filter_fn(result)
+        elif isinstance(self.t9n_filter, dict):
+            result = self.t9n_filter.get(result, result)
 
-        if result is not NoValue:
-            if isinstance(self.t9n_filter, str):
-                if filter_fn := _translation_filters.get(self.t9n_filter):
-                    result = filter_fn(result)
-            elif isinstance(self.t9n_filter, dict):
-                result = self.t9n_filter.get(result, result)
-
-            if self.t9n_cast == 'boolean':
-                result = bool(result)
-            elif self.t9n_cast == 'integer':
-                result = int(result)
-            elif self.t9n_cast == 'number':
-                result = Decimal(f'{result}')
-            elif self.t9n_cast == 'string':
-                result = str(result)
+        if self.t9n_cast == 'boolean':
+            result = bool(result)
+        elif self.t9n_cast == 'integer':
+            result = int(result)
+        elif self.t9n_cast == 'number':
+            result = Decimal(f'{result}')
+        elif self.t9n_cast == 'string':
+            result = str(result)
 
         return result
 

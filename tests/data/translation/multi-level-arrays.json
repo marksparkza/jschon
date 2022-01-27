@@ -1,0 +1,110 @@
+{
+    "schema": {
+        "$schema": "https://jschon.dev/ext/translation/schema",
+        "type": "object",
+        "properties": {
+            "level1": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "level2": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "a": true,
+                                    "b": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "translations": [
+            {
+                "t9nScheme": "scheme1",
+                "t9nTarget": "",
+                "t9nObject": {
+                    "outer": {
+                        "t9nSource": "0/level1",
+                        "t9nArray": {
+                            "t9nObject": {
+                                "inner": {
+                                    "t9nSource": "0/level2",
+                                    "t9nArray": {
+                                        "t9nObject": {
+                                            "p": {"t9nSource": "0/a"},
+                                            "q": {"t9nSource": "0/b"}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        ]
+    },
+    "tests": [
+        {
+            "data": {
+                "level1": [
+                    {
+                        "level2": [
+                            {"a": 1, "b": -1},
+                            {"a": 2, "b": -2}
+                        ]
+                    },
+                    {
+                        "level2": [
+                            {"a": 3, "b": -3},
+                            {"a": 4, "b": -4}
+                        ]
+                    }
+                ]
+            },
+            "patches": {
+                "scheme1": [
+                    {"op": "add", "path": "", "value": {}},
+                    {"op": "add", "path": "/outer", "value": []},
+                    {"op": "add", "path": "/outer/0", "value": {}},
+                    {"op": "add", "path": "/outer/0/inner", "value": []},
+                    {"op": "add", "path": "/outer/0/inner/0", "value": {}},
+                    {"op": "add", "path": "/outer/0/inner/0/p", "value": 1},
+                    {"op": "add", "path": "/outer/0/inner/0/q", "value": -1},
+                    {"op": "add", "path": "/outer/0/inner/1", "value": {}},
+                    {"op": "add", "path": "/outer/0/inner/1/p", "value": 2},
+                    {"op": "add", "path": "/outer/0/inner/1/q", "value": -2},
+                    {"op": "add", "path": "/outer/1", "value": {}},
+                    {"op": "add", "path": "/outer/1/inner", "value": []},
+                    {"op": "add", "path": "/outer/1/inner/0", "value": {}},
+                    {"op": "add", "path": "/outer/1/inner/0/p", "value": 3},
+                    {"op": "add", "path": "/outer/1/inner/0/q", "value": -3},
+                    {"op": "add", "path": "/outer/1/inner/1", "value": {}},
+                    {"op": "add", "path": "/outer/1/inner/1/p", "value": 4},
+                    {"op": "add", "path": "/outer/1/inner/1/q", "value": -4}
+                ]
+            },
+            "translations": {
+                "scheme1": {
+                    "outer": [
+                        {
+                            "inner": [
+                                {"p": 1, "q": -1},
+                                {"p": 2, "q": -2}
+                            ]
+                        },
+                        {
+                            "inner": [
+                                {"p": 3, "q": -3},
+                                {"p": 4, "q": -4}
+                            ]
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

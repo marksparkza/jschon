@@ -25,8 +25,8 @@
                             "quantity": {"multipleOf": 2}
                         }
                     },
-                    "t9nSource": ["0/quantity", "0/ingredient", "0/confection"],
-                    "t9nJoin": " "
+                    "t9nConcat": ["0/quantity", "0/ingredient", "0/confection"],
+                    "t9nSep": " "
                 },
                 {
                     "t9nScheme": "scheme1",
@@ -36,8 +36,8 @@
                             "quantity": {"not": {"multipleOf": 2}}
                         }
                     },
-                    "t9nSource": ["0/quantity", "0/ingredient", "0/confection"],
-                    "t9nJoin": " "
+                    "t9nConcat": ["0/quantity", "0/ingredient", "0/confection"],
+                    "t9nSep": " "
                 }
             ]
         }

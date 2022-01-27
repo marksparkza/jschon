@@ -85,7 +85,7 @@
                                 "affiliation": {
                                     "t9nArray": {
                                         "t9nObject": {
-                                            "affiliation": {"t9nSource": ["0/organizationName", "0/positionName", "0/contactInfo"], "t9nJoin": "\n"}
+                                            "affiliation": {"t9nConcat": ["0/organizationName", "0/positionName", "0/contactInfo"], "t9nSep": "\n"}
                                         }
                                     }
                                 }
@@ -115,7 +115,7 @@
                                 "affiliation": {
                                     "t9nArray": {
                                         "t9nObject": {
-                                            "affiliation": {"t9nSource": ["0/organizationName", "0/positionName", "0/contactInfo"], "t9nJoin": "\n"}
+                                            "affiliation": {"t9nConcat": ["0/organizationName", "0/positionName", "0/contactInfo"], "t9nSep": "\n"}
                                         }
                                     }
                                 },
@@ -218,13 +218,15 @@
                                         }
                                     },
                                     "geoLocationPolygons": {
+                                        "t9nSource": "0/boundingPolygon",
                                         "t9nArray": {
                                             "t9nObject": {
                                                 "polygonPoints": {
+                                                    "t9nSource": "0/polygon",
                                                     "t9nArray": {
                                                         "t9nObject": {
-                                                            "pointLongitude": {"t9nSource": "0/boundingPolygon/0/polygon/0/longitude"},
-                                                            "pointLatitude": {"t9nSource": "0/boundingPolygon/0/polygon/0/latitude"}
+                                                            "pointLongitude": {"t9nSource": "0/longitude"},
+                                                            "pointLatitude": {"t9nSource": "0/latitude"}
                                                         }
                                                     }
                                                 }
@@ -317,7 +319,7 @@
                             "t9nTarget": "/dates",
                             "t9nArray": {
                                 "t9nObject": {
-                                    "date": {"t9nSource": ["0/startTime", "0/endTime"], "t9nJoin": "/"},
+                                    "date": {"t9nConcat": ["0/startTime", "0/endTime"], "t9nSep": "/"},
                                     "dateType": {"t9nConst": "Valid"}
                                 }
                             }

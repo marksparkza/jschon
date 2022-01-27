@@ -1,10 +1,10 @@
-from typing import Mapping, Optional, Sequence, Union
+from typing import Mapping, Optional, Sequence
 
+from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpointer import JSONPointer, RelativeJSONPointer
 from jschon.jsonschema import JSONSchema, Scope
 from jschon.translation import JSONTranslationSchema, TranslationScope
-from jschon.utils import tuplify
 from jschon.vocabulary import Applicator, ApplicatorMixin, Keyword
 
 __all__ = [
@@ -14,7 +14,8 @@ __all__ = [
     'T9nConditionKeyword',
     'T9nConstKeyword',
     'T9nSourceKeyword',
-    'T9nJoinKeyword',
+    'T9nConcatKeyword',
+    'T9nSepKeyword',
     'T9nFilterKeyword',
     'T9nCastKeyword',
     'T9nArrayKeyword',
@@ -85,19 +86,29 @@ class T9nSourceKeyword(Keyword):
     key = "t9nSource"
     static = True
 
-    def __init__(self, parentschema: JSONTranslationSchema, value: Union[str, Sequence[str]]):
-        value = tuplify(value)
+    def __init__(self, parentschema: JSONTranslationSchema, value: str):
         super().__init__(parentschema, value)
-        parentschema.t9n_sources = tuple(RelativeJSONPointer(v) for v in value)
+        if (source := RelativeJSONPointer(value)).index:
+            raise JSONSchemaError('"t9nSource" must reference an instance, not an index')
+        parentschema.t9n_source = source
 
 
-class T9nJoinKeyword(Keyword):
-    key = "t9nJoin"
+class T9nConcatKeyword(Keyword):
+    key = "t9nConcat"
+    static = True
+
+    def __init__(self, parentschema: JSONTranslationSchema, value: Sequence[str]):
+        super().__init__(parentschema, value)
+        parentschema.t9n_concat = tuple(RelativeJSONPointer(v) for v in value)
+
+
+class T9nSepKeyword(Keyword):
+    key = "t9nSep"
     static = True
 
     def __init__(self, parentschema: JSONTranslationSchema, value: str):
         super().__init__(parentschema, value)
-        parentschema.t9n_join = value
+        parentschema.t9n_sep = value
 
 
 class T9nFilterKeyword(Keyword):

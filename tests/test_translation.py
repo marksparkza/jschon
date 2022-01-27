@@ -84,6 +84,8 @@ def test_translate_iso19115_to_datacite():
     # assert translation == output_json
     assert translation.keys() == output_json.keys()
     for k in translation:
-        if k in ('contributors', 'geoLocations'):
+        if k == 'contributors':
+            # todo: resolve leftover empty arrays/objects when there are
+            #  no source values to fill them
             continue
         assert translation[k] == output_json[k]
