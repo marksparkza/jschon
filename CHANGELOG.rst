@@ -3,10 +3,46 @@ Changelog
 
 v0.8.0 (in development)
 -----------------------
+Features:
+
+* Added support for remote schema references and, more generally, 'sources' for loading
+  URI-identified JSON resources
+* Added a JSON Patch implementation
+* Added a Relative JSON Pointer implementation
+* Added experimental support for a JSON translation vocabulary
+
+Breaking changes:
+
+* Replaced the Catalog.add_directory method with the more general Catalog.add_uri_source
+
+Bug fixes:
+
+* Fixed error messaging for the "required" keyword
+* Eliminated extraneous error messages from "additionalProperties" and "items" by reverting
+  to the Draft 7 approach for applying these keywords (#17)
+
 Miscellaneous:
 
 * Implemented a Catalog instance registry, replacing the default instance approach
+* Moved JSON Schema vocabulary initialization from the Catalog class to the create_catalog function
 * Replaced the AnyJSONCompatible type variable with a JSONCompatible type alias
+* Removed isinstance type checks that would only fail if type hints were disregarded
+* Removed printing of JSON instance values for "enum" and "const" error messages
+* Decorated several JSON and JSONSchema properties with @cached_property
+* Constrained the Keyword.types and Keyword.depends class attributes to allow tuples only
+* Removed unused code supporting instantiation of JSON arrays/objects from collections of JSON
+  class instances
+* Changed type hints for JSON inequality operators to indicate that they are supported only
+  for strings and numbers
+* Removed unnecessary type coercion in JSON inequality operators
+* Generalized Keyword class mixins to support custom subschema construction by custom
+  applicator keywords
+* Added a required positional arg `instance` to the Scope constructor
+* Removed the `path`, `instpath` and `relpath` Scope constructor args
+* Added a `cls` keyword arg to Scope.__call__ supporting custom Scope classes
+* Generalized output formatting, to support custom output formats by extensions
+* Added a globals property to the root of the Scope tree, for arbitrary evaluation state
+* Added a Keyword.static class attribute, obviating the need to override can_evaluate
 
 
 v0.7.3 (2021-10-24)
