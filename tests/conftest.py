@@ -1,6 +1,9 @@
+import hypothesis
 import pytest
 
 from jschon import create_catalog
+
+hypothesis.settings.register_profile('tox', deadline=1000)
 
 
 def pytest_addoption(parser):
