@@ -42,12 +42,15 @@ specified when creating new :class:`~jschon.jsonschema.JSONSchema` objects:
 
 Reference loading
 -----------------
-With jschon, schema references can be resolved to files on disk, by configuring
+Schema references can be resolved to files on disk, by configuring
 a local directory source for a given base URI:
 
->>> from jschon import create_catalog, URI
+>>> from jschon import create_catalog, LocalSource, URI
 >>> catalog = create_catalog('2020-12')
->>> catalog.add_local_source(URI("https://example.com/schemas/"), '/path/to/schemas/')
+>>> catalog.add_uri_source(
+...     URI("https://example.com/schemas/"),
+...     LocalSource('/path/to/schemas/', suffix='.json')
+... )
 
 Now, the ``"$ref"`` in the following schema resolves to the local file
 ``/path/to/schemas/my/schema.json``::

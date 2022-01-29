@@ -128,7 +128,7 @@ The argument to :meth:`~jschon.json.JSON.loadf` may be a plain :class:`str`, or
 any :class:`PathLike` object; for example:
 
 >>> import pathlib
->>> schema_path = pathlib.Path(__file__).parent / 'num-schema.json',
+>>> schema_path = pathlib.Path(__file__).parent / 'num-schema.json'
 >>> num_schema = JSONSchema.loadf(schema_path)
 
 Both :meth:`~jschon.json.JSON.loads` and :meth:`~jschon.json.JSON.loadf` accept

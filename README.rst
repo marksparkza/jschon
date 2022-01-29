@@ -8,15 +8,18 @@ jschon is a pythonic and extensible implementation of the
 
 Features
 --------
-* JSON Schema validator implementation (2019-09, 2020-12)
+* JSON Schema validator implementation (drafts 2019-09, 2020-12)
 
-  * Format assertion supported via plug-in callables
   * Schema compilation and indexing
-  * $ref loading from local and (coming soon!) remote sources
+  * $ref loading from local and remote sources
   * Support for custom keywords, vocabularies and meta-schemas
+  * Support for format validation
 
 * JSON class implementing the JSON data model
-* JSON pointer implementation (`RFC 6901 <https://tools.ietf.org/html/rfc6901>`_)
+* JSON Pointer (`RFC 6901 <https://tools.ietf.org/html/rfc6901.html>`_)
+* JSON Patch (`RFC 6902 <https://tools.ietf.org/html/rfc6902.html>`_)
+* Relative JSON Pointer (`draft <https://json-schema.org/draft/2020-12/relative-json-pointer.html>`_)
+* JSON document translation (`experimental <https://github.com/marksparkza/json-translation-vocabulary>`_)
 
 Installation
 ------------

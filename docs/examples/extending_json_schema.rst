@@ -1,16 +1,9 @@
 Extending JSON Schema
 =====================
-Consider the following scenario:
-
-You're working on data validation for a project that uses enumerations
-consisting of thousands of codes, obtained and cached from remote terminology
-services. Your validation schema -- and any error output it produces -- cannot
-list all the possible values for an enumeration, but should rather reference
-an enumeration by its id.
-
-In the following example, we solve this problem by defining a custom keyword --
-``"enumRef"`` -- that can retrieve an enumeration given its URI and decide
-whether a given string instance is valid.
+In this example, we define a custom keyword -- ``"enumRef"`` -- that provides
+us with the capability to validate JSON string instances against enumerations
+(which may consist of many thousands of terms) that we have obtained and cached
+from remote terminology services.
 
 First, we create a vocabulary that describes the syntax of our new keyword.
 This is a JSON meta-schema that we'll save to ``data/enumRef-vocabulary.json``:

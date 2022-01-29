@@ -1,8 +1,8 @@
 Changelog
 =========
 
-v0.8.0 (in development)
------------------------
+v0.8.0 (2022-01-29)
+-------------------
 Features:
 
 * Added support for remote schema references and, more generally, 'sources' for loading

@@ -11,6 +11,8 @@ The following classes may be imported directly from the top-level
 * :class:`~jschon.jsonpatch.JSONPatchOperation`
 * :class:`~jschon.jsonpointer.JSONPointer`
 * :class:`~jschon.exceptions.JSONPointerError`
+* :class:`~jschon.jsonpointer.RelativeJSONPointer`
+* :class:`~jschon.exceptions.RelativeJSONPointerError`
 * :class:`~jschon.jsonschema.JSONSchema`
 * :class:`~jschon.exceptions.JSONSchemaError`
 * :class:`~jschon.catalog.LocalSource`

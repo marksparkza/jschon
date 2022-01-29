@@ -11,23 +11,17 @@ of each. We begin by importing the :class:`~jschon.json.JSON` class:
 
 >>> from jschon import JSON
 
->>> JSON(None).type
-'null'
-
->>> JSON(True).type
-'boolean'
+>>> JSON("Hello, World!").type
+'string'
 
 >>> JSON(3.14159).type
 'number'
 
->>> JSON("Hello, World!").type
-'string'
+>>> JSON(None).type
+'null'
 
->>> JSON((1, 2, 3)).type
+>>> JSON(("a", "b", "c")).type
 'array'
-
->>> JSON({"foo": True, "bar": False}).type
-'object'
 
 Instances with the JSON types ``"array"`` and ``"object"`` are constructed
 recursively. Here we create an array and an object:
@@ -68,7 +62,8 @@ working with complex JSON structures. Consider the following example:
 ...     ]
 ... })
 
-A leaf node's :attr:`~jschon.json.JSON.data` is the value from which it was constructed:
+A leaf node's :attr:`~jschon.json.JSON.data` attribute holds the value from which
+it was constructed:
 
 >>> document["1a"]["2a"].data
 'foo'
@@ -124,19 +119,18 @@ items have different JSON types:
 >>> JSON([False, True]) == JSON([0, 1])
 False
 
-:class:`~jschon.json.JSON` also implements the ``<``, ``<=``, ``>=``, ``>`` and
-``!=`` comparison operators, which may be used wherever it makes sense for the
-types of the given operands:
-
->>> JSON(3) < JSON(3.01)
-True
-
 A :class:`~jschon.json.JSON` instance may be compared with *any* Python object.
-Internally, the non-:class:`~jschon.json.JSON` object is cast to its :class:`~jschon.json.JSON`
+Internally, the non-:class:`~jschon.json.JSON` object is coerced to its :class:`~jschon.json.JSON`
 equivalent before performing the comparison. Notice that tuples and lists are
 considered structurally equivalent:
 
 >>> (7, 11) == JSON([7, 11])
+True
+
+:class:`~jschon.json.JSON` also implements the ``<``, ``<=``, ``>=`` and ``>``
+inequality operators, which may be used for numeric or string comparisons:
+
+>>> JSON(3) < 3.01
 True
 
 jschon is not a JSON encoder/decoder. However, the :class:`~jschon.json.JSON`
