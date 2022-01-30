@@ -138,7 +138,7 @@ class Catalog:
             try:
                 return source(relative_path)
             except Exception as e:
-                raise CatalogError from e
+                raise CatalogError(*e.args) from e
 
         raise CatalogError(f'A source is not available for "{uri}"')
 

@@ -3,14 +3,22 @@ from decimal import Decimal
 from os import PathLike
 from typing import Any, Tuple, Iterable, Union
 
-import requests
-
 __all__ = [
     'tuplify',
     'json_loadf',
     'json_loadr',
     'json_loads',
 ]
+
+requests = None
+
+
+def _import_requests():
+    global requests
+    try:
+        import requests
+    except ImportError as e:
+        raise ImportError('requests is not installed, run `pip install jschon[requests]`') from e
 
 
 def tuplify(value: Any) -> Tuple:
@@ -31,6 +39,8 @@ def json_loadf(path: Union[str, PathLike]) -> Any:
 
 def json_loadr(url: str) -> Any:
     """Fetch and deserialize a remote JSON resource, returning a JSON-compatible Python object."""
+    if requests is None:
+        _import_requests()
     r = requests.get(url)
     r.raise_for_status()
     return r.json(parse_float=Decimal, parse_constant=_parse_invalid_const)

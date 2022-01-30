@@ -27,6 +27,10 @@ Installation
 
     pip install jschon
 
+For remote $ref support, the requests library is required. It may be installed with::
+
+    pip install jschon[requests]
+
 Usage
 -----
 Create a JSON schema:

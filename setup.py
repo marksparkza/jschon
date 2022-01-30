@@ -40,9 +40,11 @@ setup(
     python_requires='~=3.8',
     install_requires=[
         'rfc3986',
-        'requests',
     ],
     extras_require={
+        'requests': [
+            'requests',
+        ],
         'test': [
             'tox',
         ],
@@ -52,6 +54,7 @@ setup(
             'hypothesis',
             'pytest-benchmark',
             'pytest-httpserver',
+            'requests',
         ],
         'doc': [
             'sphinx',
