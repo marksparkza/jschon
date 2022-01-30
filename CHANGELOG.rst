@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v0.8.1 (2022-01-30)
+-------------------
+
+Miscellaneous:
+
+* The requests dependency for remote $refs is now an optional install.
+
+
 v0.8.0 (2022-01-29)
 -------------------
 Features:
