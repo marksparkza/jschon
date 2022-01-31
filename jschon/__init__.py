@@ -26,7 +26,7 @@ __all__ = [
     'create_catalog',
 ]
 
-__version__ = '0.8.2'
+__version__ = '0.8.3'
 
 
 def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
