@@ -1,6 +1,14 @@
 Changelog
 =========
 
+v0.8.2 (2022-01-31)
+-------------------
+
+Miscellaneous:
+
+* Include translation vocabulary definition files in the distribution.
+
+
 v0.8.1 (2022-01-30)
 -------------------
 
