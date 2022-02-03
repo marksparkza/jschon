@@ -1,6 +1,15 @@
 Changelog
 =========
 
+v0.8.4 (2022-02-02)
+-------------------
+
+Miscellaneous:
+
+* Add PEP-561 py.typed marker to signal to type checkers that
+  this library has usable type annotations.
+
+
 v0.8.3 (2022-01-31)
 -------------------
 
