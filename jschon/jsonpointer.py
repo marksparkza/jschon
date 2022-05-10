@@ -101,7 +101,7 @@ class JSONPointer(Sequence[str]):
         ...
 
     def __getitem__(self, index):
-        """ self[index] """
+        """Return `self[index]`."""
         if isinstance(index, int):
             return self._keys[index]
         if isinstance(index, slice):
@@ -109,7 +109,7 @@ class JSONPointer(Sequence[str]):
         raise TypeError("Expecting int or slice")
 
     def __len__(self) -> int:
-        """ len(self) """
+        """Return `len(self)`."""
         return len(self._keys)
 
     @overload
@@ -121,7 +121,7 @@ class JSONPointer(Sequence[str]):
         ...
 
     def __truediv__(self, suffix) -> JSONPointer:
-        """ self / suffix """
+        """Return `self / suffix`."""
         if isinstance(suffix, str):
             return JSONPointer(self, (suffix,))
         if isinstance(suffix, Iterable):
@@ -129,7 +129,7 @@ class JSONPointer(Sequence[str]):
         return NotImplemented
 
     def __eq__(self, other: JSONPointer) -> bool:
-        """ self == other """
+        """Return `self == other`."""
         if isinstance(other, JSONPointer):
             return self._keys == other._keys
         return NotImplemented
@@ -155,15 +155,15 @@ class JSONPointer(Sequence[str]):
         return NotImplemented
 
     def __hash__(self) -> int:
-        """ hash(self) """
+        """Return `hash(self)`."""
         return hash(tuple(self._keys))
 
     def __str__(self) -> str:
-        """ str(self) """
+        """Return `str(self)`."""
         return ''.join([f'/{self.escape(key)}' for key in self._keys])
 
     def __repr__(self) -> str:
-        """ repr(self) """
+        """Return `repr(self)`."""
         return f"JSONPointer({str(self)!r})"
 
     def evaluate(self, document: Any) -> Any:
