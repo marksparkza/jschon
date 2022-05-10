@@ -88,6 +88,27 @@ def test_evaluate_jsonpointer(value, testkey):
             JSONPointer(f'/{value}').evaluate(value)
 
 
+@given(jsonpointer, jsonpointer)
+def test_compare_jsonpointer(value1, value2):
+    ptr1 = JSONPointer(value1)
+    ptr2 = JSONPointer(value2)
+    assert ptr1 == JSONPointer(ptr1)
+    assert ptr1 <= JSONPointer(ptr1)
+    assert ptr1 >= JSONPointer(ptr1)
+    assert not (ptr1 < JSONPointer(ptr1))
+    assert not (ptr1 > JSONPointer(ptr1))
+    assert ptr1 <= ptr1 / ptr2
+    assert ptr1 / ptr2 >= ptr1
+    assert bool(ptr2) == (ptr1 < ptr1 / ptr2)
+    assert bool(ptr2) == (ptr1 / ptr2 > ptr1)
+    assert bool(ptr2) == (not (ptr1 / ptr2 <= ptr1))
+    assert bool(ptr2) == (not (ptr1 >= ptr1 / ptr2))
+    assert (ptr1 <= ptr2) == ([k for k in ptr1] == [k for k in ptr2[:len(ptr1)]])
+    assert (ptr1 >= ptr2) == ([k for k in ptr1[:len(ptr2)]] == [k for k in ptr2])
+    assert (ptr1 < ptr2) == (ptr1 <= ptr2 and ptr1 != ptr2)
+    assert (ptr1 > ptr2) == (ptr1 >= ptr2 and ptr1 != ptr2)
+
+
 def jsonpointer_escape(key: str):
     return key.replace('~', '~0').replace('/', '~1')
 

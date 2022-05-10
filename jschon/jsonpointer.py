@@ -134,6 +134,26 @@ class JSONPointer(Sequence[str]):
             return self._keys == other._keys
         return NotImplemented
 
+    def __le__(self, other: JSONPointer) -> bool:
+        """Return `self <= other`.
+
+        Test whether self is a prefix of other, that is,
+        `self == other[:len(self)]`.
+        """
+        if isinstance(other, JSONPointer):
+            return self._keys == other._keys[:len(self._keys)]
+        return NotImplemented
+
+    def __lt__(self, other: JSONPointer) -> bool:
+        """Return `self < other`.
+
+        Test whether self is a proper prefix of other, that is,
+        `self <= other and self != other`.
+        """
+        if isinstance(other, JSONPointer):
+            return len(self._keys) < len(other._keys) and self._keys == other._keys[:len(self._keys)]
+        return NotImplemented
+
     def __hash__(self) -> int:
         """ hash(self) """
         return hash(tuple(self._keys))
