@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v0.8.5 (in development)
+-----------------------
+Features:
+
+* Added JSONPointer prefix test operators (#29)
+
+
 v0.8.4 (2022-02-03)
 -------------------
 
