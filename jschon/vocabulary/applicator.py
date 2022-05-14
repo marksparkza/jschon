@@ -118,7 +118,7 @@ class ElseKeyword(Keyword, Applicator):
 
 class DependentSchemasKeyword(Keyword, PropertyApplicator):
     key = "dependentSchemas"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
@@ -141,7 +141,7 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
 
 class PrefixItemsKeyword(Keyword, ArrayApplicator):
     key = "prefixItems"
-    types = "array",
+    instance_types = "array",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         eval_index = None
@@ -163,7 +163,7 @@ class PrefixItemsKeyword(Keyword, ArrayApplicator):
 
 class ItemsKeyword(Keyword, Applicator):
     key = "items"
-    types = "array",
+    instance_types = "array",
     depends = "prefixItems",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -183,7 +183,7 @@ class ItemsKeyword(Keyword, Applicator):
 
 class UnevaluatedItemsKeyword(Keyword, Applicator):
     key = "unevaluatedItems"
-    types = "array",
+    instance_types = "array",
     depends = "prefixItems", "items", "contains", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -221,7 +221,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
 
 class ContainsKeyword(Keyword, Applicator):
     key = "contains"
-    types = "array",
+    instance_types = "array",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
@@ -239,7 +239,7 @@ class ContainsKeyword(Keyword, Applicator):
 
 class PropertiesKeyword(Keyword, PropertyApplicator):
     key = "properties"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         annotation = []
@@ -261,7 +261,7 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
 
 class PatternPropertiesKeyword(Keyword, PropertyApplicator):
     key = "patternProperties"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         matched_names = set()
@@ -284,7 +284,7 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
 
 class AdditionalPropertiesKeyword(Keyword, Applicator):
     key = "additionalProperties"
-    types = "object",
+    instance_types = "object",
     depends = "properties", "patternProperties",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -312,7 +312,7 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
 
 class UnevaluatedPropertiesKeyword(Keyword, Applicator):
     key = "unevaluatedProperties"
-    types = "object",
+    instance_types = "object",
     depends = "properties", "patternProperties", "additionalProperties", \
               "if", "then", "else", "dependentSchemas", \
               "allOf", "anyOf", "oneOf", "not",
@@ -340,7 +340,7 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
 
 class PropertyNamesKeyword(Keyword, Applicator):
     key = "propertyNames"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         err_names = []

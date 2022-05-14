@@ -65,7 +65,7 @@ class ConstKeyword(Keyword):
 
 class MultipleOfKeyword(Keyword):
     key = "multipleOf"
-    types = "number",
+    instance_types = "number",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
@@ -77,7 +77,7 @@ class MultipleOfKeyword(Keyword):
 
 class MaximumKeyword(Keyword):
     key = "maximum"
-    types = "number",
+    instance_types = "number",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance > self.json:
@@ -86,7 +86,7 @@ class MaximumKeyword(Keyword):
 
 class ExclusiveMaximumKeyword(Keyword):
     key = "exclusiveMaximum"
-    types = "number",
+    instance_types = "number",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance >= self.json:
@@ -95,7 +95,7 @@ class ExclusiveMaximumKeyword(Keyword):
 
 class MinimumKeyword(Keyword):
     key = "minimum"
-    types = "number",
+    instance_types = "number",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance < self.json:
@@ -104,7 +104,7 @@ class MinimumKeyword(Keyword):
 
 class ExclusiveMinimumKeyword(Keyword):
     key = "exclusiveMinimum"
-    types = "number",
+    instance_types = "number",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if instance <= self.json:
@@ -113,7 +113,7 @@ class ExclusiveMinimumKeyword(Keyword):
 
 class MaxLengthKeyword(Keyword):
     key = "maxLength"
-    types = "string",
+    instance_types = "string",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -122,7 +122,7 @@ class MaxLengthKeyword(Keyword):
 
 class MinLengthKeyword(Keyword):
     key = "minLength"
-    types = "string",
+    instance_types = "string",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -131,7 +131,7 @@ class MinLengthKeyword(Keyword):
 
 class PatternKeyword(Keyword):
     key = "pattern"
-    types = "string",
+    instance_types = "string",
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
@@ -144,7 +144,7 @@ class PatternKeyword(Keyword):
 
 class MaxItemsKeyword(Keyword):
     key = "maxItems"
-    types = "array",
+    instance_types = "array",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -153,7 +153,7 @@ class MaxItemsKeyword(Keyword):
 
 class MinItemsKeyword(Keyword):
     key = "minItems"
-    types = "array",
+    instance_types = "array",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -162,7 +162,7 @@ class MinItemsKeyword(Keyword):
 
 class UniqueItemsKeyword(Keyword):
     key = "uniqueItems"
-    types = "array",
+    instance_types = "array",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if not self.json.data:
@@ -179,7 +179,7 @@ class UniqueItemsKeyword(Keyword):
 
 class MaxContainsKeyword(Keyword):
     key = "maxContains"
-    types = "array",
+    instance_types = "array",
     depends = "contains",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -191,7 +191,7 @@ class MaxContainsKeyword(Keyword):
 
 class MinContainsKeyword(Keyword):
     key = "minContains"
-    types = "array",
+    instance_types = "array",
     depends = "contains", "maxContains",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -214,7 +214,7 @@ class MinContainsKeyword(Keyword):
 
 class MaxPropertiesKeyword(Keyword):
     key = "maxProperties"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) > self.json:
@@ -223,7 +223,7 @@ class MaxPropertiesKeyword(Keyword):
 
 class MinPropertiesKeyword(Keyword):
     key = "minProperties"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) < self.json:
@@ -232,7 +232,7 @@ class MinPropertiesKeyword(Keyword):
 
 class RequiredKeyword(Keyword):
     key = "required"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = [name.value for name in self.json if name.data not in instance]
@@ -242,7 +242,7 @@ class RequiredKeyword(Keyword):
 
 class DependentRequiredKeyword(Keyword):
     key = "dependentRequired"
-    types = "object",
+    instance_types = "object",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         missing = {}

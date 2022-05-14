@@ -54,7 +54,7 @@ class RecursiveAnchorKeyword_2019_09(Keyword):
 
 class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
     key = "items"
-    types = "array",
+    instance_types = "array",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if len(instance) == 0:
@@ -88,7 +88,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
 
 class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
     key = "additionalItems"
-    types = "array",
+    instance_types = "array",
     depends = "items",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
@@ -106,7 +106,7 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
 
 class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
     key = "unevaluatedItems"
-    types = "array",
+    instance_types = "array",
     depends = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:

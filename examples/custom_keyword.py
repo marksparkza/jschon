@@ -25,10 +25,8 @@ remote_enum_cache = {
 class EnumRefKeyword(Keyword):
     key = "enumRef"
 
-    # if "enumRef" is only intended for use with string instances, then its
-    # applicability may be constrained with `types`, in which case any non-
-    # string instances are ignored by this keyword
-    types = "string",
+    # ignore non-string instances
+    instance_types = "string",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         # get the keyword's value as it appears in the JSON schema
