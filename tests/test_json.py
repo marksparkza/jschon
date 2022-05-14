@@ -4,6 +4,7 @@ from decimal import Decimal
 from typing import Optional
 
 from hypothesis import given
+from pytest_httpserver import HTTPServer
 
 from jschon import JSON, JSONPointer
 from jschon.json import JSONCompatible
@@ -84,6 +85,14 @@ def test_load_json_from_file(value):
         f.write(s.encode())
         f.flush()
         instance = JSON.loadf(f.name)
+    assert_json_node(instance, value, None, None, '')
+
+
+@given(value=json_nodecimal)
+def test_load_json_from_url(value):
+    with HTTPServer() as httpserver:
+        httpserver.expect_request('/load.json').respond_with_json(value)
+        instance = JSON.loadr(httpserver.url_for('/load.json'))
     assert_json_node(instance, value, None, None, '')
 
 

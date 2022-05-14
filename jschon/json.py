@@ -5,10 +5,10 @@ from collections import deque
 from decimal import Decimal
 from functools import cached_property
 from os import PathLike
-from typing import Sequence, Mapping, Type, Optional, Iterator, Union, Any, List, Dict
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Type, Union
 
 from jschon.jsonpointer import JSONPointer
-from jschon.utils import json_loadf, json_loads, json_dumpf, json_dumps
+from jschon.utils import json_dumpf, json_dumps, json_loadf, json_loadr, json_loads
 
 __all__ = [
     'JSON',
@@ -30,6 +30,15 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         :param kwargs: keyword arguments to pass to the :class:`JSON` (subclass) constructor
         """
         return cls(json_loadf(path), **kwargs)
+
+    @classmethod
+    def loadr(cls, url: str, **kwargs: Any) -> JSON:
+        """Deserialize a remote JSON resource to a :class:`JSON` instance.
+
+        :param url: the URL of the resource
+        :param kwargs: keyword arguments to pass to the :class:`JSON` (subclass) constructor
+        """
+        return cls(json_loadr(url), **kwargs)
 
     @classmethod
     def loads(cls, value: str, **kwargs: Any) -> JSON:
