@@ -1,3 +1,4 @@
+import math
 import re
 from decimal import Decimal, InvalidOperation
 
@@ -17,12 +18,10 @@ def evaluate(kwclass, kwvalue, instval):
 
 
 def isequal(x, y):
-    if type(x) is not type(y) and not {type(x), type(y)} <= {int, float, Decimal}:
+    if {type(x), type(y)} <= {int, float, Decimal}:
+        return math.isclose(x, y)
+    if type(x) is not type(y):
         return False
-    if isinstance(x, float):
-        x = Decimal(f'{x}')
-    if isinstance(y, float):
-        y = Decimal(f'{y}')
     if isinstance(x, list):
         return len(x) == len(y) and all(isequal(x[i], y[i]) for i in range(len(x)))
     if isinstance(x, dict):

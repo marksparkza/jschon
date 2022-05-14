@@ -5,6 +5,8 @@ from typing import Any, Tuple, Iterable, Union
 
 __all__ = [
     'tuplify',
+    'json_dumpf',
+    'json_dumps',
     'json_loadf',
     'json_loadr',
     'json_loads',
@@ -31,8 +33,19 @@ def tuplify(value: Any) -> Tuple:
     return value,
 
 
+def json_dumpf(obj: Any, path: Union[str, PathLike]) -> None:
+    """Serialize a JSON-compatible Python object to a JSON file."""
+    with open(path, 'w') as f:
+        json.dump(obj, f, ensure_ascii=False, allow_nan=False, default=_serialize_custom_obj)
+
+
+def json_dumps(obj: Any) -> str:
+    """Serialize a JSON-compatible Python object to a JSON string."""
+    return json.dumps(obj, ensure_ascii=False, allow_nan=False, default=_serialize_custom_obj)
+
+
 def json_loadf(path: Union[str, PathLike]) -> Any:
-    """Open and deserialize a JSON file, returning a JSON-compatible Python object."""
+    """Deserialize a JSON file, returning a JSON-compatible Python object."""
     with open(path) as f:
         return json.load(f, parse_float=Decimal, parse_constant=_parse_invalid_const)
 
@@ -56,3 +69,12 @@ def _parse_invalid_const(c):
     JSON-encoded input. These JavaScript constants are not strictly allowed
     by the JSON data model."""
     raise ValueError(f"{c} is not a valid JSON value")
+
+
+def _serialize_custom_obj(o):
+    from jschon.json import JSON
+    if isinstance(o, JSON):
+        return o.data
+    if isinstance(o, Decimal):
+        return float(o)
+    raise TypeError

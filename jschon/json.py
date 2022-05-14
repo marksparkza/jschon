@@ -8,7 +8,7 @@ from os import PathLike
 from typing import Sequence, Mapping, Type, Optional, Iterator, Union, Any, List, Dict
 
 from jschon.jsonpointer import JSONPointer
-from jschon.utils import json_loadf, json_loads
+from jschon.utils import json_loadf, json_loads, json_dumpf, json_dumps
 
 __all__ = [
     'JSON',
@@ -148,21 +148,24 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             return {key: item.value for key, item in self.data.items()}
         return self.data
 
+    def dumpf(self, path: Union[str, PathLike]) -> None:
+        """Serialize the instance data to a JSON file.
+
+        :param path: the path to the file
+        """
+        json_dumpf(self.data, path)
+
+    def dumps(self) -> str:
+        """Serialize the instance data to a JSON string."""
+        return json_dumps(self.data)
+
     def __repr__(self) -> str:
         """Return `repr(self)`."""
-        return f'{self.__class__.__name__}({json.loads(str(self))!r})'
+        return f'{self.__class__.__name__}({json.loads(self.dumps())!r})'
 
     def __str__(self) -> str:
         """Return `str(self)`."""
-        def default(o):
-            if isinstance(o, JSON):
-                return o.data
-            if isinstance(o, Decimal):
-                return float(o)
-            raise TypeError
-
-        return json.dumps(self.data, default=default,
-                          ensure_ascii=False, allow_nan=False)
+        return self.dumps()
 
     def __bool__(self) -> bool:
         """Return `bool(self)`."""

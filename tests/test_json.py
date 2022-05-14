@@ -87,6 +87,24 @@ def test_load_json_from_file(value):
     assert_json_node(instance, value, None, None, '')
 
 
+@given(json)
+def test_dump_json_to_string(value):
+    instance = JSON(value)
+    s = instance.dumps()
+    obj = jsonlib.loads(s)
+    assert isequal(obj, value)
+
+
+@given(json)
+def test_dump_json_to_file(value):
+    instance = JSON(value)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        instance.dumpf(tmpfile := f'{tmpdir}/dump.json')
+        with open(tmpfile) as f:
+            obj = jsonlib.load(f)
+    assert isequal(obj, value)
+
+
 @given(json, json)
 def test_json_equality(value1, value2):
     assert isequal(value1, value2) is (value1 == JSON(value2)) is (JSON(value1) == JSON(value2)) is (JSON(value1) == value2)
