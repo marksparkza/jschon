@@ -64,7 +64,7 @@ class ContentEncodingKeyword(AnnotationKeyword):
 class ContentSchemaKeyword(AnnotationKeyword):
     key = "contentSchema"
     instance_types = "string",
-    depends = "contentMediaType",
+    depends_on = "contentMediaType",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if scope.sibling(instance, "contentMediaType"):

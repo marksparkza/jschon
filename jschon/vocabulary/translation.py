@@ -131,7 +131,7 @@ class T9nCastKeyword(Keyword):
 
 class T9nArrayKeyword(Keyword, ApplicatorMixin):
     key = "t9nArray"
-    depends = "t9nCondition",
+    depends_on = "t9nCondition",
 
     def __init__(self, parentschema: JSONTranslationSchema, value: Mapping[str, JSONCompatible]):
         super().__init__(parentschema, value)
@@ -174,7 +174,7 @@ class T9nArrayKeyword(Keyword, ApplicatorMixin):
 
 class T9nObjectKeyword(Keyword, ApplicatorMixin):
     key = "t9nObject"
-    depends = "t9nCondition",
+    depends_on = "t9nCondition",
 
     def __init__(self, parentschema: JSONTranslationSchema, value: Mapping[str, JSONCompatible]):
         super().__init__(parentschema, value)

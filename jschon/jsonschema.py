@@ -157,7 +157,7 @@ class JSONSchema(JSON):
     @staticmethod
     def _resolve_dependencies(kwclasses: Dict[str, KeywordClass]) -> Iterator[KeywordClass]:
         dependencies = {
-            kwclass: [depclass for dep in kwclass.depends
+            kwclass: [depclass for dep in kwclass.depends_on
                       if (depclass := kwclasses.get(dep))]
             for kwclass in kwclasses.values()
         }

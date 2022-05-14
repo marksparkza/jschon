@@ -89,7 +89,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
 class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
     key = "additionalItems"
     instance_types = "array",
-    depends = "items",
+    depends_on = "items",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if (items := scope.sibling(instance, "items")) and type(items.annotation) is int:
@@ -107,7 +107,7 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
 class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
     key = "unevaluatedItems"
     instance_types = "array",
-    depends = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
+    depends_on = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         last_evaluated_item = -1

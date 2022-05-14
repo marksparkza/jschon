@@ -180,7 +180,7 @@ class UniqueItemsKeyword(Keyword):
 class MaxContainsKeyword(Keyword):
     key = "maxContains"
     instance_types = "array",
-    depends = "contains",
+    depends_on = "contains",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling(instance, "contains"):
@@ -192,7 +192,7 @@ class MaxContainsKeyword(Keyword):
 class MinContainsKeyword(Keyword):
     key = "minContains"
     instance_types = "array",
-    depends = "contains", "maxContains",
+    depends_on = "contains", "maxContains",
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         if contains := scope.sibling(instance, "contains"):

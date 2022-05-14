@@ -70,7 +70,9 @@ class Keyword:
     instance_types: Tuple[str, ...] = "null", "boolean", "integer", "number", "string", "array", "object",
     """The types of instance that the keyword can evaluate."""
 
-    depends: Tuple[str, ...] = ()
+    depends_on: Tuple[str, ...] = ()
+    """Keywords that must be evaluated before this keyword can be evaluated."""
+
     static: bool = False
 
     def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
