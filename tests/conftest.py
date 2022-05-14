@@ -1,9 +1,15 @@
 import hypothesis
 import pytest
+import sys
 
 from jschon import create_catalog
 
-hypothesis.settings.register_profile('tox', deadline=1000)
+if _debug := bool(sys.gettrace()):
+    hypothesis.settings.register_profile('debug', deadline=None)
+    hypothesis.settings.load_profile('debug')
+else:
+    hypothesis.settings.register_profile('test', deadline=1000)
+    hypothesis.settings.load_profile('test')
 
 
 def pytest_addoption(parser):
@@ -16,3 +22,8 @@ def pytest_addoption(parser):
 @pytest.fixture(scope='module', autouse=True)
 def catalog():
     return create_catalog('2019-09', '2020-12', 'translation')
+
+
+@pytest.fixture(scope='session')
+def debug():
+    return _debug
