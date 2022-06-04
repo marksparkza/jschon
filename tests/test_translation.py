@@ -9,8 +9,8 @@ from jschon.jsonpatch import JSONPatch
 from jschon.translation import translation_filter
 from jschon.utils import json_loadf
 
-example_dir = pathlib.Path(__file__).parent / 'data' / 'translation'
-iso19115_to_datacite_dir = example_dir / 'iso19115-to-datacite'
+translation_tests_dir = pathlib.Path(__file__).parent.parent / 'jschon' / 'catalog' / 'json-translation-vocabulary' / 'tests'
+iso19115_to_datacite_dir = translation_tests_dir / 'iso19115-to-datacite'
 
 
 @translation_filter('date-to-year')
@@ -30,7 +30,7 @@ def pytest_generate_tests(metafunc):
         argvalues = []
         testids = []
 
-        testfile_paths = sorted(example_dir.glob('*.json'))
+        testfile_paths = sorted(translation_tests_dir.glob('*.json'))
         for testfile_path in testfile_paths:
             testcase = json_loadf(testfile_path)
             for n, test in enumerate(testcase['tests']):
