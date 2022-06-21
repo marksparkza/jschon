@@ -325,7 +325,7 @@ class Scope:
         self.key: Optional[str] = key
         self.children: Dict[JSONPointer, Dict[str, Scope]] = {}
         self.annotation: JSONCompatible = None
-        self.error: Optional[str] = None
+        self.error: JSONCompatible = None
         self._valid = True
         self._assert = True
         self._discard = False
@@ -395,8 +395,8 @@ class Scope:
         """Set an annotation on the scope."""
         self.annotation = value
 
-    def fail(self, error: str = None) -> None:
-        """Flag the scope as invalid, optionally with an error message."""
+    def fail(self, error: JSONCompatible = None) -> None:
+        """Flag the scope as invalid, optionally with an error."""
         self._valid = False
         self.error = error
 
@@ -477,6 +477,17 @@ class Scope:
                 yield self.annotation
             for child in self.iter_children():
                 yield from child.collect_annotations(instance, key)
+
+    def collect_errors(self, instance: JSON = None, key: str = None) -> Iterator[JSONCompatible]:
+        """Return an iterator over errors produced in this subtree,
+        optionally filtered by instance and/or keyword."""
+        if not self._valid and not self._discard:
+            if self.error is not None and \
+                    (key is None or key == self.key) and \
+                    (instance is None or instance.path == self.instance.path):
+                yield self.error
+            for child in self.iter_children():
+                yield from child.collect_errors(instance, key)
 
     def output(self, format: str, **kwargs: Any) -> JSONCompatible:
         """Return the evaluation result in the specified `format`.

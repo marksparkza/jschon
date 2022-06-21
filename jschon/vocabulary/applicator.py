@@ -299,14 +299,21 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
             known_property_patterns = ()
 
         annotation = []
+        error = []
         for name, item in instance.items():
             if name not in known_property_names and not any(
                 re.search(regex, name) for regex in known_property_patterns
             ):
                 if self.json.evaluate(item, scope).passed:
                     annotation += [name]
+                else:
+                    error += [name]
+                    # reset to passed for the next iteration
+                    scope.pass_()
 
-        if scope.passed:
+        if error:
+            scope.fail(error)
+        else:
             scope.annotate(annotation)
 
 
