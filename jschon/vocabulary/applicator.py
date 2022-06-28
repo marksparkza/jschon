@@ -336,12 +336,19 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
             evaluated_names |= set(unevaluated_properties_annotation)
 
         annotation = []
+        error = []
         for name, item in instance.items():
             if name not in evaluated_names:
                 if self.json.evaluate(item, scope).passed:
                     annotation += [name]
+                else:
+                    error += [name]
+                    # reset to passed for the next iteration
+                    scope.pass_()
 
-        if scope.passed:
+        if error:
+            scope.fail(error)
+        else:
             scope.annotate(annotation)
 
 
