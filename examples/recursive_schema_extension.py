@@ -43,23 +43,9 @@ tree_result = tree_schema.evaluate(tree_json)
 strict_tree_result = strict_tree_schema.evaluate(tree_json)
 
 # print output for the tree case
-print(f'Tree schema result: {tree_result.valid}')
-print('Tree schema flag output:')
-pprint.pp(tree_result.output('flag'))
-print('Tree schema basic output:')
-pprint.pp(tree_result.output('basic'))
-print('Tree schema detailed output:')
-pprint.pp(tree_result.output('detailed'))
 print('Tree schema verbose output:')
 pprint.pp(tree_result.output('verbose'))
 
 # print output for the strict-tree case
-print(f'Strict tree schema result: {strict_tree_result.valid}')
-print('Strict tree schema flag output:')
-pprint.pp(strict_tree_result.output('flag'))
-print('Strict tree schema basic output:')
-pprint.pp(strict_tree_result.output('basic'))
-print('Strict tree schema detailed output:')
-pprint.pp(strict_tree_result.output('detailed'))
 print('Strict tree schema verbose output:')
 pprint.pp(strict_tree_result.output('verbose'))

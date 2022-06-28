@@ -1,44 +1,3 @@
-Tree schema result: True
-Tree schema flag output:
-{'valid': True}
-Tree schema basic output:
-{'valid': True,
- 'annotations': [{'instanceLocation': '',
-                  'keywordLocation': '/properties',
-                  'absoluteKeywordLocation': 'https://example.com/tree#/properties',
-                  'annotation': ['children']},
-                 {'instanceLocation': '/children',
-                  'keywordLocation': '/properties/children/items',
-                  'absoluteKeywordLocation': 'https://example.com/tree#/properties/children/items',
-                  'annotation': True},
-                 {'instanceLocation': '/children/0',
-                  'keywordLocation': '/properties/children/items/$dynamicRef/properties',
-                  'absoluteKeywordLocation': 'https://example.com/tree#/properties',
-                  'annotation': []}]}
-Tree schema detailed output:
-{'valid': True,
- 'instanceLocation': '',
- 'keywordLocation': '',
- 'absoluteKeywordLocation': 'https://example.com/tree#',
- 'annotations': [{'instanceLocation': '',
-                  'keywordLocation': '/type',
-                  'absoluteKeywordLocation': 'https://example.com/tree#/type'},
-                 {'instanceLocation': '/children',
-                  'keywordLocation': '/properties/children',
-                  'absoluteKeywordLocation': 'https://example.com/tree#/properties/children',
-                  'annotations': [{'instanceLocation': '/children',
-                                   'keywordLocation': '/properties/children/type',
-                                   'absoluteKeywordLocation': 'https://example.com/tree#/properties/children/type'},
-                                  {'instanceLocation': '/children/0',
-                                   'keywordLocation': '/properties/children/items/$dynamicRef',
-                                   'absoluteKeywordLocation': 'https://example.com/tree',
-                                   'annotations': [{'instanceLocation': '/children/0',
-                                                    'keywordLocation': '/properties/children/items/$dynamicRef/type',
-                                                    'absoluteKeywordLocation': 'https://example.com/tree#/type'},
-                                                   {'instanceLocation': '/children/0',
-                                                    'keywordLocation': '/properties/children/items/$dynamicRef/properties',
-                                                    'absoluteKeywordLocation': 'https://example.com/tree#/properties',
-                                                    'annotation': []}]}]}]}
 Tree schema verbose output:
 {'valid': True,
  'instanceLocation': '',
@@ -79,36 +38,6 @@ Tree schema verbose output:
                                                                                       'keywordLocation': '/properties/children/items/$dynamicRef/properties',
                                                                                       'absoluteKeywordLocation': 'https://example.com/tree#/properties',
                                                                                       'annotation': []}]}]}]}]}]}
-Strict tree schema result: False
-Strict tree schema flag output:
-{'valid': False}
-Strict tree schema basic output:
-{'valid': False,
- 'errors': [{'instanceLocation': '',
-             'keywordLocation': '/$ref/properties',
-             'absoluteKeywordLocation': 'https://example.com/tree#/properties',
-             'error': "Properties ['children'] are invalid"},
-            {'instanceLocation': '/children/0',
-             'keywordLocation': '/$ref/properties/children/items/$dynamicRef/unevaluatedProperties',
-             'absoluteKeywordLocation': 'https://example.com/strict-tree#/unevaluatedProperties',
-             'error': 'The instance is disallowed by a boolean false schema'},
-            {'instanceLocation': '',
-             'keywordLocation': '/unevaluatedProperties',
-             'absoluteKeywordLocation': 'https://example.com/strict-tree#/unevaluatedProperties',
-             'error': 'The instance is disallowed by a boolean false schema'}]}
-Strict tree schema detailed output:
-{'valid': False,
- 'instanceLocation': '',
- 'keywordLocation': '',
- 'absoluteKeywordLocation': 'https://example.com/strict-tree#',
- 'errors': [{'instanceLocation': '/children/0',
-             'keywordLocation': '/$ref/properties/children/items/$dynamicRef/unevaluatedProperties',
-             'absoluteKeywordLocation': 'https://example.com/strict-tree#/unevaluatedProperties',
-             'error': 'The instance is disallowed by a boolean false schema'},
-            {'instanceLocation': '',
-             'keywordLocation': '/unevaluatedProperties',
-             'absoluteKeywordLocation': 'https://example.com/strict-tree#/unevaluatedProperties',
-             'error': 'The instance is disallowed by a boolean false schema'}]}
 Strict tree schema verbose output:
 {'valid': False,
  'instanceLocation': '',
@@ -160,17 +89,9 @@ Strict tree schema verbose output:
                                                                          'instanceLocation': '/children/0',
                                                                          'keywordLocation': '/$ref/properties/children/items/$dynamicRef/unevaluatedProperties',
                                                                          'absoluteKeywordLocation': 'https://example.com/strict-tree#/unevaluatedProperties',
-                                                                         'error': 'The '
-                                                                                  'instance '
-                                                                                  'is '
-                                                                                  'disallowed '
-                                                                                  'by '
-                                                                                  'a '
-                                                                                  'boolean '
-                                                                                  'false '
-                                                                                  'schema'}]}]}]}]}]},
+                                                                         'error': ['daat']}]}]}]}]}]},
             {'valid': False,
              'instanceLocation': '',
              'keywordLocation': '/unevaluatedProperties',
              'absoluteKeywordLocation': 'https://example.com/strict-tree#/unevaluatedProperties',
-             'error': 'The instance is disallowed by a boolean false schema'}]}
+             'error': ['children']}]}
