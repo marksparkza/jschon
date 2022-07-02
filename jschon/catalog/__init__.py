@@ -10,7 +10,6 @@ from jschon.exceptions import CatalogError, JSONPointerError, URIError
 from jschon.json import JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema
-from jschon.output import JSONSchemaOutputFormatter, OutputFormatter
 from jschon.uri import URI
 from jschon.utils import json_loadf, json_loadr
 from jschon.vocabulary import KeywordClass, Metaschema, Vocabulary
@@ -82,9 +81,6 @@ class Catalog:
 
         self.name: str = name
         """The unique name of this :class:`Catalog` instance."""
-
-        self.output_formatter: OutputFormatter = JSONSchemaOutputFormatter()
-        """A JSON Schema output formatter."""
 
         self._uri_sources: Dict[URI, Source] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}

@@ -1,19 +1,18 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from jschon.exceptions import RelativeJSONPointerError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpatch import JSONPatch, JSONPatchOperation, PatchOp
 from jschon.jsonpointer import JSONPointer, RelativeJSONPointer
 from jschon.jsonschema import JSONSchema, Scope
-from jschon.output import JSONSchemaOutputFormatter
+from jschon.output import output_formatter
 
 __all__ = [
     'JSONTranslationSchema',
     'TranslationScope',
-    'TranslationOutputFormatter',
     'TranslationFilter',
     'translation_filter',
 ]
@@ -149,29 +148,22 @@ class TranslationScope(Scope):
             self.add_translation_patch(scheme, object_path, {})
 
 
-class TranslationOutputFormatter(JSONSchemaOutputFormatter):
+@output_formatter
+def patch(scope: Scope, scheme: str) -> JSONCompatible:
+    return JSONPatch(*_visit(scope, scheme)).aslist()
 
-    def create_output(self, scope: Scope, format: str, **kwargs: Any) -> JSONCompatible:
-        def visit(node: Scope):
-            if node.valid:
-                if hasattr(node, 't9n_patchops'):
-                    try:
-                        yield from node.t9n_patchops[scheme]
-                    except (KeyError, TypeError):
-                        pass
-                for child in node.iter_children():
-                    yield from visit(child)
 
-        if format in ('patch', 'translation'):
+@output_formatter
+def translation(scope: Scope, scheme: str) -> JSONCompatible:
+    return JSONPatch(*_visit(scope, scheme)).evaluate(None)
+
+
+def _visit(node: Scope, scheme: str) -> Iterator[JSONPatchOperation]:
+    if node.valid:
+        if hasattr(node, 't9n_patchops'):
             try:
-                scheme = kwargs.pop('scheme')
-            except KeyError:
-                raise TypeError("Missing keyword argument 'scheme'")
-
-            patch = JSONPatch(*(patchop for patchop in visit(scope)))
-            if format == 'patch':
-                return patch.aslist()
-            else:
-                return patch.evaluate(None)
-
-        return super().create_output(scope, format, **kwargs)
+                yield from node.t9n_patchops[scheme]
+            except (KeyError, TypeError):
+                pass
+        for child in node.iter_children():
+            yield from _visit(child, scheme)

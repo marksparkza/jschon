@@ -492,14 +492,15 @@ class Scope:
     def output(self, format: str, **kwargs: Any) -> JSONCompatible:
         """Return the evaluation result in the specified `format`.
 
-        :param format: The format of the returned document. The default
-            :class:`~jschon.output.JSONSchemaOutputFormatter` supports
-            the ``flag``, ``basic``, ``detailed`` and ``verbose`` output
-            formats, as defined by the JSON Schema specification.
+        :param format: One of the standard JSON Schema output formats --
+            ``flag``, ``basic``, ``detailed`` or ``verbose`` -- or any
+            format registered with the :func:`~jschon.output.output_formatter`
+            decorator.
         :param kwargs: Additional keyword arguments to pass to the output
-            formatter.
+            formatting function.
         """
-        return self.schema.catalog.output_formatter.create_output(self, format, **kwargs)
+        from jschon.output import create_output
+        return create_output(self, format, **kwargs)
 
     def __str__(self) -> str:
         return str(self.path)

@@ -1,7 +1,6 @@
 import pathlib
 
 from jschon.catalog import Catalog, LocalSource
-from jschon.translation import TranslationOutputFormatter
 from jschon.uri import URI
 from jschon.vocabulary.translation import *
 
@@ -39,5 +38,3 @@ def initialize(catalog: Catalog):
         URI("https://json-schema.org/draft/2020-12/vocab/content"),
         URI("https://jschon.dev/ext/translation"),
     )
-
-    catalog.output_formatter = TranslationOutputFormatter()
