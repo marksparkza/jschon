@@ -5,7 +5,7 @@ from collections import deque
 from decimal import Decimal
 from functools import cached_property
 from os import PathLike
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Type, Union
+from typing import Any, Dict, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Type, Union
 
 from jschon.jsonpointer import JSONPointer
 from jschon.utils import json_dumpf, json_dumps, json_loadf, json_loadr, json_loads
@@ -19,7 +19,7 @@ JSONCompatible = Union[None, bool, int, float, Decimal, str, Sequence[Any], Mapp
 """Type hint for a JSON-compatible Python object."""
 
 
-class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
+class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
     """An implementation of the JSON data model."""
 
     @classmethod
@@ -76,7 +76,7 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
 
         self.type: str
         """The JSON type of the instance. One of
-        ``"null"``, ``"boolean"``, ``"number"``, ``"string"``, ``"array"``, ``"object"``."""
+        ``null``, ``boolean``, ``number``, ``string``, ``array``, ``object``."""
 
         self.data: Union[None, bool, int, Decimal, str, List[JSON], Dict[str, JSON]]
         """The instance data.
@@ -99,6 +99,12 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         self.key: Optional[str] = key
         """The index of the instance within its parent."""
 
+        self.itemclass: Type[JSON] = itemclass or JSON
+        """The :class:`JSON` class type of child instances."""
+
+        self.itemkwargs: Dict[str, Any] = itemkwargs
+        """Keyword arguments to the :attr:`itemclass` constructor."""
+
         if value is None:
             self.type = "null"
             self.data = None
@@ -120,18 +126,16 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             self.data = value
 
         elif isinstance(value, Sequence):
-            itemclass = itemclass or JSON
             self.type = "array"
             self.data = [
-                itemclass(v, parent=self, key=str(i), **itemkwargs)
+                self.itemclass(v, parent=self, key=str(i), **self.itemkwargs)
                 for i, v in enumerate(value)
             ]
 
         elif isinstance(value, Mapping):
-            itemclass = itemclass or JSON
             self.type = "object"
             self.data = {
-                k: itemclass(v, parent=self, key=k, **itemkwargs)
+                k: self.itemclass(v, parent=self, key=k, **self.itemkwargs)
                 for k, v in value.items()
             }
 
@@ -157,6 +161,26 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
             return {key: item.value for key, item in self.data.items()}
         return self.data
 
+    def _invalidate_path(self) -> None:
+        try:
+            del self.path
+        except AttributeError:
+            pass
+        if self.type == 'array':
+            for item in self.data:
+                item._invalidate_path()
+        elif self.type == 'object':
+            for item in self.data.values():
+                item._invalidate_path()
+
+    def _invalidate_value(self) -> None:
+        try:
+            del self.value
+        except AttributeError:
+            pass
+        if self.parent is not None:
+            self.parent._invalidate_value()
+
     def dumpf(self, path: Union[str, PathLike]) -> None:
         """Serialize the instance data to a JSON file.
 
@@ -181,22 +205,96 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return bool(self.data)
 
     def __len__(self) -> int:
-        """Return `len(self)` for an instance of type ``"string"``, ``"array"``
-        or ``"object"``."""
-        return len(self.data)
+        """Return `len(self)`.
+
+        Supported for JSON types ``string``, ``array`` and ``object``.
+        """
+        if self.type in ('string', 'array', 'object'):
+            return len(self.data)
+
+        raise TypeError(f'JSON {self.type} has no length')
 
     def __iter__(self) -> Iterator:
-        """Return `iter(self)` for an instance of type ``"array"`` or ``"object"``."""
-        if self.type in ("array", "object"):
+        """Return `iter(self)`.
+
+        Supported for JSON types ``array`` and ``object``.
+        """
+        if self.type in ('array', 'object'):
             return iter(self.data)
-        raise TypeError(f"{self!r} is not iterable")
+
+        raise TypeError(f'JSON {self.type} is not iterable')
 
     def __getitem__(self, index: Union[int, slice, str]) -> JSON:
-        """Return `self[index]` for an instance of type ``"array"`` or ``"object"``."""
-        if isinstance(index, (int, slice)) and self.type == "array" or \
-                isinstance(index, str) and self.type == "object":
+        """Return `self[index]`.
+
+        Supported for JSON types ``array`` and ``object``.
+        """
+        if (
+                self.type == 'array' and isinstance(index, (int, slice)) or
+                self.type == 'object' and isinstance(index, str)
+        ):
             return self.data[index]
-        raise TypeError(f"{self!r} is not subscriptable by {index!r}")
+
+        raise TypeError(f'JSON {self.type} is not subscriptable by {index!r}')
+
+    def __setitem__(self, index: Union[int, str], obj: Union[JSON, JSONCompatible]) -> None:
+        """Set `self[index]` to `obj`.
+
+        Supported for JSON types ``array`` and ``object``.
+        """
+        if (
+                self.type == 'array' and isinstance(index, int) or
+                self.type == 'object' and isinstance(index, str)
+        ):
+            self.data[index] = self.itemclass(
+                obj.value if isinstance(obj, JSON) else obj,
+                parent=self,
+                key=str(index),
+                **self.itemkwargs,
+            )
+            self._invalidate_value()
+
+        else:
+            raise TypeError(f'JSON {self.type} is not subscriptable by {index!r}')
+
+    def __delitem__(self, index: Union[int, str]) -> None:
+        """Delete `self[index]`.
+
+        Supported for JSON types ``array`` and ``object``.
+        """
+        if (
+                self.type == 'array' and isinstance(index, int) or
+                self.type == 'object' and isinstance(index, str)
+        ):
+            del self.data[index]
+            self._invalidate_value()
+            if self.type == 'array':
+                for item in self.data[index:]:
+                    item.key = str(int(item.key) - 1)
+                    item._invalidate_path()
+
+        else:
+            raise TypeError(f'JSON {self.type} is not subscriptable by {index!r}')
+
+    def insert(self, index: int, obj: Union[JSON, JSONCompatible]) -> None:
+        """Insert `obj` before `index`.
+
+        Supported for JSON type ``array``.
+        """
+        if self.type == 'array':
+            self.data.insert(index, self.itemclass(
+                obj.value if isinstance(obj, JSON) else obj,
+                parent=self,
+                key=str(index),
+                **self.itemkwargs,
+            ))
+            self._invalidate_value()
+            for item in self.data[index + 1:]:
+                item.key = str(int(item.key) + 1)
+                item._invalidate_path()
+
+        else:
+            raise TypeError(f'JSON {self.type} does not support insert')
 
     def __eq__(self, other: Union[JSON, JSONCompatible]) -> bool:
         """Return `self == other`."""
@@ -213,7 +311,10 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return NotImplemented
 
     def __ge__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
-        """Return `self >= other`, for instances of type ``"number"`` or ``"string"``."""
+        """Return `self >= other`.
+
+        Supported for JSON types ``number`` and ``string``.
+        """
         if isinstance(other, JSON):
             return self.data >= other.data
         if isinstance(other, float):
@@ -221,7 +322,10 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return self.data >= other
 
     def __gt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
-        """Return `self > other`, for instances of type ``"number"`` or ``"string"``."""
+        """Return `self > other`.
+
+        Supported for JSON types ``number`` and ``string``.
+        """
         if isinstance(other, JSON):
             return self.data > other.data
         if isinstance(other, float):
@@ -229,7 +333,10 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return self.data > other
 
     def __le__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
-        """Return `self <= other`, for instances of type ``"number"`` or ``"string"``."""
+        """Return `self <= other`.
+
+        Supported for JSON types ``number`` and ``string``.
+        """
         if isinstance(other, JSON):
             return self.data <= other.data
         if isinstance(other, float):
@@ -237,7 +344,10 @@ class JSON(Sequence['JSON'], Mapping[str, 'JSON']):
         return self.data <= other
 
     def __lt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
-        """Return `self < other`, for instances of type ``"number"`` or ``"string"``."""
+        """Return `self < other`.
+
+        Supported for JSON types ``number`` and ``string``.
+        """
         if isinstance(other, JSON):
             return self.data < other.data
         if isinstance(other, float):
