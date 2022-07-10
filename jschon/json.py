@@ -209,92 +209,62 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         Supported for JSON types ``string``, ``array`` and ``object``.
         """
-        if self.type in ('string', 'array', 'object'):
-            return len(self.data)
-
-        raise TypeError(f'JSON {self.type} has no length')
+        return len(self.data)
 
     def __iter__(self) -> Iterator:
         """Return `iter(self)`.
 
         Supported for JSON types ``array`` and ``object``.
         """
-        if self.type in ('array', 'object'):
-            return iter(self.data)
-
-        raise TypeError(f'JSON {self.type} is not iterable')
+        return iter(self.data)
 
     def __getitem__(self, index: Union[int, slice, str]) -> JSON:
         """Return `self[index]`.
 
         Supported for JSON types ``array`` and ``object``.
         """
-        if (
-                self.type == 'array' and isinstance(index, (int, slice)) or
-                self.type == 'object' and isinstance(index, str)
-        ):
-            return self.data[index]
-
-        raise TypeError(f'JSON {self.type} is not subscriptable by {index!r}')
+        return self.data[index]
 
     def __setitem__(self, index: Union[int, str], obj: Union[JSON, JSONCompatible]) -> None:
         """Set `self[index]` to `obj`.
 
         Supported for JSON types ``array`` and ``object``.
         """
-        if (
-                self.type == 'array' and isinstance(index, int) or
-                self.type == 'object' and isinstance(index, str)
-        ):
-            self.data[index] = self.itemclass(
-                obj.value if isinstance(obj, JSON) else obj,
-                parent=self,
-                key=str(index),
-                **self.itemkwargs,
-            )
-            self._invalidate_value()
-
-        else:
-            raise TypeError(f'JSON {self.type} is not subscriptable by {index!r}')
+        self.data[index] = self.itemclass(
+            obj.value if isinstance(obj, JSON) else obj,
+            parent=self,
+            key=str(index),
+            **self.itemkwargs,
+        )
+        self._invalidate_value()
 
     def __delitem__(self, index: Union[int, str]) -> None:
         """Delete `self[index]`.
 
         Supported for JSON types ``array`` and ``object``.
         """
-        if (
-                self.type == 'array' and isinstance(index, int) or
-                self.type == 'object' and isinstance(index, str)
-        ):
-            del self.data[index]
-            self._invalidate_value()
-            if self.type == 'array':
-                for item in self.data[index:]:
-                    item.key = str(int(item.key) - 1)
-                    item._invalidate_path()
-
-        else:
-            raise TypeError(f'JSON {self.type} is not subscriptable by {index!r}')
+        del self.data[index]
+        self._invalidate_value()
+        if self.type == 'array':
+            for item in self.data[index:]:
+                item.key = str(int(item.key) - 1)
+                item._invalidate_path()
 
     def insert(self, index: int, obj: Union[JSON, JSONCompatible]) -> None:
         """Insert `obj` before `index`.
 
         Supported for JSON type ``array``.
         """
-        if self.type == 'array':
-            self.data.insert(index, self.itemclass(
-                obj.value if isinstance(obj, JSON) else obj,
-                parent=self,
-                key=str(index),
-                **self.itemkwargs,
-            ))
-            self._invalidate_value()
-            for item in self.data[index + 1:]:
-                item.key = str(int(item.key) + 1)
-                item._invalidate_path()
-
-        else:
-            raise TypeError(f'JSON {self.type} does not support insert')
+        self.data.insert(index, self.itemclass(
+            obj.value if isinstance(obj, JSON) else obj,
+            parent=self,
+            key=str(index),
+            **self.itemkwargs,
+        ))
+        self._invalidate_value()
+        for item in self.data[index + 1:]:
+            item.key = str(int(item.key) + 1)
+            item._invalidate_path()
 
     def __eq__(self, other: Union[JSON, JSONCompatible]) -> bool:
         """Return `self == other`."""
