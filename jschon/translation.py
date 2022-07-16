@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Union
 
 from jschon.exceptions import RelativeJSONPointerError
@@ -87,7 +86,7 @@ class JSONTranslationSchema(JSONSchema):
         elif self.t9n_cast == 'integer':
             result = int(result)
         elif self.t9n_cast == 'number':
-            result = Decimal(f'{result}')
+            result = float(result)
         elif self.t9n_cast == 'string':
             result = str(result)
 

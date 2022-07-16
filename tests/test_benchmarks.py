@@ -1,5 +1,4 @@
 import sys
-from decimal import Decimal
 
 import pytest
 from pytest import param
@@ -15,7 +14,6 @@ def test_create_json(benchmark):
             'bool': True,
             'int': sys.maxsize,
             'float': 1.234,
-            'decimal': Decimal('99.99'),
             'string': 'Hello, World!',
             'array': list(map(chr, range(10))),
             'object': dict(zip(map(str, range(10)), map(chr, range(10)))),

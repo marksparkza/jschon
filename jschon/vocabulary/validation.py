@@ -1,8 +1,8 @@
-import decimal
 import re
+from decimal import Decimal, InvalidOperation
 
 from jschon.json import JSON
-from jschon.jsonschema import Scope, JSONSchema
+from jschon.jsonschema import JSONSchema, Scope
 from jschon.utils import tuplify
 from jschon.vocabulary import Keyword
 
@@ -69,9 +69,9 @@ class MultipleOfKeyword(Keyword):
 
     def evaluate(self, instance: JSON, scope: Scope) -> None:
         try:
-            if instance.data % self.json.data != 0:
+            if Decimal(f'{instance.data}') % Decimal(f'{self.json.data}') != 0:
                 scope.fail(f"The value must be a multiple of {self.json}")
-        except decimal.InvalidOperation:
+        except InvalidOperation:
             scope.fail(f"Invalid operation: {instance} % {self.json}")
 
 

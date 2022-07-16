@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 from collections import deque
-from decimal import Decimal
 from functools import cached_property
 from os import PathLike
 from typing import Any, Dict, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Type, Union
@@ -15,7 +14,7 @@ __all__ = [
     'JSONCompatible',
 ]
 
-JSONCompatible = Union[None, bool, int, float, Decimal, str, Sequence[Any], Mapping[str, Any]]
+JSONCompatible = Union[None, bool, int, float, str, Sequence[Any], Mapping[str, Any]]
 """Type hint for a JSON-compatible Python object."""
 
 
@@ -78,7 +77,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         """The JSON type of the instance. One of
         ``null``, ``boolean``, ``number``, ``string``, ``array``, ``object``."""
 
-        self.data: Union[None, bool, int, Decimal, str, List[JSON], Dict[str, JSON]]
+        self.data: Union[None, bool, int, float, str, List[JSON], Dict[str, JSON]]
         """The instance data.
         
         =========   ===============
@@ -86,7 +85,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         =========   ===============
         null        None
         boolean     bool
-        number      int | Decimal
+        number      int | float
         string      str
         array       list[JSON]
         object      dict[str, JSON]
@@ -113,13 +112,9 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             self.type = "boolean"
             self.data = value
 
-        elif isinstance(value, (int, Decimal)):
+        elif isinstance(value, (int, float)):
             self.type = "number"
             self.data = value
-
-        elif isinstance(value, float):
-            self.type = "number"
-            self.data = Decimal(f'{value}')
 
         elif isinstance(value, str):
             self.type = "string"
@@ -280,46 +275,38 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             return self.data == other.data
         return NotImplemented
 
-    def __ge__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+    def __ge__(self, other: Union[JSON, int, float, str]) -> bool:
         """Return `self >= other`.
 
         Supported for JSON types ``number`` and ``string``.
         """
         if isinstance(other, JSON):
             return self.data >= other.data
-        if isinstance(other, float):
-            return self.data >= Decimal(f'{other}')
         return self.data >= other
 
-    def __gt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+    def __gt__(self, other: Union[JSON, int, float, str]) -> bool:
         """Return `self > other`.
 
         Supported for JSON types ``number`` and ``string``.
         """
         if isinstance(other, JSON):
             return self.data > other.data
-        if isinstance(other, float):
-            return self.data > Decimal(f'{other}')
         return self.data > other
 
-    def __le__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+    def __le__(self, other: Union[JSON, int, float, str]) -> bool:
         """Return `self <= other`.
 
         Supported for JSON types ``number`` and ``string``.
         """
         if isinstance(other, JSON):
             return self.data <= other.data
-        if isinstance(other, float):
-            return self.data <= Decimal(f'{other}')
         return self.data <= other
 
-    def __lt__(self, other: Union[JSON, int, float, Decimal, str]) -> bool:
+    def __lt__(self, other: Union[JSON, int, float, str]) -> bool:
         """Return `self < other`.
 
         Supported for JSON types ``number`` and ``string``.
         """
         if isinstance(other, JSON):
             return self.data < other.data
-        if isinstance(other, float):
-            return self.data < Decimal(f'{other}')
         return self.data < other

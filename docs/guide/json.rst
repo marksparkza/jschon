@@ -152,15 +152,3 @@ JSON(...)
 
 >>> JSON.loads('{"1": "spam", "2": "eggs"}')
 JSON({'1': 'spam', '2': 'eggs'})
-
-Finally, a word on floating point numbers:
-
-To ensure reliable operation of the JSON Schema ``"multipleOf"`` keyword, :class:`float`
-values are converted to :class:`decimal.Decimal` by the :class:`~jschon.json.JSON`
-constructor, and parsed as :class:`decimal.Decimal` during deserialization:
-
->>> JSON(5.1).data
-Decimal('5.1')
-
->>> JSON.loads('{"pi": 3.14159}')["pi"].data
-Decimal('3.14159')

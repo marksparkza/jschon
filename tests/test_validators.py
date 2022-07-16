@@ -18,7 +18,7 @@ def evaluate(kwclass, kwvalue, instval):
 
 
 def isequal(x, y):
-    if {type(x), type(y)} <= {int, float, Decimal}:
+    if {type(x), type(y)} <= {int, float}:
         return math.isclose(x, y)
     if type(x) is not type(y):
         return False
@@ -38,7 +38,7 @@ def test_type(kwvalue, instval):
         assert result == ("null" in kwvalue)
     elif isinstance(instval, bool):
         assert result == ("boolean" in kwvalue)
-    elif isinstance(instval, int) or isinstance(instval, (float, Decimal)) and instval == int(instval):
+    elif isinstance(instval, int) or isinstance(instval, float) and instval == int(instval):
         assert result == ("number" in kwvalue or "integer" in kwvalue)
     elif isinstance(instval, float):
         assert result == ("number" in kwvalue)
@@ -64,14 +64,9 @@ def test_const(kwvalue, instval):
 
 @given(kwvalue=jsonnumber.filter(lambda x: x > 0), instval=jsonnumber)
 def test_multiple_of(kwvalue, instval):
-    def decimalize(val):
-        if isinstance(val, float):
-            return Decimal(f'{val}')
-        return val
-
     result = evaluate(MultipleOfKeyword, kwvalue, instval)
     try:
-        assert result == (decimalize(instval) % decimalize(kwvalue) == 0)
+        assert result == (Decimal(f'{instval}') % Decimal(f'{kwvalue}') == 0)
     except InvalidOperation:
         pass
 

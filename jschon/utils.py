@@ -1,5 +1,4 @@
 import json
-from decimal import Decimal
 from os import PathLike
 from typing import Any, Tuple, Iterable, Union
 
@@ -47,7 +46,7 @@ def json_dumps(obj: Any) -> str:
 def json_loadf(path: Union[str, PathLike]) -> Any:
     """Deserialize a JSON file, returning a JSON-compatible Python object."""
     with open(path) as f:
-        return json.load(f, parse_float=Decimal, parse_constant=_parse_invalid_const)
+        return json.load(f, parse_constant=_parse_invalid_const)
 
 
 def json_loadr(url: str) -> Any:
@@ -56,12 +55,12 @@ def json_loadr(url: str) -> Any:
         _import_requests()
     r = requests.get(url)
     r.raise_for_status()
-    return r.json(parse_float=Decimal, parse_constant=_parse_invalid_const)
+    return r.json(parse_constant=_parse_invalid_const)
 
 
 def json_loads(value: str) -> Any:
     """Deserialize a JSON string, returning a JSON-compatible Python object."""
-    return json.loads(value, parse_float=Decimal, parse_constant=_parse_invalid_const)
+    return json.loads(value, parse_constant=_parse_invalid_const)
 
 
 def _parse_invalid_const(c):
@@ -75,6 +74,4 @@ def _serialize_custom_obj(o):
     from jschon.json import JSON
     if isinstance(o, JSON):
         return o.data
-    if isinstance(o, Decimal):
-        return float(o)
     raise TypeError

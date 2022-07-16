@@ -1,6 +1,5 @@
 import json as jsonlib
 import tempfile
-from decimal import Decimal
 from random import randint
 
 from hypothesis import assume, given, strategies as hs
@@ -8,7 +7,7 @@ from pytest_httpserver import HTTPServer
 
 from jschon import JSON, JSONPointer
 from jschon.json import JSONCompatible
-from tests.strategies import json, json_nodecimal, jsonflatarray, jsonflatobject, jsonleaf, jsonnumber, jsonstring
+from tests.strategies import json, jsonflatarray, jsonflatobject, jsonleaf, jsonnumber, jsonstring
 from tests.test_jsonpointer import jsonpointer_escape
 from tests.test_validators import isequal
 
@@ -23,7 +22,7 @@ def assert_json_node(
         key: str = None,
         ptr: str = '',
 ):
-    assert inst.data == (Decimal(f'{val}') if isinstance(val, float) else val)
+    assert inst.data == val
     assert inst.parent == parent
     assert inst.key == key
     assert inst.path == JSONPointer(ptr)
@@ -33,7 +32,7 @@ def assert_json_node(
         assert inst.type == "null"
     elif isinstance(val, bool):
         assert inst.type == "boolean"
-    elif isinstance(val, (int, float, Decimal)):
+    elif isinstance(val, (int, float)):
         assert inst.type == "number"
     elif isinstance(val, str):
         assert inst.type == "string"
@@ -71,14 +70,14 @@ def test_create_json(value):
     assert_json_node(instance, value)
 
 
-@given(json_nodecimal)
+@given(json)
 def test_load_json_from_string(value):
     s = jsonlib.dumps(value)
     instance = JSON.loads(s)
     assert_json_node(instance, value)
 
 
-@given(json_nodecimal)
+@given(json)
 def test_load_json_from_file(value):
     s = jsonlib.dumps(value)
     with tempfile.NamedTemporaryFile() as f:
@@ -88,7 +87,7 @@ def test_load_json_from_file(value):
     assert_json_node(instance, value)
 
 
-@given(value=json_nodecimal)
+@given(json)
 def test_load_json_from_url(value):
     with HTTPServer() as httpserver:
         httpserver.expect_request('/load.json').respond_with_json(value)

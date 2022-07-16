@@ -13,23 +13,20 @@ jsontypes = hs.lists(jsontype, unique=True)
 
 jsonnull = hs.none()
 jsonboolean = hs.booleans()
-jsonnumber = hs.integers() | \
-             hs.floats(allow_nan=False, allow_infinity=False) | \
-             hs.decimals(allow_nan=False, allow_infinity=False)
-jsonnumber_nodecimal = hs.integers() | \
-                       hs.floats(allow_nan=False, allow_infinity=False)
+jsonnumber = hs.integers() | hs.floats(allow_nan=False, allow_infinity=False)
+jsonnumber_withdecimal = jsonnumber | hs.decimals(allow_nan=False, allow_infinity=False)
 jsoninteger = hs.integers()
 jsonstring = hs.text()
 jsonleaf = jsonnull | jsonboolean | jsonnumber | jsonstring
-jsonleaf_nodecimal = jsonnull | jsonboolean | jsonnumber_nodecimal | jsonstring
+jsonleaf_withdecimal = jsonnull | jsonboolean | jsonnumber_withdecimal | jsonstring
 
 json = hs.recursive(
     base=jsonleaf,
     extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
     max_leaves=10,
 )
-json_nodecimal = hs.recursive(
-    base=jsonleaf_nodecimal,
+json_withdecimal = hs.recursive(
+    base=jsonleaf_withdecimal,
     extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
     max_leaves=10,
 )
