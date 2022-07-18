@@ -148,21 +148,21 @@ class TranslationScope(Scope):
 
 
 @output_formatter
-def patch(scope: Scope, scheme: str) -> JSONCompatible:
-    return JSONPatch(*_visit(scope, scheme)).aslist()
+def patch(scope: Scope, scheme: str, ignore_validity: bool = False) -> JSONCompatible:
+    return JSONPatch(*_visit(scope, scheme, ignore_validity)).aslist()
 
 
 @output_formatter
-def translation(scope: Scope, scheme: str) -> JSONCompatible:
-    return JSONPatch(*_visit(scope, scheme)).evaluate(None)
+def translation(scope: Scope, scheme: str, ignore_validity: bool = False) -> JSONCompatible:
+    return JSONPatch(*_visit(scope, scheme, ignore_validity)).evaluate(None)
 
 
-def _visit(node: Scope, scheme: str) -> Iterator[JSONPatchOperation]:
-    if node.valid:
+def _visit(node: Scope, scheme: str, ignore_validity: bool) -> Iterator[JSONPatchOperation]:
+    if ignore_validity or node.valid:
         if hasattr(node, 't9n_patchops'):
             try:
                 yield from node.t9n_patchops[scheme]
             except (KeyError, TypeError):
                 pass
         for child in node.iter_children():
-            yield from _visit(child, scheme)
+            yield from _visit(child, scheme, ignore_validity)
