@@ -39,7 +39,8 @@ class LocalSource(Source):
     def __call__(self, relative_path: str) -> JSONCompatible:
         filepath = pathlib.Path(self.base_dir) / relative_path
         if self.suffix:
-            filepath = filepath.with_suffix(self.suffix)
+            filepath = str(filepath)
+            filepath += self.suffix
 
         return json_loadf(filepath)
 
