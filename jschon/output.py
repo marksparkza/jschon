@@ -65,28 +65,28 @@ def basic(scope: Scope) -> JSONCompatible:
 
     return {
         "valid": valid,
-        childkey: [result for result in visit(scope)],
+        childkey: [output for output in visit(scope)],
     }
 
 
 @output_formatter
 def detailed(scope: Scope) -> JSONCompatible:
     def visit(node: Scope):
-        result = {
+        output = {
             "instanceLocation": str(node.instance.path),
             "keywordLocation": str(node.path),
             "absoluteKeywordLocation": str(node.absolute_uri),
             childkey: [visit(child) for child in node.iter_children()
                        if child.valid is valid],
         }
-        if not result[childkey]:
-            del result[childkey]
+        if not output[childkey]:
+            del output[childkey]
             if (msgval := getattr(node, msgkey)) is not None:
-                result[msgkey] = msgval
-        elif len(result[childkey]) == 1:
-            result = result[childkey][0]
+                output[msgkey] = msgval
+        elif len(output[childkey]) == 1:
+            output = output[childkey][0]
 
-        return result
+        return output
 
     valid = scope.valid
     msgkey = "annotation" if valid else "error"
@@ -105,7 +105,7 @@ def detailed(scope: Scope) -> JSONCompatible:
 @output_formatter
 def verbose(scope: Scope) -> JSONCompatible:
     def visit(node: Scope):
-        result = {
+        output = {
             "valid": (valid := node.valid),
             "instanceLocation": str(node.instance.path),
             "keywordLocation": str(node.path),
@@ -114,12 +114,12 @@ def verbose(scope: Scope) -> JSONCompatible:
 
         msgkey = "annotation" if valid else "error"
         if (msgval := getattr(node, msgkey)) is not None:
-            result[msgkey] = msgval
+            output[msgkey] = msgval
 
         childkey = "annotations" if valid else "errors"
         if childarr := [visit(child) for child in node.iter_children()]:
-            result[childkey] = childarr
+            output[childkey] = childarr
 
-        return result
+        return output
 
     return visit(scope)
