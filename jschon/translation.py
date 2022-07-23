@@ -164,5 +164,5 @@ def _visit(node: Result, scheme: str, ignore_validity: bool) -> Iterator[JSONPat
                 yield from node.t9n_patchops[scheme]
             except (KeyError, TypeError):
                 pass
-        for child in node.iter_children():
+        for child in node.children.values():
             yield from _visit(child, scheme, ignore_validity)

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from functools import cached_property
-from typing import Any, ContextManager, Dict, Hashable, Iterator, Mapping, Optional, TYPE_CHECKING, Type, Union
+from typing import Any, ContextManager, Dict, Hashable, Iterator, Mapping, Optional, TYPE_CHECKING, Tuple, Type, Union
 from uuid import uuid4
 
 from jschon.exceptions import JSONSchemaError
@@ -201,7 +201,8 @@ class JSONSchema(JSON):
 
             if any(
                     not child.passed
-                    for child in result.iter_children(instance)
+                    for child in result.children.values()
+                    if child.instance.path == instance.path
             ):
                 result.fail()
 
@@ -341,8 +342,8 @@ class Result:
         self.key: Optional[str] = key
         """The index of the current schema node within its dynamic parent."""
 
-        self.children: Dict[JSONPointer, Dict[str, Result]] = {}
-        """Subresults of the current result node, indexed by instance path and child key."""
+        self.children: Dict[Tuple[str, JSONPointer], Result] = {}
+        """Subresults of the current result node, indexed by schema key and instance path."""
 
         self.annotation: JSONCompatible = None
         """The annotation value of the result."""
@@ -383,8 +384,7 @@ class Result:
         if schema is None:
             schema = self.schema
 
-        self.children.setdefault(instance_path := instance.path, {})
-        self.children[instance_path][key] = (child := (cls or self.__class__)(
+        self.children[key, instance.path] = (child := (cls or self.__class__)(
             schema,
             instance,
             parent=self,
@@ -395,7 +395,7 @@ class Result:
             yield child
         finally:
             if child._discard:
-                del self.children[instance_path][key]
+                del self.children[key, instance.path]
 
     @cached_property
     def globals(self) -> Dict:
@@ -412,7 +412,7 @@ class Result:
     def sibling(self, instance: JSON, key: str) -> Optional[Result]:
         """Return a sibling schema node's evaluation result for `instance`."""
         try:
-            return self.parent.children[instance.path][key] if self.parent else None
+            return self.parent.children[key, instance.path] if self.parent else None
         except KeyError:
             return None
 
@@ -480,13 +480,6 @@ class Result:
                 relpath = self.relpath
             return schema_uri.copy(fragment=relpath.uri_fragment())
 
-    def iter_children(self, instance: JSON = None) -> Iterator[Result]:
-        """Return an iterator over subresults, optionally
-        filtered by an instance to which they apply."""
-        for instance_path, keyword_results in self.children.items():
-            if instance is None or instance.path == instance_path:
-                yield from keyword_results.values()
-
     def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[JSONCompatible]:
         """Return an iterator over annotations produced in this subtree,
         optionally filtered by instance and/or keyword."""
@@ -495,7 +488,7 @@ class Result:
                     (key is None or key == self.key) and \
                     (instance is None or instance.path == self.instance.path):
                 yield self.annotation
-            for child in self.iter_children():
+            for child in self.children.values():
                 yield from child.collect_annotations(instance, key)
 
     def collect_errors(self, instance: JSON = None, key: str = None) -> Iterator[JSONCompatible]:
@@ -506,7 +499,7 @@ class Result:
                     (key is None or key == self.key) and \
                     (instance is None or instance.path == self.instance.path):
                 yield self.error
-            for child in self.iter_children():
+            for child in self.children.values():
                 yield from child.collect_errors(instance, key)
 
     def output(self, format: str, **kwargs: Any) -> JSONCompatible:

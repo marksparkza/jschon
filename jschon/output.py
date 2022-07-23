@@ -56,7 +56,7 @@ def basic(result: Result) -> JSONCompatible:
                     "absoluteKeywordLocation": str(node.absolute_uri),
                     msgkey: msgval,
                 }
-            for child in node.iter_children():
+            for child in node.children.values():
                 yield from visit(child)
 
     valid = result.valid
@@ -76,7 +76,7 @@ def detailed(result: Result) -> JSONCompatible:
             "instanceLocation": str(node.instance.path),
             "keywordLocation": str(node.path),
             "absoluteKeywordLocation": str(node.absolute_uri),
-            childkey: [visit(child) for child in node.iter_children()
+            childkey: [visit(child) for child in node.children.values()
                        if child.valid is valid],
         }
         if not output[childkey]:
@@ -97,7 +97,7 @@ def detailed(result: Result) -> JSONCompatible:
         "instanceLocation": str(result.instance.path),
         "keywordLocation": str(result.path),
         "absoluteKeywordLocation": str(result.absolute_uri),
-        childkey: [visit(child) for child in result.iter_children()
+        childkey: [visit(child) for child in result.children.values()
                    if child.valid is valid],
     }
 
@@ -117,7 +117,7 @@ def verbose(result: Result) -> JSONCompatible:
             output[msgkey] = msgval
 
         childkey = "annotations" if valid else "errors"
-        if childarr := [visit(child) for child in node.iter_children()]:
+        if childarr := [visit(child) for child in node.children.values()]:
             output[childkey] = childarr
 
         return output
