@@ -73,24 +73,24 @@ class JSONTranslationSchema(JSONSchema):
         return scope
 
     def _make_value(self, instance: JSON) -> JSONCompatible:
-        result = instance.value
+        value = instance.value
 
         if isinstance(self.t9n_filter, str):
             if filter_fn := _translation_filters.get(self.t9n_filter):
-                result = filter_fn(result)
+                value = filter_fn(value)
         elif isinstance(self.t9n_filter, dict):
-            result = self.t9n_filter.get(result, result)
+            value = self.t9n_filter.get(value, value)
 
         if self.t9n_cast == 'boolean':
-            result = bool(result)
+            value = bool(value)
         elif self.t9n_cast == 'integer':
-            result = int(result)
+            value = int(value)
         elif self.t9n_cast == 'number':
-            result = float(result)
+            value = float(value)
         elif self.t9n_cast == 'string':
-            result = str(result)
+            value = str(value)
 
-        return result
+        return value
 
 
 TranslationFilter = Callable[[JSONCompatible], JSONCompatible]
