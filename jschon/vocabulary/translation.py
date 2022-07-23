@@ -3,8 +3,8 @@ from typing import Mapping, Optional, Sequence
 from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpointer import JSONPointer, RelativeJSONPointer
-from jschon.jsonschema import JSONSchema, Scope
-from jschon.translation import JSONTranslationSchema, TranslationScope
+from jschon.jsonschema import JSONSchema, Result
+from jschon.translation import JSONTranslationSchema, TranslationResult
 from jschon.vocabulary import Applicator, ApplicatorMixin, Keyword
 
 __all__ = [
@@ -42,10 +42,10 @@ class TranslationsKeyword(Keyword, ApplicatorMixin):
             session=parentschema.session,
         )
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         for index, subschema in enumerate(self.json):
-            with scope(instance, str(index), cls=TranslationScope) as subscope:
-                subschema.evaluate(instance, subscope)
+            with result(instance, str(index), cls=TranslationResult) as subresult:
+                subschema.evaluate(instance, subresult)
 
 
 class T9nSchemeKeyword(Keyword):
@@ -60,17 +60,17 @@ class T9nSchemeKeyword(Keyword):
 class T9nTargetKeyword(Keyword):
     key = "t9nTarget"
 
-    def evaluate(self, instance: JSON, scope: TranslationScope) -> None:
-        scope.parent.t9n_target = JSONPointer(self.json.value)
+    def evaluate(self, instance: JSON, result: TranslationResult) -> None:
+        result.parent.t9n_target = JSONPointer(self.json.value)
 
 
 class T9nConditionKeyword(Keyword, Applicator):
     key = "t9nCondition"
 
-    def evaluate(self, instance: JSON, scope: TranslationScope) -> None:
-        self.json.evaluate(instance, scope)
-        if not scope.valid:
-            scope.parent.fail()
+    def evaluate(self, instance: JSON, result: TranslationResult) -> None:
+        self.json.evaluate(instance, result)
+        if not result.valid:
+            result.parent.fail()
 
 
 class T9nConstKeyword(Keyword):
@@ -153,23 +153,23 @@ class T9nArrayKeyword(Keyword, ApplicatorMixin):
             scheme=parentschema.t9n_scheme,
         )
 
-    def evaluate(self, instance: JSON, scope: TranslationScope) -> None:
-        if (condition := scope.sibling(instance, "t9nCondition")) and not condition.valid:
+    def evaluate(self, instance: JSON, result: TranslationResult) -> None:
+        if (condition := result.sibling(instance, "t9nCondition")) and not condition.valid:
             return
 
         scheme = self.parentschema.t9n_scheme
-        array_path = scope.parent.t9n_target
-        scope.init_array(scheme, array_path)
+        array_path = result.parent.t9n_target
+        result.init_array(scheme, array_path)
 
         if instance.type == 'array':
             for item in instance:
-                index = scope.next_array_index(scheme, array_path)
-                scope.t9n_target = array_path / str(index)
-                self.json.evaluate(item, scope)
+                index = result.next_array_index(scheme, array_path)
+                result.t9n_target = array_path / str(index)
+                self.json.evaluate(item, result)
         else:
-            index = scope.next_array_index(scheme, array_path)
-            scope.t9n_target = array_path / str(index)
-            self.json.evaluate(instance, scope)
+            index = result.next_array_index(scheme, array_path)
+            result.t9n_target = array_path / str(index)
+            self.json.evaluate(instance, result)
 
 
 class T9nObjectKeyword(Keyword, ApplicatorMixin):
@@ -197,15 +197,15 @@ class T9nObjectKeyword(Keyword, ApplicatorMixin):
             scheme=parentschema.t9n_scheme,
         )
 
-    def evaluate(self, instance: JSON, scope: TranslationScope) -> None:
-        if (condition := scope.sibling(instance, "t9nCondition")) and not condition.valid:
+    def evaluate(self, instance: JSON, result: TranslationResult) -> None:
+        if (condition := result.sibling(instance, "t9nCondition")) and not condition.valid:
             return
 
         scheme = self.parentschema.t9n_scheme
-        object_path = scope.parent.t9n_target
-        scope.init_object(scheme, object_path)
+        object_path = result.parent.t9n_target
+        result.init_object(scheme, object_path)
 
         for name, subschema in self.json.items():
-            with scope(instance, name) as subscope:
-                subscope.t9n_target = object_path / name
-                subschema.evaluate(instance, subscope)
+            with result(instance, name) as subresult:
+                subresult.t9n_target = object_path / name
+                subschema.evaluate(instance, subresult)

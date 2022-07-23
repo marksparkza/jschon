@@ -1,7 +1,7 @@
 from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON
-from jschon.jsonschema import JSONSchema, Scope
-from jschon.vocabulary import Keyword, Applicator, ArrayApplicator
+from jschon.jsonschema import JSONSchema, Result
+from jschon.vocabulary import Applicator, ArrayApplicator, Keyword
 
 __all__ = [
     'RecursiveRefKeyword_2019_09',
@@ -30,21 +30,21 @@ class RecursiveRefKeyword_2019_09(Keyword):
         else:
             raise JSONSchemaError(f'No base URI against which to resolve "$recursiveRef"')
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         refschema = self.refschema
         if (recursive_anchor := refschema.get("$recursiveAnchor")) and \
                 recursive_anchor.data is True:
 
-            target_scope = scope
-            while target_scope is not None:
-                if (base_anchor := target_scope.schema.get("$recursiveAnchor")) and \
+            target = result
+            while target is not None:
+                if (base_anchor := target.schema.get("$recursiveAnchor")) and \
                         base_anchor.data is True:
-                    refschema = target_scope.schema
+                    refschema = target.schema
 
-                target_scope = target_scope.parent
+                target = target.parent
 
-        refschema.evaluate(instance, scope)
-        scope.refschema(refschema)
+        refschema.evaluate(instance, result)
+        result.refschema(refschema)
 
 
 class RecursiveAnchorKeyword_2019_09(Keyword):
@@ -56,34 +56,34 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
     key = "items"
     instance_types = "array",
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         if len(instance) == 0:
             return
 
         elif isinstance(self.json.data, bool):
-            self.json.evaluate(instance, scope)
+            self.json.evaluate(instance, result)
 
         elif isinstance(self.json, JSONSchema):
             for index, item in enumerate(instance):
-                self.json.evaluate(item, scope)
+                self.json.evaluate(item, result)
 
-            if scope.passed:
-                scope.annotate(True)
+            if result.passed:
+                result.annotate(True)
 
         elif self.json.type == "array":
             eval_index = None
             err_indices = []
             for index, item in enumerate(instance[:len(self.json)]):
                 eval_index = index
-                with scope(item, str(index)) as subscope:
-                    self.json[index].evaluate(item, subscope)
-                    if not subscope.passed:
+                with result(item, str(index)) as subresult:
+                    self.json[index].evaluate(item, subresult)
+                    if not subresult.passed:
                         err_indices += [index]
 
             if err_indices:
-                scope.fail(f"Array elements {err_indices} are invalid")
+                result.fail(f"Array elements {err_indices} are invalid")
             else:
-                scope.annotate(eval_index)
+                result.annotate(eval_index)
 
 
 class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
@@ -91,17 +91,17 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
     instance_types = "array",
     depends_on = "items",
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if (items := scope.sibling(instance, "items")) and type(items.annotation) is int:
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        if (items := result.sibling(instance, "items")) and type(items.annotation) is int:
             annotation = None
             for index, item in enumerate(instance[items.annotation + 1:]):
                 annotation = True
-                self.json.evaluate(item, scope)
+                self.json.evaluate(item, result)
 
-            if scope.passed:
-                scope.annotate(annotation)
+            if result.passed:
+                result.annotate(annotation)
         else:
-            scope.discard()
+            result.discard()
 
 
 class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
@@ -109,29 +109,29 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
     instance_types = "array",
     depends_on = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         last_evaluated_item = -1
-        for items_annotation in scope.parent.collect_annotations(instance, "items"):
+        for items_annotation in result.parent.collect_annotations(instance, "items"):
             if items_annotation is True:
-                scope.discard()
+                result.discard()
                 return
             if type(items_annotation) is int and items_annotation > last_evaluated_item:
                 last_evaluated_item = items_annotation
 
-        for additional_items_annotation in scope.parent.collect_annotations(instance, "additionalItems"):
+        for additional_items_annotation in result.parent.collect_annotations(instance, "additionalItems"):
             if additional_items_annotation is True:
-                scope.discard()
+                result.discard()
                 return
 
-        for unevaluated_items_annotation in scope.parent.collect_annotations(instance, "unevaluatedItems"):
+        for unevaluated_items_annotation in result.parent.collect_annotations(instance, "unevaluatedItems"):
             if unevaluated_items_annotation is True:
-                scope.discard()
+                result.discard()
                 return
 
         annotation = None
         for index, item in enumerate(instance[last_evaluated_item + 1:]):
             annotation = True
-            self.json.evaluate(item, scope)
+            self.json.evaluate(item, result)
 
-        if scope.passed:
-            scope.annotate(annotation)
+        if result.passed:
+            result.annotate(annotation)

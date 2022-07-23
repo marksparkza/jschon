@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given, strategies as hs
 
 from jschon import JSON, JSONPointer, JSONPointerError, JSONSchema
-from jschon.jsonschema import Scope
+from jschon.jsonschema import Result
 from jschon.vocabulary.format import FormatKeyword
 from tests.strategies import jsonpointer
 
@@ -40,10 +40,10 @@ def jsonpointer_validator(value):
 
 def evaluate(format_attr, instval, assert_=True):
     schema = JSONSchema(True)
-    FormatKeyword(schema, format_attr).evaluate(inst := JSON(instval), scope := Scope(schema, inst))
-    assert scope.annotation == format_attr
-    assert scope._assert is assert_
-    return scope.valid
+    FormatKeyword(schema, format_attr).evaluate(inst := JSON(instval), result := Result(schema, inst))
+    assert result.annotation == format_attr
+    assert result._assert is assert_
+    return result.valid
 
 
 @given(instval=hs.ip_addresses(v=4))

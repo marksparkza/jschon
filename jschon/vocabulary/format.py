@@ -1,8 +1,8 @@
 from typing import Callable
 
 from jschon.exceptions import CatalogError
-from jschon.json import JSONCompatible, JSON
-from jschon.jsonschema import JSONSchema, Scope
+from jschon.json import JSON, JSONCompatible
+from jschon.jsonschema import JSONSchema, Result
 from jschon.vocabulary import Keyword
 
 __all__ = [
@@ -31,12 +31,12 @@ class FormatKeyword(Keyword):
         except CatalogError:
             self.validator = None
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        scope.annotate(self.json.data)
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        result.annotate(self.json.data)
         if self.validator is not None:
             try:
                 self.validator(instance.data)
             except ValueError as e:
-                scope.fail(f'The instance is invalid against the "{self.json.data}" format: {e}')
+                result.fail(f'The instance is invalid against the "{self.json.data}" format: {e}')
         else:
-            scope.noassert()
+            result.noassert()

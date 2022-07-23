@@ -1,5 +1,5 @@
 from jschon.json import JSON
-from jschon.jsonschema import Scope
+from jschon.jsonschema import Result
 from jschon.vocabulary import Keyword
 
 __all__ = [
@@ -18,9 +18,9 @@ __all__ = [
 
 class AnnotationKeyword(Keyword):
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        scope.annotate(self.json.data)
-        scope.noassert()
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        result.annotate(self.json.data)
+        result.noassert()
 
 
 class TitleKeyword(AnnotationKeyword):
@@ -66,8 +66,8 @@ class ContentSchemaKeyword(AnnotationKeyword):
     instance_types = "string",
     depends_on = "contentMediaType",
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        if scope.sibling(instance, "contentMediaType"):
-            super().evaluate(instance, scope)
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        if result.sibling(instance, "contentMediaType"):
+            super().evaluate(instance, result)
         else:
-            scope.discard()
+            result.discard()

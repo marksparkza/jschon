@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict
 
 from jschon.json import JSONCompatible
-from jschon.jsonschema import Scope
+from jschon.jsonschema import Result
 
 __all__ = [
     'OutputFormatter',
@@ -12,7 +12,7 @@ __all__ = [
 OutputFormatter = Callable[..., JSONCompatible]
 """Call signature for a function decorated with :func:`output_formatter`.
 
-The function must take a :class:`~jschon.jsonschema.Scope` object
+The function must take a :class:`~jschon.jsonschema.Result` object
 as its first argument.
 """
 
@@ -34,20 +34,20 @@ def output_formatter(name: str = None):
     return decorator(name) if callable(name) else decorator
 
 
-def create_output(scope: Scope, format: str, **kwargs: Any) -> JSONCompatible:
-    return _formatters[format](scope, **kwargs)
+def create_output(result: Result, format: str, **kwargs: Any) -> JSONCompatible:
+    return _formatters[format](result, **kwargs)
 
 
 @output_formatter
-def flag(scope: Scope) -> JSONCompatible:
+def flag(result: Result) -> JSONCompatible:
     return {
-        "valid": scope.valid
+        "valid": result.valid
     }
 
 
 @output_formatter
-def basic(scope: Scope) -> JSONCompatible:
-    def visit(node: Scope):
+def basic(result: Result) -> JSONCompatible:
+    def visit(node: Result):
         if node.valid is valid:
             if (msgval := getattr(node, msgkey)) is not None:
                 yield {
@@ -59,19 +59,19 @@ def basic(scope: Scope) -> JSONCompatible:
             for child in node.iter_children():
                 yield from visit(child)
 
-    valid = scope.valid
+    valid = result.valid
     msgkey = "annotation" if valid else "error"
     childkey = "annotations" if valid else "errors"
 
     return {
         "valid": valid,
-        childkey: [output for output in visit(scope)],
+        childkey: [output for output in visit(result)],
     }
 
 
 @output_formatter
-def detailed(scope: Scope) -> JSONCompatible:
-    def visit(node: Scope):
+def detailed(result: Result) -> JSONCompatible:
+    def visit(node: Result):
         output = {
             "instanceLocation": str(node.instance.path),
             "keywordLocation": str(node.path),
@@ -88,23 +88,23 @@ def detailed(scope: Scope) -> JSONCompatible:
 
         return output
 
-    valid = scope.valid
+    valid = result.valid
     msgkey = "annotation" if valid else "error"
     childkey = "annotations" if valid else "errors"
 
     return {
         "valid": valid,
-        "instanceLocation": str(scope.instance.path),
-        "keywordLocation": str(scope.path),
-        "absoluteKeywordLocation": str(scope.absolute_uri),
-        childkey: [visit(child) for child in scope.iter_children()
+        "instanceLocation": str(result.instance.path),
+        "keywordLocation": str(result.path),
+        "absoluteKeywordLocation": str(result.absolute_uri),
+        childkey: [visit(child) for child in result.iter_children()
                    if child.valid is valid],
     }
 
 
 @output_formatter
-def verbose(scope: Scope) -> JSONCompatible:
-    def visit(node: Scope):
+def verbose(result: Result) -> JSONCompatible:
+    def visit(node: Result):
         output = {
             "valid": (valid := node.valid),
             "instanceLocation": str(node.instance.path),
@@ -122,4 +122,4 @@ def verbose(scope: Scope) -> JSONCompatible:
 
         return output
 
-    return visit(scope)
+    return visit(result)

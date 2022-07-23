@@ -29,8 +29,8 @@ def test_create_json(benchmark):
 def test_evaluate_json(benchmark, request, value):
     json = JSON(value)
     schema = JSONSchema(example_schema)
-    scope = benchmark(schema.evaluate, json)
-    assert scope.valid is (True if '[valid]' in request.node.name else False)
+    result = benchmark(schema.evaluate, json)
+    assert result.valid is (True if '[valid]' in request.node.name else False)
 
 
 def test_create_schema(benchmark):

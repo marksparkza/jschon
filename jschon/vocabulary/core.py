@@ -1,10 +1,10 @@
 from typing import Mapping
 
-from jschon.exceptions import JSONSchemaError, URIError, CatalogError
+from jschon.exceptions import CatalogError, JSONSchemaError, URIError
 from jschon.json import JSON
-from jschon.jsonschema import JSONSchema, Scope
+from jschon.jsonschema import JSONSchema, Result
 from jschon.uri import URI
-from jschon.vocabulary import Keyword, PropertyApplicator, Metaschema
+from jschon.vocabulary import Keyword, Metaschema, PropertyApplicator
 
 __all__ = [
     'SchemaKeyword',
@@ -98,9 +98,9 @@ class RefKeyword(Keyword):
             uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
         )
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
-        self.refschema.evaluate(instance, scope)
-        scope.refschema(self.refschema)
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        self.refschema.evaluate(instance, result)
+        result.refschema(self.refschema)
 
 
 class AnchorKeyword(Keyword):
@@ -147,15 +147,15 @@ class DynamicRefKeyword(Keyword):
         if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.data == self.fragment:
             self.dynamic = True
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         refschema = self.refschema
 
         if self.dynamic:
-            target_scope = scope
+            target = result
             checked_uris = set()
 
-            while target_scope is not None:
-                if (base_uri := target_scope.schema.base_uri) is not None and base_uri not in checked_uris:
+            while target is not None:
+                if (base_uri := target.schema.base_uri) is not None and base_uri not in checked_uris:
                     checked_uris |= {base_uri}
                     target_uri = URI(f"#{self.fragment}").resolve(base_uri)
                     try:
@@ -168,10 +168,10 @@ class DynamicRefKeyword(Keyword):
                     except CatalogError:
                         pass
 
-                target_scope = target_scope.parent
+                target = target.parent
 
-        refschema.evaluate(instance, scope)
-        scope.refschema(refschema)
+        refschema.evaluate(instance, result)
+        result.refschema(refschema)
 
 
 class DynamicAnchorKeyword(Keyword):

@@ -2,7 +2,7 @@ import pathlib
 import pprint
 
 from jschon import create_catalog, URI, JSON, JSONSchema, JSONSchemaError, LocalSource
-from jschon.jsonschema import Scope
+from jschon.jsonschema import Result
 from jschon.vocabulary import Keyword
 
 data_dir = pathlib.Path(__file__).parent / 'data'
@@ -28,7 +28,7 @@ class EnumRefKeyword(Keyword):
     # ignore non-string instances
     instance_types = "string",
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         # get the keyword's value as it appears in the JSON schema
         enum_id = self.json.data
         try:
@@ -39,11 +39,11 @@ class EnumRefKeyword(Keyword):
 
         # test the value of the current JSON instance node against the enumeration
         if instance.data in enum:
-            # (optionally) on success, set an annotation on the current scope node
-            scope.annotate(enum_id)
+            # (optionally) on success, annotate the result
+            result.annotate(enum_id)
         else:
-            # on failure, flag the scope as failed, with an (optional) error message
-            scope.fail(f"The instance is not a member of the {enum_id} enumeration")
+            # on failure, mark the result as failed, with an (optional) error message
+            result.fail(f"The instance is not a member of the {enum_id} enumeration")
 
 
 # initialize the catalog, with JSON Schema 2020-12 vocabulary support

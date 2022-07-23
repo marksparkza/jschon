@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     'JSONSchema',
-    'Scope',
+    'Result',
 ]
 
 
@@ -173,42 +173,39 @@ class JSONSchema(JSON):
                     yield kwclass
                     break
 
-    def validate(self) -> Scope:
+    def validate(self) -> Result:
         """Validate the schema against its metaschema."""
         return self.metaschema.evaluate(self)
 
-    def evaluate(self, instance: JSON, scope: Scope = None) -> Scope:
-        """Evaluate a JSON document.
-        
-        The returned :class:`Scope` represents the complete evaluation
-        result tree for this (sub)schema node.
+    def evaluate(self, instance: JSON, result: Result = None) -> Result:
+        """Evaluate a JSON document and return the evaluation result.
 
         :param instance: the JSON document to evaluate
-        :param scope: the dynamic evaluation scope; used by keywords
+        :param result: the current result node; given by keywords
             when invoking this method recursively
         """
-        if scope is None:
-            scope = Scope(self, instance)
+        if result is None:
+            result = Result(self, instance)
 
         if self.data is True:
             pass
 
         elif self.data is False:
-            scope.fail("The instance is disallowed by a boolean false schema")
+            result.fail("The instance is disallowed by a boolean false schema")
 
         else:
             for key, keyword in self.keywords.items():
                 if not keyword.static and keyword.can_evaluate(instance):
-                    with scope(instance, key, self) as subscope:
-                        keyword.evaluate(instance, subscope)
+                    with result(instance, key, self) as subresult:
+                        keyword.evaluate(instance, subresult)
 
             if any(
                     not child.passed
-                    for child in scope.iter_children(instance)
+                    for child in result.iter_children(instance)
             ):
-                scope.fail()
+                result.fail()
 
-        return scope
+        return result
 
     @cached_property
     def parentschema(self) -> Optional[JSONSchema]:
@@ -310,22 +307,49 @@ class JSONSchema(JSON):
                 return node._uri.copy(fragment=relpath.uri_fragment())
 
 
-class Scope:
+class Result:
+    """The result of evaluating a JSON document
+    node against a JSON schema node.
+
+    The root of a :class:`Result` tree represents
+    a complete document evaluation result.
+    """
+
     def __init__(
             self,
             schema: JSONSchema,
             instance: JSON,
             *,
-            parent: Scope = None,
+            parent: Result = None,
             key: str = None,
-    ):
+    ) -> None:
+        self.path: JSONPointer
+        """The dynamic evaluation path to the current schema node."""
+
+        self.relpath: JSONPointer
+        """The path to the current schema node relative to the evaluating (sub)schema."""
+
         self.schema: JSONSchema = schema
+        """The evaluating (sub)schema."""
+
         self.instance: JSON = instance
-        self.parent: Optional[Scope] = parent
+        """The instance under evaluation."""
+
+        self.parent: Optional[Result] = parent
+        """The parent result node."""
+
         self.key: Optional[str] = key
-        self.children: Dict[JSONPointer, Dict[str, Scope]] = {}
+        """The index of the current schema node within its dynamic parent."""
+
+        self.children: Dict[JSONPointer, Dict[str, Result]] = {}
+        """Subresults of the current result node, indexed by instance path and child key."""
+
         self.annotation: JSONCompatible = None
+        """The annotation value of the result."""
+
         self.error: JSONCompatible = None
+        """The error value of the result."""
+
         self._valid = True
         self._assert = True
         self._discard = False
@@ -347,14 +371,14 @@ class Scope:
             key: str,
             schema: JSONSchema = None,
             *,
-            cls: Type[Scope] = None,
-    ) -> ContextManager[Scope]:
-        """Yield a subscope of the current scope, for evaluating `instance`.
+            cls: Type[Result] = None,
+    ) -> ContextManager[Result]:
+        """Yield a subresult for the evaluation of `instance`.
         Descend down the evaluation path by `key`, into `schema` if given, or
-        within the schema of the current scope otherwise.
+        within `self.schema` otherwise.
 
-        Extension keywords may provide a custom Scope class via `cls`, which
-        is applied to all nodes within the yielded subtree.
+        Extension keywords may provide a custom :class:`Result` class via `cls`,
+        which is applied to all nodes within the yielded subtree.
         """
         if schema is None:
             schema = self.schema
@@ -382,74 +406,70 @@ class Scope:
 
     @cached_property
     def schema_node(self) -> JSON:
-        """Return the schema node associated with this scope."""
+        """Return the current schema node."""
         return self.relpath.evaluate(self.schema)
 
-    def sibling(self, instance: JSON, key: str) -> Optional[Scope]:
+    def sibling(self, instance: JSON, key: str) -> Optional[Result]:
+        """Return a sibling schema node's evaluation result for `instance`."""
         try:
             return self.parent.children[instance.path][key] if self.parent else None
         except KeyError:
             return None
 
     def annotate(self, value: JSONCompatible) -> None:
-        """Set an annotation on the scope."""
+        """Annotate the result."""
         self.annotation = value
 
     def fail(self, error: JSONCompatible = None) -> None:
-        """Flag the scope as invalid, optionally with an error."""
+        """Mark the result as invalid, optionally with an error."""
         self._valid = False
         self.error = error
 
     def pass_(self) -> None:
-        """Flag the scope as valid.
+        """Mark the result as valid.
         
-        A scope is initially valid, so this should ordinarily only need
-        to be called by a keyword when it must reverse a scope failure.
+        A result is initially valid, so this should only need
+        to be called by a keyword when it must reverse a failure.
         """
         self._valid = True
         self.error = None
 
     def noassert(self) -> None:
-        """Indicate that the scope's validity should not affect its
-        assertion result."""
+        """Indicate that evaluation passes regardless of validity."""
         self._assert = False
 
     def discard(self) -> None:
-        """Indicate that the scope should be ignored and discarded."""
+        """Indicate that the result should be ignored and discarded."""
         self._discard = True
 
     def refschema(self, schema: JSONSchema) -> None:
-        """Set the referenced schema for the scope of a by-reference keyword.
+        """Set the referenced schema for a by-reference keyword.
         
-        The referenced schema's URI is then returned by :attr:`absolute_uri`,
-        instead of calculating the absolute URI using the containing schema.
+        This ensures that :attr:`absolute_uri` returns the URI of the
+        referenced schema rather than the referencing keyword.
         """
         self._refschema = schema
 
     @property
     def valid(self) -> bool:
-        """Return the validation result of the scope.
-
-        :rtype: bool
-        """
+        """Return the validity of the instance against the schema."""
         return self._valid
 
     @property
     def passed(self) -> bool:
-        """Return the assertion result of the scope.
-        
-        In the current implementation, this can only ever differ from
-        :attr:`valid` for an "if" keyword subscope: its validation result
-        may be false (triggering "else") while its assertion result is always
-        true. For the root scope (representing the overall document evaluation
-        result), :attr:`valid` will always equal :attr:`passed`.
+        """Return the assertion result for the schema node.
 
-        :rtype: bool
+        In the standard JSON Schema vocabulary, this can only differ
+        from :attr:`valid` for the ``if`` keyword: validity may be false
+        (triggering ``else``) while its assertion result is always true.
+
+        For the root result node, :attr:`passed` will always equal :attr:`valid`.
         """
         return self._valid or not self._assert
 
     @property
     def absolute_uri(self) -> Optional[URI]:
+        """Return the absolute URI of the current schema node."""
         if self._refschema is not None:
             return self._refschema.canonical_uri
 
@@ -460,12 +480,12 @@ class Scope:
                 relpath = self.relpath
             return schema_uri.copy(fragment=relpath.uri_fragment())
 
-    def iter_children(self, instance: JSON = None) -> Iterator[Scope]:
-        """Return an iterator over child scopes of this scope, optionally
+    def iter_children(self, instance: JSON = None) -> Iterator[Result]:
+        """Return an iterator over subresults, optionally
         filtered by an instance to which they apply."""
-        for instance_path, keyword_scopes in self.children.items():
+        for instance_path, keyword_results in self.children.items():
             if instance is None or instance.path == instance_path:
-                yield from keyword_scopes.values()
+                yield from keyword_results.values()
 
     def collect_annotations(self, instance: JSON = None, key: str = None) -> Iterator[JSONCompatible]:
         """Return an iterator over annotations produced in this subtree,
@@ -496,8 +516,7 @@ class Scope:
             ``flag``, ``basic``, ``detailed`` or ``verbose`` -- or any
             format registered with the :func:`~jschon.output.output_formatter`
             decorator.
-        :param kwargs: Additional keyword arguments to pass to the output
-            formatting function.
+        :param kwargs: Keyword arguments to pass to the output formatter.
         """
         from jschon.output import create_output
         return create_output(self, format, **kwargs)

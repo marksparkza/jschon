@@ -6,12 +6,12 @@ from jschon.exceptions import RelativeJSONPointerError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpatch import JSONPatch, JSONPatchOperation, PatchOp
 from jschon.jsonpointer import JSONPointer, RelativeJSONPointer
-from jschon.jsonschema import JSONSchema, Scope
+from jschon.jsonschema import JSONSchema, Result
 from jschon.output import output_formatter
 
 __all__ = [
     'JSONTranslationSchema',
-    'TranslationScope',
+    'TranslationResult',
     'TranslationFilter',
     'translation_filter',
 ]
@@ -39,18 +39,18 @@ class JSONTranslationSchema(JSONSchema):
         self.t9n_leaf: bool = True
         super().__init__(*args, **kwargs)
 
-    def evaluate(self, instance: JSON, scope: TranslationScope = None) -> Scope:
+    def evaluate(self, instance: JSON, result: TranslationResult = None) -> Result:
         if self.t9n_source is not None:
             try:
                 source = self.t9n_source.evaluate(instance)
             except RelativeJSONPointerError:
-                return scope
+                return result
         else:
             source = instance
 
-        super().evaluate(source, scope)
+        super().evaluate(source, result)
 
-        if scope.valid and self.t9n_leaf:
+        if result.valid and self.t9n_leaf:
             if self.t9n_const is not NoValue:
                 value = self.t9n_const
             elif self.t9n_concat is not None:
@@ -68,9 +68,9 @@ class JSONTranslationSchema(JSONSchema):
                 value = self._make_value(source)
 
             if value is not NoValue:
-                scope.add_translation_patch(self.t9n_scheme, scope.t9n_target, value)
+                result.add_translation_patch(self.t9n_scheme, result.t9n_target, value)
 
-        return scope
+        return result
 
     def _make_value(self, instance: JSON) -> JSONCompatible:
         value = instance.value
@@ -106,7 +106,7 @@ def translation_filter(name: str = None):
     return decorator(name) if callable(name) else decorator
 
 
-class TranslationScope(Scope):
+class TranslationResult(Result):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.t9n_target: Optional[JSONPointer] = None
@@ -148,16 +148,16 @@ class TranslationScope(Scope):
 
 
 @output_formatter
-def patch(scope: Scope, scheme: str, ignore_validity: bool = False) -> JSONCompatible:
-    return JSONPatch(*_visit(scope, scheme, ignore_validity)).aslist()
+def patch(result: Result, scheme: str, ignore_validity: bool = False) -> JSONCompatible:
+    return JSONPatch(*_visit(result, scheme, ignore_validity)).aslist()
 
 
 @output_formatter
-def translation(scope: Scope, scheme: str, ignore_validity: bool = False) -> JSONCompatible:
-    return JSONPatch(*_visit(scope, scheme, ignore_validity)).evaluate(None)
+def translation(result: Result, scheme: str, ignore_validity: bool = False) -> JSONCompatible:
+    return JSONPatch(*_visit(result, scheme, ignore_validity)).evaluate(None)
 
 
-def _visit(node: Scope, scheme: str, ignore_validity: bool) -> Iterator[JSONPatchOperation]:
+def _visit(node: Result, scheme: str, ignore_validity: bool) -> Iterator[JSONPatchOperation]:
     if ignore_validity or node.valid:
         if hasattr(node, 't9n_patchops'):
             try:

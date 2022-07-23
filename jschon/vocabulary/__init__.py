@@ -4,7 +4,7 @@ import inspect
 from typing import Any, Dict, Mapping, Optional, Sequence, TYPE_CHECKING, Tuple, Type
 
 from jschon.json import JSON, JSONCompatible
-from jschon.jsonschema import JSONSchema, Scope
+from jschon.jsonschema import JSONSchema, Result
 from jschon.uri import URI
 
 if TYPE_CHECKING:
@@ -95,7 +95,7 @@ class Keyword:
 
         return False
 
-    def evaluate(self, instance: JSON, scope: Scope) -> None:
+    def evaluate(self, instance: JSON, result: Result) -> None:
         pass
 
     def __str__(self) -> str:

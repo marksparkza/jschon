@@ -5,7 +5,7 @@ from decimal import Decimal, InvalidOperation
 from hypothesis import given
 
 from jschon import JSON, JSONSchema
-from jschon.jsonschema import Scope
+from jschon.jsonschema import Result
 from jschon.vocabulary.validation import *
 from tests import metaschema_uri_2019_09
 from tests.strategies import *
@@ -13,8 +13,8 @@ from tests.strategies import *
 
 def evaluate(kwclass, kwvalue, instval):
     schema = JSONSchema(True)
-    kwclass(schema, kwvalue).evaluate(inst := JSON(instval), scope := Scope(schema, inst))
-    return scope.valid
+    kwclass(schema, kwvalue).evaluate(inst := JSON(instval), result := Result(schema, inst))
+    return result.valid
 
 
 def isequal(x, y):
@@ -151,8 +151,8 @@ def test_contains(minmax, instval):
         "minContains": min_contains,
         "maxContains": max_contains,
     }, metaschema_uri=metaschema_uri_2019_09)
-    scope = schema.evaluate(JSON(instval))
-    assert scope.valid == (min_contains <= contains_count <= max_contains)
+    result = schema.evaluate(JSON(instval))
+    assert result.valid == (min_contains <= contains_count <= max_contains)
 
 
 @given(kwvalue=hs.integers(min_value=0, max_value=20), instval=jsonflatobject)
