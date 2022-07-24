@@ -515,4 +515,7 @@ class Result:
         return create_output(self, format, **kwargs)
 
     def __str__(self) -> str:
-        return str(self.path)
+        s = 'valid' if self.valid else 'invalid'
+        if self.parent:
+            s = f'{self.path}: {s}'
+        return s
