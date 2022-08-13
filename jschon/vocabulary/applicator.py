@@ -370,10 +370,11 @@ class PropertyNamesKeyword(Keyword, Applicator):
     instance_types = "object",
 
     def evaluate(self, instance: JSON, result: Result) -> None:
-        err_names = []
+        error = []
         for name in instance:
             if not self.json.evaluate(JSON(name, parent=instance, key=name), result).passed:
-                err_names += [name]
+                error += [name]
+                result.pass_()
 
-        if err_names:
-            result.fail(f"Property names {err_names} are invalid")
+        if error:
+            result.fail(error)
