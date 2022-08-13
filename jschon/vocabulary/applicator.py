@@ -172,11 +172,18 @@ class ItemsKeyword(Keyword, Applicator):
             start_index = 0
 
         annotation = None
-        for index, item in enumerate(instance[start_index:]):
-            annotation = True
-            self.json.evaluate(item, result)
+        error = []
+        for index, item in enumerate(instance[start_index:], start_index):
+            if self.json.evaluate(item, result).passed:
+                annotation = True
+            else:
+                error += [index]
+                # reset to passed for the next iteration
+                result.pass_()
 
-        if annotation is True and result.passed:
+        if error:
+            result.fail(error)
+        else:
             result.annotate(annotation)
 
 

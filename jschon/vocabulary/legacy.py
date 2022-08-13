@@ -93,12 +93,20 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
     def evaluate(self, instance: JSON, result: Result) -> None:
         if (items := result.sibling(instance, "items")) and type(items.annotation) is int:
             annotation = None
-            for index, item in enumerate(instance[items.annotation + 1:]):
-                annotation = True
-                self.json.evaluate(item, result)
+            error = []
+            for index, item in enumerate(instance[(start := items.annotation + 1):], start):
+                if self.json.evaluate(item, result).passed:
+                    annotation = True
+                else:
+                    error += [index]
+                    # reset to passed for the next iteration
+                    result.pass_()
 
-            if result.passed:
+            if error:
+                result.fail(error)
+            else:
                 result.annotate(annotation)
+
         else:
             result.discard()
 

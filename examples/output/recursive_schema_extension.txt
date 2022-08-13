@@ -68,6 +68,7 @@ Strict tree schema verbose output:
                                                  'instanceLocation': '/children',
                                                  'keywordLocation': '/$ref/properties/children/items',
                                                  'absoluteKeywordLocation': 'https://example.com/tree#/properties/children/items',
+                                                 'error': [0],
                                                  'errors': [{'valid': False,
                                                              'instanceLocation': '/children/0',
                                                              'keywordLocation': '/$ref/properties/children/items/$dynamicRef',
