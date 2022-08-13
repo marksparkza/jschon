@@ -210,12 +210,19 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
             contains_indices |= set(contains_annotation)
 
         annotation = None
+        error = []
         for index, item in enumerate(instance[(start := last_evaluated_item + 1):], start):
             if index not in contains_indices:
-                annotation = True
-                self.json.evaluate(item, result)
+                if self.json.evaluate(item, result).passed:
+                    annotation = True
+                else:
+                    error += [index]
+                    # reset to passed for the next iteration
+                    result.pass_()
 
-        if result.passed:
+        if error:
+            result.fail(error)
+        else:
             result.annotate(annotation)
 
 

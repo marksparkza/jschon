@@ -129,9 +129,16 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
                 return
 
         annotation = None
+        error = []
         for index, item in enumerate(instance[last_evaluated_item + 1:]):
-            annotation = True
-            self.json.evaluate(item, result)
+            if self.json.evaluate(item, result).passed:
+                annotation = True
+            else:
+                error += [index]
+                # reset to passed for the next iteration
+                result.pass_()
 
-        if result.passed:
+        if error:
+            result.fail(error)
+        else:
             result.annotate(annotation)
