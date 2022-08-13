@@ -10,7 +10,3 @@
 	path = jschon/catalog/json-schema-spec-2020-12
 	url = https://github.com/json-schema-org/json-schema-spec
 	branch = 2020-12
-[submodule "json-translation-vocabulary"]
-	path = jschon/catalog/json-translation-vocabulary
-	url = https://github.com/marksparkza/json-translation-vocabulary
-	branch = main

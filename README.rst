@@ -19,7 +19,6 @@ Features
 * JSON Pointer (`RFC 6901 <https://tools.ietf.org/html/rfc6901.html>`_)
 * JSON Patch (`RFC 6902 <https://tools.ietf.org/html/rfc6902.html>`_)
 * Relative JSON Pointer (`draft <https://json-schema.org/draft/2020-12/relative-json-pointer.html>`_)
-* JSON document translation (`experimental <https://github.com/marksparkza/json-translation-vocabulary>`_)
 
 Installation
 ------------

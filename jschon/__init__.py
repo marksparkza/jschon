@@ -33,18 +33,17 @@ def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
     """Create and return a :class:`Catalog` instance, configured with
     support for the specified JSON Schema vocabularies.
 
-    :param vocabularies: any of ``2019-09``, ``2020-12``, ``translation``
+    :param vocabularies: any of ``2019-09``, ``2020-12``
     :param name: a unique name for the :class:`Catalog` instance
     :raise ValueError: if a supplied vocabulary parameter is not recognized
     """
-    from .catalog import _2019_09, _2020_12, _translation
+    from .catalog import _2019_09, _2020_12
 
     catalog = Catalog(name=name)
 
     vocabulary_initializers = {
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
-        'translation': _translation.initialize,
     }
     try:
         for vocabulary in vocabularies:
