@@ -144,21 +144,20 @@ class PrefixItemsKeyword(Keyword, ArrayApplicator):
     instance_types = "array",
 
     def evaluate(self, instance: JSON, result: Result) -> None:
-        eval_index = None
-        err_indices = []
+        annotation = None
+        error = []
         for index, item in enumerate(instance[:len(self.json)]):
-            eval_index = index
+            annotation = index
             with result(item, str(index)) as subresult:
-                self.json[index].evaluate(item, subresult)
-                if not subresult.passed:
-                    err_indices += [index]
+                if not self.json[index].evaluate(item, subresult).passed:
+                    error += [index]
 
-        if err_indices:
-            result.fail(f"Array elements {err_indices} are invalid")
-        elif eval_index is not None:
-            if eval_index == len(instance) - 1:
-                eval_index = True
-            result.annotate(eval_index)
+        if error:
+            result.fail(error)
+        elif annotation is not None:
+            if annotation == len(instance) - 1:
+                annotation = True
+            result.annotate(annotation)
 
 
 class ItemsKeyword(Keyword, Applicator):

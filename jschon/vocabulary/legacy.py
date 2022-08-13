@@ -71,19 +71,18 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
                 result.annotate(True)
 
         elif self.json.type == "array":
-            eval_index = None
-            err_indices = []
+            annotation = None
+            error = []
             for index, item in enumerate(instance[:len(self.json)]):
-                eval_index = index
+                annotation = index
                 with result(item, str(index)) as subresult:
-                    self.json[index].evaluate(item, subresult)
-                    if not subresult.passed:
-                        err_indices += [index]
+                    if not self.json[index].evaluate(item, subresult).passed:
+                        error += [index]
 
-            if err_indices:
-                result.fail(f"Array elements {err_indices} are invalid")
+            if error:
+                result.fail(error)
             else:
-                result.annotate(eval_index)
+                result.annotate(annotation)
 
 
 class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
