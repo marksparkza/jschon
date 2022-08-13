@@ -129,7 +129,7 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
 
         annotation = None
         error = []
-        for index, item in enumerate(instance[last_evaluated_item + 1:]):
+        for index, item in enumerate(instance[(start := last_evaluated_item + 1):], start):
             if self.json.evaluate(item, result).passed:
                 annotation = True
             else:
