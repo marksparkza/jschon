@@ -1,6 +1,35 @@
 Changelog
 =========
 
+v0.9.0 (2022-08-14)
+-------------------
+Features:
+
+* JSON array/object mutation
+* JSON serialization to string/file
+* JSON deserialization from remote location
+
+Breaking changes:
+
+* Rename Scope to Result
+* Remove JSON support for decimal.Decimal (#31)
+* Rename Keyword.types to Keyword.instance_types
+* Rename Keyword.depends to Keyword.depends_on
+* Move translation vocabulary implementation to its own repo (jschon-translation)
+
+Miscellaneous:
+
+* Allow any JSON-compatible value to be set as an error on a Result node
+* Array/object applicator keywords -- additionalProperties, unevaluatedProperties,
+  propertyNames, additionalItems, items, prefixItems, unevaluatedItems -- now
+  produce an error array of failing child indices
+* Register output formatters with a decorator
+* Remove JSON type checks for unsupported usage
+* Append (rather than replace) the suffix when resolving a LocalSource filepath
+* Flatten dict of subresults on Result node
+* Provide a useful __str__ method for Result node
+
+
 v0.8.5 (2022-05-10)
 -------------------
 Features:
