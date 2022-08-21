@@ -68,58 +68,15 @@ directly from the catalog:
 See :doc:`../examples/file_based_schemas` for further examples of loading
 schemas from disk.
 
-Format validators
+Format validation
 -----------------
-jschon does not provide built-in support for validating JSON Schema
-`formats <https://json-schema.org/draft/2020-12/json-schema-validation.html#rfc.section.7.3>`_.
-By default, any occurrence of the ``"format"`` keyword in a schema simply passes,
-with its value -- its *format attribute* -- collected as an annotation.
+By default, formats are not validated in jschon. Any occurrence of the ``format``
+keyword simply produces an annotation consisting of the keyword's value, called
+the *format attribute*.
 
-To validate a given format attribute, we can define a *format validator*.
+Format validators can be registered using the :func:`~jschon.vocabulary.format.format_validator`
+decorator. Format attributes must, however, be explicitly enabled for validation
+in the catalog, in order to use any registered format validator. This can be done
+using :meth:`~jschon.catalog.Catalog.enable_formats`.
 
-The :meth:`~jschon.catalog.Catalog.add_format_validators` method accepts a
-dictionary of :class:`~jschon.vocabulary.format.FormatValidator` objects indexed
-by format attribute. A :class:`~jschon.vocabulary.format.FormatValidator`
-is simply a callable that accepts a single argument -- the value to be validated --
-and raises a :exc:`ValueError` if a supplied value is invalid.
-
-For example, suppose that we'd like to validate that any occurrence of an IP address
-or hostname in a JSON document conforms to the ``"ipv4"``, ``"ipv6"`` or ``"hostname"``
-format. For the IP address formats, we can use the :class:`ipaddress.IPv*Address`
-classes, available in the Python standard library, since their constructors raise
-a :exc:`ValueError` for an invalid constructor argument. For the hostname format,
-we'll define a validation function using a hostname `regex <https://stackoverflow.com/a/106223>`_.
-Our catalog setup looks like this:
-
->>> import ipaddress
->>> import re
->>> from jschon import Catalog
-...
->>> def validate_hostname(value):
-...     hostname_regex = re.compile(r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
-...     if not hostname_regex.match(value):
-...         raise ValueError(f"'{value}' is not a valid hostname")
-...
->>> catalog = create_catalog('2020-12')
->>> catalog.add_format_validators({
-...     "ipv4": ipaddress.IPv4Address,
-...     "ipv6": ipaddress.IPv6Address,
-...     "hostname": validate_hostname,
-... })
-
-Now, we can define a schema that returns a validation failure for any JSON document
-that contains incorrectly formatted IP addresses or hostnames. The following
-simple example validates a single string instance:
-
->>> from jschon import JSONSchema
->>> schema = JSONSchema({
-...     "$schema": "https://json-schema.org/draft/2020-12/schema",
-...     "type": "string",
-...     "anyOf": [
-...         {"format": "ipv4"},
-...         {"format": "ipv6"},
-...         {"format": "hostname"}
-...     ]
-... })
-
-For a complete working example, see :doc:`../examples/format_validation`.
+For a working example, see :doc:`../examples/format_validation`.

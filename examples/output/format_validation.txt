@@ -1,62 +1,35 @@
-Valid array result: True
-Valid array basic output:
+Valid case output:
 {'valid': True,
  'annotations': [{'instanceLocation': '',
                   'keywordLocation': '/items',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items',
+                  'absoluteKeywordLocation': 'https://example.com/schema#/items',
                   'annotation': True},
                  {'instanceLocation': '/0',
-                  'keywordLocation': '/items/properties',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties',
-                  'annotation': ['ipaddress', 'hostname']},
-                 {'instanceLocation': '/0/ipaddress',
-                  'keywordLocation': '/items/properties/ipaddress/oneOf/0/format',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0/format',
+                  'keywordLocation': '/items/anyOf/0/format',
+                  'absoluteKeywordLocation': 'https://example.com/schema#/items/anyOf/0/format',
                   'annotation': 'ipv4'},
-                 {'instanceLocation': '/0/hostname',
-                  'keywordLocation': '/items/properties/hostname/format',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname/format',
-                  'annotation': 'hostname'},
                  {'instanceLocation': '/1',
-                  'keywordLocation': '/items/properties',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties',
-                  'annotation': ['ipaddress', 'hostname']},
-                 {'instanceLocation': '/1/ipaddress',
-                  'keywordLocation': '/items/properties/ipaddress/oneOf/0/format',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0/format',
-                  'annotation': 'ipv4'},
-                 {'instanceLocation': '/1/hostname',
-                  'keywordLocation': '/items/properties/hostname/format',
-                  'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname/format',
-                  'annotation': 'hostname'}]}
-Invalid array result: False
-Invalid array detailed output:
+                  'keywordLocation': '/items/anyOf/1/format',
+                  'absoluteKeywordLocation': 'https://example.com/schema#/items/anyOf/1/format',
+                  'annotation': 'ipv6'}]}
+Invalid case output:
 {'valid': False,
- 'instanceLocation': '',
- 'keywordLocation': '',
- 'absoluteKeywordLocation': 'https://example.com/hosts-schema#',
  'errors': [{'instanceLocation': '',
              'keywordLocation': '/items',
-             'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items',
-             'errors': [{'instanceLocation': '/0/hostname',
-                         'keywordLocation': '/items/properties/hostname/format',
-                         'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/hostname/format',
-                         'error': 'The instance is invalid against the '
-                                  '"hostname" format: \'~localhost\' is not a '
-                                  'valid hostname'},
-                        {'instanceLocation': '/1/ipaddress',
-                         'keywordLocation': '/items/properties/ipaddress/oneOf',
-                         'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf',
-                         'errors': [{'instanceLocation': '/1/ipaddress',
-                                     'keywordLocation': '/items/properties/ipaddress/oneOf/0/format',
-                                     'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/0/format',
-                                     'error': 'The instance is invalid against '
-                                              'the "ipv4" format: Expected 4 '
-                                              "octets in '10.0.0'"},
-                                    {'instanceLocation': '/1/ipaddress',
-                                     'keywordLocation': '/items/properties/ipaddress/oneOf/1/format',
-                                     'absoluteKeywordLocation': 'https://example.com/hosts-schema#/items/properties/ipaddress/oneOf/1/format',
-                                     'error': 'The instance is invalid against '
-                                              'the "ipv6" format: At least 3 '
-                                              'parts expected in '
-                                              "'10.0.0'"}]}]}]}
+             'absoluteKeywordLocation': 'https://example.com/schema#/items',
+             'error': [0]},
+            {'instanceLocation': '/0',
+             'keywordLocation': '/items/anyOf',
+             'absoluteKeywordLocation': 'https://example.com/schema#/items/anyOf',
+             'error': 'The instance must be valid against at least one '
+                      'subschema'},
+            {'instanceLocation': '/0',
+             'keywordLocation': '/items/anyOf/0/format',
+             'absoluteKeywordLocation': 'https://example.com/schema#/items/anyOf/0/format',
+             'error': 'The instance is invalid against the "ipv4" format: '
+                      "Expected 4 octets in '127.0.1'"},
+            {'instanceLocation': '/0',
+             'keywordLocation': '/items/anyOf/1/format',
+             'absoluteKeywordLocation': 'https://example.com/schema#/items/anyOf/1/format',
+             'error': 'The instance is invalid against the "ipv6" format: At '
+                      "least 3 parts expected in '127.0.1'"}]}

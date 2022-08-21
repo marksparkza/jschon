@@ -1,6 +1,5 @@
-from typing import Callable
+from typing import Callable, Dict, Tuple
 
-from jschon.exceptions import CatalogError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Result
 from jschon.vocabulary import Keyword
@@ -8,16 +7,8 @@ from jschon.vocabulary import Keyword
 __all__ = [
     'FormatKeyword',
     'FormatValidator',
+    'format_validator',
 ]
-
-FormatValidator = Callable[[JSONCompatible], None]
-"""The type of a ``"format"`` keyword validator.
-
-A :class:`~jschon.vocabulary.format.FormatValidator` is a
-callable accepting a JSON-compatible Python object as its
-only argument. It must raise a :exc:`ValueError` if the
-argument is invalid per the applicable format specification.
-"""
 
 
 class FormatKeyword(Keyword):
@@ -25,18 +16,51 @@ class FormatKeyword(Keyword):
 
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
-
-        try:
-            self.validator: FormatValidator = parentschema.catalog.get_format_validator(value)
-        except CatalogError:
+        if parentschema.catalog.is_format_enabled(value):
+            self.validator, self.validates_types = _format_validators[value]
+        else:
             self.validator = None
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         result.annotate(self.json.data)
-        if self.validator is not None:
+        if self.validator and instance.type in self.validates_types:
             try:
                 self.validator(instance.data)
             except ValueError as e:
                 result.fail(f'The instance is invalid against the "{self.json.data}" format: {e}')
         else:
             result.noassert()
+
+
+FormatValidator = Callable[[JSONCompatible], None]
+"""Call signature for a function decorated with :func:`format_validator`.
+
+The function validates a JSON-compatible Python object (typically, a string)
+and raises a :exc:`ValueError` if the object is invalid per the applicable
+format specification.
+"""
+
+# dict of {'format_attr': (validator_fn, (instance_type, ...))}
+_format_validators: Dict[str, Tuple[FormatValidator, Tuple[str, ...]]] = {}
+
+
+def format_validator(
+        format_attr: str,
+        *,
+        instance_types: Tuple[str, ...] = ('string',)
+):
+    """A decorator for a format validation function.
+
+    The decorator only registers a function as a format validator.
+    Assertion behaviour must be enabled in a catalog using
+    :meth:`~jschon.catalog.Catalog.enable_formats`.
+
+    :param format_attr: The format attribute that the decorated function validates.
+    :param instance_types: The set of instance types validated by this format.
+    """
+
+    def decorator(f: FormatValidator):
+        _format_validators[format_attr] = (f, instance_types)
+        return f
+
+    return decorator

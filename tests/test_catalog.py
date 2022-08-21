@@ -29,8 +29,8 @@ def new_catalog() -> Catalog:
 def test_new_catalog(new_catalog):
     assert not new_catalog._uri_sources
     assert not new_catalog._vocabularies
-    assert not new_catalog._format_validators
     assert not new_catalog._schema_cache
+    assert not new_catalog._enabled_formats
 
 
 @pytest.fixture

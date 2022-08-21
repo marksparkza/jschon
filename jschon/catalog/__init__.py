@@ -3,8 +3,9 @@ from __future__ import annotations
 import pathlib
 import uuid
 from contextlib import contextmanager
+from importlib import import_module
 from os import PathLike
-from typing import Any, ContextManager, Dict, Hashable, Mapping, Union
+from typing import Any, ContextManager, Dict, Hashable, Set, Union
 
 from jschon.exceptions import CatalogError, JSONPointerError, URIError
 from jschon.json import JSONCompatible
@@ -13,7 +14,6 @@ from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
 from jschon.utils import json_loadf, json_loadr
 from jschon.vocabulary import KeywordClass, Metaschema, Vocabulary
-from jschon.vocabulary.format import FormatValidator
 
 __all__ = [
     'Catalog',
@@ -85,8 +85,8 @@ class Catalog:
 
         self._uri_sources: Dict[URI, Source] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
-        self._format_validators: Dict[str, FormatValidator] = {}
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
+        self._enabled_formats: Set[str] = set()
 
     def add_uri_source(self, base_uri: URI, source: Source):
         """Register a source for URI-identified JSON resources.
@@ -196,33 +196,19 @@ class Catalog:
         if not metaschema.validate().valid:
             raise CatalogError("The metaschema is invalid against itself")
 
-    def add_format_validators(self, validators: Mapping[str, FormatValidator]) -> None:
-        """Register a collection of format validators.
-        
-        In jschon, a given occurrence of the ``"format"`` keyword evaluates
-        a JSON instance using a format validation callable, if one has been
-        registered for the applicable *format attribute* (the keyword's value).
-        If a validator has not been registered for that format attribute,
-        keyword evaluation simply passes.
+    def enable_formats(self, *format_attr: str) -> None:
+        """Enable validation of the specified format attributes.
 
-        :param validators: a dictionary of :class:`~jschon.vocabulary.format.FormatValidator`
-            callables, keyed by format attribute
+        These may include formats defined in :mod:`jschon.formats`
+        and elsewhere.
         """
-        self._format_validators.update(validators)
+        import_module('jschon.formats')
+        self._enabled_formats |= set(format_attr)
 
-    def get_format_validator(self, format_attr: str) -> FormatValidator:
-        """Get a registered :class:`~jschon.vocabulary.format.FormatValidator`
-        function.
-
-        :param format_attr: the format attribute (``"format"`` keyword value)
-            to which the validator applies
-        :raise CatalogError: if no format validator is registered for the
-            given `format_attr`
-        """
-        try:
-            return self._format_validators[format_attr]
-        except KeyError:
-            raise CatalogError(f"Unsupported format attribute '{format_attr}'")
+    def is_format_enabled(self, format_attr) -> bool:
+        """Return True if validation is enabled for `format_attr`,
+        False otherwise."""
+        return format_attr in self._enabled_formats
 
     def add_schema(
             self,

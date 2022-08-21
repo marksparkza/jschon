@@ -1,7 +1,7 @@
 Format validation
 =================
-The script below demonstrates the implementation of format validators
-for the ``"ipv4"``, ``"ipv6"`` and ``"hostname"`` format attributes.
+In this example we register and enable validators for the ``ipv4``
+and ``ipv6`` formats.
 
 .. literalinclude:: ../../examples/format_validation.py
 

@@ -5,37 +5,31 @@ from hypothesis import given, strategies as hs
 
 from jschon import JSON, JSONPointer, JSONPointerError, JSONSchema
 from jschon.jsonschema import Result
-from jschon.vocabulary.format import FormatKeyword
+from jschon.vocabulary.format import FormatKeyword, format_validator
 from tests.strategies import jsonpointer
 
 
 @pytest.fixture(scope='module', autouse=True)
 def setup_validators(catalog):
-    catalog.add_format_validators({
-        "ipv4": ipv4_validator,
-        "ipv6": ipv6_validator,
-        "json-pointer": jsonpointer_validator,
-    })
+    catalog.enable_formats(
+        "ipv4",
+        "ipv6",
+        "json-pointer",
+    )
     yield
-    catalog._format_validators.clear()
+    catalog._enabled_formats.clear()
 
 
+@format_validator('ipv4')
 def ipv4_validator(value):
     if isinstance(value, str):
         ipaddress.IPv4Address(value)
 
 
+@format_validator('ipv6')
 def ipv6_validator(value):
     if isinstance(value, str):
         ipaddress.IPv6Address(value)
-
-
-def jsonpointer_validator(value):
-    if isinstance(value, str):
-        try:
-            JSONPointer(value)
-        except JSONPointerError as e:
-            raise ValueError(str(e))
 
 
 def evaluate(format_attr, instval, assert_=True):

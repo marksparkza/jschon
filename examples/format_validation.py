@@ -1,77 +1,54 @@
 import ipaddress
 import pprint
-import re
 
-from jschon import create_catalog, JSON, JSONSchema
-
-
-# define a "hostname" format validation function
-def validate_hostname(value):
-    hostname_regex = re.compile(
-        r"^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\-]*[A-Za-z0-9])$")
-    if not hostname_regex.match(value):
-        raise ValueError(f"'{value}' is not a valid hostname")
+from jschon import JSON, JSONSchema, create_catalog
+from jschon.vocabulary.format import format_validator
 
 
-# create a catalog with support for JSON Schema version 2020-12
+# register an 'ipv4' format validator
+@format_validator('ipv4')
+def validate_ipv4(value: str) -> None:
+    if isinstance(value, str):
+        ipaddress.IPv4Address(value)  # raises ValueError for an invalid IPv4 address
+
+
+# register an 'ipv6' format validator
+@format_validator('ipv6')
+def validate_ipv6(value: str) -> None:
+    if isinstance(value, str):
+        ipaddress.IPv6Address(value)  # raises ValueError for an invalid IPv6 address
+
+
+# initialize the catalog, with JSON Schema 2020-12 vocabulary support
 catalog = create_catalog('2020-12')
 
-# register IP address and hostname format validators
-catalog.add_format_validators({
-    "ipv4": ipaddress.IPv4Address,
-    "ipv6": ipaddress.IPv6Address,
-    "hostname": validate_hostname,
-})
+# enable validation with the 'ipv4' and 'ipv6' format validators
+catalog.enable_formats('ipv4', 'ipv6')
 
-# create a schema for validating an array of host records
-hosts_schema = JSONSchema({
+# create a schema for validating an array of IP addresses
+schema = JSONSchema({
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://example.com/hosts-schema",
+    "$id": "https://example.com/schema",
     "type": "array",
     "items": {
-        "type": "object",
-        "properties": {
-            "ipaddress": {
-                "type": "string",
-                "oneOf": [
-                    {"format": "ipv4"},
-                    {"format": "ipv6"}
-                ]
-            },
-            "hostname": {
-                "type": "string",
-                "format": "hostname"
-            }
-        },
-        "required": ["ipaddress", "hostname"]
+        "type": "string",
+        "anyOf": [
+            {"format": "ipv4"},
+            {"format": "ipv6"}
+        ]
     }
 })
 
-# declare a host record array containing valid IP addresses and hostnames
-valid_host_records = JSON([
-    {"ipaddress": "127.0.0.1", "hostname": "localhost"},
-    {"ipaddress": "10.0.0.8", "hostname": "server.local"},
-])
+# evaluate a valid array
+valid_result = schema.evaluate(JSON(['127.0.0.1', '::1']))
 
-# declare a host record array containing some values that are invalid
-# per the registered format validators
-invalid_host_records = JSON([
-    {"ipaddress": "127.0.0.1", "hostname": "~localhost"},
-    {"ipaddress": "10.0.0", "hostname": "server.local"},
-])
-
-# evaluate the valid array
-valid_result = hosts_schema.evaluate(valid_host_records)
-
-# evaluate the invalid array
-invalid_result = hosts_schema.evaluate(invalid_host_records)
+# evaluate an invalid array
+invalid_result = schema.evaluate(JSON(['127.0.1', '::1']))
 
 # print output for the valid case
-print(f'Valid array result: {valid_result.valid}')
-print('Valid array basic output:')
+print('Valid case output:')
 pprint.pp(valid_result.output('basic'))
 
 # print output for the invalid case
-print(f'Invalid array result: {invalid_result.valid}')
-print('Invalid array detailed output:')
-pprint.pp(invalid_result.output('detailed'))
+print('Invalid case output:')
+pprint.pp(invalid_result.output('basic'))
