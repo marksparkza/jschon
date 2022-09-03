@@ -37,14 +37,14 @@ def create_output(result: Result, format: str, **kwargs: Any) -> JSONCompatible:
 
 
 @output_formatter('flag')
-def _flag(result: Result) -> JSONCompatible:
+def flag(result: Result) -> JSONCompatible:
     return {
         "valid": result.valid
     }
 
 
 @output_formatter('basic')
-def _basic(result: Result) -> JSONCompatible:
+def basic(result: Result) -> JSONCompatible:
     def visit(node: Result):
         if node.valid is valid:
             if (msgval := getattr(node, msgkey)) is not None:
@@ -68,7 +68,7 @@ def _basic(result: Result) -> JSONCompatible:
 
 
 @output_formatter('detailed')
-def _detailed(result: Result) -> JSONCompatible:
+def detailed(result: Result) -> JSONCompatible:
     def visit(node: Result):
         output = {
             "instanceLocation": str(node.instance.path),
@@ -101,7 +101,7 @@ def _detailed(result: Result) -> JSONCompatible:
 
 
 @output_formatter('verbose')
-def _verbose(result: Result) -> JSONCompatible:
+def verbose(result: Result) -> JSONCompatible:
     def visit(node: Result):
         output = {
             "valid": (valid := node.valid),
