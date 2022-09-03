@@ -19,34 +19,32 @@ as its first argument.
 _formatters: Dict[str, OutputFormatter] = {}
 
 
-def output_formatter(name: str = None):
+def output_formatter(format: str):
     """A decorator for a JSON Schema output formatting function.
 
-    :param name: The format name; defaults to the name of the decorated
-        function.
+    :param format: A string identifying the output format.
     """
 
-    def decorator(f):
-        formatter_name = name if isinstance(name, str) else f.__name__
-        _formatters[formatter_name] = f
+    def decorator(f: OutputFormatter):
+        _formatters[format] = f
         return f
 
-    return decorator(name) if callable(name) else decorator
+    return decorator
 
 
 def create_output(result: Result, format: str, **kwargs: Any) -> JSONCompatible:
     return _formatters[format](result, **kwargs)
 
 
-@output_formatter
-def flag(result: Result) -> JSONCompatible:
+@output_formatter('flag')
+def _flag(result: Result) -> JSONCompatible:
     return {
         "valid": result.valid
     }
 
 
-@output_formatter
-def basic(result: Result) -> JSONCompatible:
+@output_formatter('basic')
+def _basic(result: Result) -> JSONCompatible:
     def visit(node: Result):
         if node.valid is valid:
             if (msgval := getattr(node, msgkey)) is not None:
@@ -69,8 +67,8 @@ def basic(result: Result) -> JSONCompatible:
     }
 
 
-@output_formatter
-def detailed(result: Result) -> JSONCompatible:
+@output_formatter('detailed')
+def _detailed(result: Result) -> JSONCompatible:
     def visit(node: Result):
         output = {
             "instanceLocation": str(node.instance.path),
@@ -102,8 +100,8 @@ def detailed(result: Result) -> JSONCompatible:
     }
 
 
-@output_formatter
-def verbose(result: Result) -> JSONCompatible:
+@output_formatter('verbose')
+def _verbose(result: Result) -> JSONCompatible:
     def visit(node: Result):
         output = {
             "valid": (valid := node.valid),
