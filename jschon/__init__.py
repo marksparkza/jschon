@@ -1,5 +1,5 @@
 from .catalog import Catalog, LocalSource, RemoteSource
-from .exceptions import CatalogError, JSONPatchError, JSONPointerError, JSONSchemaError, RelativeJSONPointerError, URIError
+from .exceptions import CatalogError, JSONError, JSONPatchError, JSONPointerError, JSONSchemaError, RelativeJSONPointerError, URIError
 from .json import JSON
 from .jsonpatch import JSONPatch, JSONPatchOperation
 from .jsonpointer import JSONPointer, RelativeJSONPointer
@@ -10,6 +10,7 @@ __all__ = [
     'Catalog',
     'CatalogError',
     'JSON',
+    'JSONError',
     'JSONPatch',
     'JSONPatchError',
     'JSONPatchOperation',

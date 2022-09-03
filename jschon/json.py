@@ -6,6 +6,7 @@ from functools import cached_property
 from os import PathLike
 from typing import Any, Dict, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Type, Union
 
+from jschon.exceptions import JSONError, JSONPointerError
 from jschon.jsonpointer import JSONPointer
 from jschon.utils import json_dumpf, json_dumps, json_loadf, json_loadr, json_loads
 
@@ -310,3 +311,61 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         if isinstance(other, JSON):
             return self.data < other.data
         return self.data < other
+
+    def add(self, path: JSONPointer, obj: Union[JSON, JSONCompatible]) -> None:
+        """Add `obj` at `path` relative to `self`.
+
+        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_add`,
+        this method performs an in-place JSON Patch ``add`` operation on `self`.
+
+        Supported for JSON types ``array`` and ``object``.
+        """
+        if not path:
+            self.__init__(
+                obj.value if isinstance(obj, JSON) else obj,
+                parent=self.parent,
+                key=self.key,
+                itemclass=self.itemclass,
+                **self.itemkwargs,
+            )
+            return
+
+        try:
+            target_parent: JSON = path[:-1].evaluate(self)
+            target_key = path[-1]
+        except JSONPointerError as e:
+            raise JSONError(f'Expecting an array or object at {path[:-1]}') from e
+
+        if target_parent.type == 'array':
+            try:
+                if target_key == '-' or int(target_key) == len(target_parent):
+                    target_index = len(target_parent)
+                elif 0 <= int(target_key) < len(target_parent):
+                    target_index = int(target_key)
+                else:
+                    raise ValueError
+            except ValueError:
+                raise JSONError(f'Invalid array index {target_key}')
+
+            target_parent.insert(target_index, obj)
+
+        elif target_parent.type == 'object':
+            target_parent[target_key] = obj
+
+        else:
+            raise JSONError(f'Expecting an array or object at {path[:-1]}')
+
+    def remove(self, path: JSONPointer) -> None:
+        pass
+
+    def replace(self, path: JSONPointer, obj: Union[JSON, JSONCompatible]) -> None:
+        pass
+
+    def move(self, from_: JSONPointer, to: JSONPointer) -> None:
+        pass
+
+    def copy(self, from_: JSONPointer, to: JSONPointer) -> None:
+        pass
+
+    def test(self, path: JSONPointer, obj: Union[JSON, JSONCompatible]) -> None:
+        pass
