@@ -1,8 +1,10 @@
+from copy import deepcopy
+
 import pytest
 from pytest import param as p
 
-from jschon import JSON, JSONSchema
-from tests import metaschema_uri_2020_12, metaschema_uri_2019_09
+from jschon import JSON, JSONPointer, JSONSchema
+from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 
 schema_valid = {
     "$id": "http://example.com",
@@ -299,3 +301,115 @@ def test_chained_ref_absolute_uri():
     result = schema.evaluate(JSON({})).output('verbose')
     assert result['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/foo'
     assert result['annotations'][0]['annotations'][0]['absoluteKeywordLocation'] == 'http://example.com#/$defs/bar'
+
+
+tree_schema = {
+    "$id": "http://example.com",
+    "$anchor": "node",
+    "type": "object",
+    "title": "Tree Node",
+    "properties": {
+        "data": True,
+        "children": {
+            "type": "array",
+            "items": {
+                "$ref": "#node"
+            }
+        }
+    }
+}
+
+tree_data = {
+    "children": [
+        {
+            "data": "foo",
+            "children": [
+                {},
+                {
+                    "children": [
+                        {
+                            "data": "bar"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+
+tree_output = {'valid': True,
+               'annotations': [{'instanceLocation': '',
+                                'keywordLocation': '/title',
+                                'absoluteKeywordLocation': 'http://example.com#/title',
+                                'annotation': 'Tree Node'},
+                               {'instanceLocation': '',
+                                'keywordLocation': '/properties',
+                                'absoluteKeywordLocation': 'http://example.com#/properties',
+                                'annotation': ['children']},
+                               {'instanceLocation': '/children',
+                                'keywordLocation': '/properties/children/items',
+                                'absoluteKeywordLocation': 'http://example.com#/properties/children/items',
+                                'annotation': True},
+                               {'instanceLocation': '/children/0',
+                                'keywordLocation': '/properties/children/items/$ref/title',
+                                'absoluteKeywordLocation': 'http://example.com#/title',
+                                'annotation': 'Tree Node'},
+                               {'instanceLocation': '/children/0',
+                                'keywordLocation': '/properties/children/items/$ref/properties',
+                                'absoluteKeywordLocation': 'http://example.com#/properties',
+                                'annotation': ['data', 'children']},
+                               {'instanceLocation': '/children/0/children',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items',
+                                'absoluteKeywordLocation': 'http://example.com#/properties/children/items',
+                                'annotation': True},
+                               {'instanceLocation': '/children/0/children/0',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/title',
+                                'absoluteKeywordLocation': 'http://example.com#/title',
+                                'annotation': 'Tree Node'},
+                               {'instanceLocation': '/children/0/children/0',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/properties',
+                                'absoluteKeywordLocation': 'http://example.com#/properties',
+                                'annotation': []},
+                               {'instanceLocation': '/children/0/children/1',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/title',
+                                'absoluteKeywordLocation': 'http://example.com#/title',
+                                'annotation': 'Tree Node'},
+                               {'instanceLocation': '/children/0/children/1',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/properties',
+                                'absoluteKeywordLocation': 'http://example.com#/properties',
+                                'annotation': ['children']},
+                               {'instanceLocation': '/children/0/children/1/children',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/properties/children/items',
+                                'absoluteKeywordLocation': 'http://example.com#/properties/children/items',
+                                'annotation': True},
+                               {'instanceLocation': '/children/0/children/1/children/0',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/properties/children/items/$ref/title',
+                                'absoluteKeywordLocation': 'http://example.com#/title',
+                                'annotation': 'Tree Node'},
+                               {'instanceLocation': '/children/0/children/1/children/0',
+                                'keywordLocation': '/properties/children/items/$ref/properties/children/items/$ref/properties/children/items/$ref/properties',
+                                'absoluteKeywordLocation': 'http://example.com#/properties',
+                                'annotation': ['data']}]}
+
+
+@pytest.mark.parametrize('annotations', [
+    None,
+    [],
+    ['items'],
+    ['properties'],
+    ['title', 'description'],
+    ['items', 'properties'],
+    ['properties', 'title', 'description'],
+])
+def test_basic_output_filtering(annotations):
+    schema = JSONSchema(tree_schema, metaschema_uri=metaschema_uri_2020_12)
+    result = schema.evaluate(JSON(tree_data)).output('basic', annotations=annotations)
+    if annotations is None:
+        assert result == tree_output
+    else:
+        filtered_output = deepcopy(tree_output)
+        filtered_output['annotations'] = [
+            annotation for annotation in tree_output['annotations']
+            if JSONPointer(annotation['keywordLocation'])[-1] in annotations
+        ]
+        assert result == filtered_output

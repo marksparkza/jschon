@@ -1,4 +1,4 @@
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Iterable
 
 from jschon.json import JSONCompatible
 from jschon.jsonschema import Result
@@ -44,10 +44,13 @@ def flag(result: Result) -> JSONCompatible:
 
 
 @output_formatter('basic')
-def basic(result: Result) -> JSONCompatible:
+def basic(result: Result, annotations: Iterable[str] = None) -> JSONCompatible:
     def visit(node: Result):
         if node.valid is valid:
-            if (msgval := getattr(node, msgkey)) is not None:
+            if (
+                    (annotations is None or node.key in annotations) and
+                    (msgval := getattr(node, msgkey)) is not None
+            ):
                 yield {
                     "instanceLocation": str(node.instance.path),
                     "keywordLocation": str(node.path),
