@@ -3,9 +3,9 @@
 .. toctree::
     :hidden:
 
-    guide
     api
     examples
+    tutorial
     testing
     contributing
     changelog
