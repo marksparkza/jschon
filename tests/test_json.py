@@ -69,20 +69,20 @@ def assert_json_node(
 
 
 @given(json)
-def test_create_json(value):
+def test_json_create(value):
     instance = JSON(value)
     assert_json_node(instance, value)
 
 
 @given(json)
-def test_load_json_from_string(value):
+def test_json_loads(value):
     s = jsonlib.dumps(value)
     instance = JSON.loads(s)
     assert_json_node(instance, value)
 
 
 @given(json)
-def test_load_json_from_file(value):
+def test_json_loadf(value):
     s = jsonlib.dumps(value)
     with tempfile.NamedTemporaryFile() as f:
         f.write(s.encode())
@@ -92,7 +92,7 @@ def test_load_json_from_file(value):
 
 
 @given(json)
-def test_load_json_from_url(value):
+def test_json_loadr(value):
     with HTTPServer() as httpserver:
         httpserver.expect_request('/load.json').respond_with_json(value)
         instance = JSON.loadr(httpserver.url_for('/load.json'))
@@ -100,7 +100,7 @@ def test_load_json_from_url(value):
 
 
 @given(json)
-def test_dump_json_to_string(value):
+def test_json_dumps(value):
     instance = JSON(value)
     s = instance.dumps()
     obj = jsonlib.loads(s)
@@ -108,7 +108,7 @@ def test_dump_json_to_string(value):
 
 
 @given(json)
-def test_dump_json_to_file(value):
+def test_json_dumpf(value):
     instance = JSON(value)
     with tempfile.TemporaryDirectory() as tmpdir:
         instance.dumpf(tmpfile := f'{tmpdir}/dump.json')
@@ -118,12 +118,12 @@ def test_dump_json_to_file(value):
 
 
 @given(json, json)
-def test_json_equality(value1, value2):
+def test_json_eq(value1, value2):
     assert isequal(value1, value2) is (value1 == JSON(value2)) is (JSON(value1) == JSON(value2)) is (JSON(value1) == value2)
 
 
 @given(jsonnumber, jsonnumber)
-def test_jsonnumber_inequality(value1, value2):
+def test_json_number(value1, value2):
     assert (value1 < value2) is (value1 < JSON(value2)) is (JSON(value1) < JSON(value2)) is (JSON(value1) < value2)
     assert (value1 <= value2) is (value1 <= JSON(value2)) is (JSON(value1) <= JSON(value2)) is (JSON(value1) <= value2)
     assert (value1 >= value2) is (value1 >= JSON(value2)) is (JSON(value1) >= JSON(value2)) is (JSON(value1) >= value2)
@@ -131,7 +131,7 @@ def test_jsonnumber_inequality(value1, value2):
 
 
 @given(jsonstring, jsonstring)
-def test_jsonstring_inequality(value1, value2):
+def test_json_string(value1, value2):
     assert (value1 < value2) is (value1 < JSON(value2)) is (JSON(value1) < JSON(value2)) is (JSON(value1) < value2)
     assert (value1 <= value2) is (value1 <= JSON(value2)) is (JSON(value1) <= JSON(value2)) is (JSON(value1) <= value2)
     assert (value1 >= value2) is (value1 >= JSON(value2)) is (JSON(value1) >= JSON(value2)) is (JSON(value1) >= value2)
@@ -154,7 +154,7 @@ def _cache_json(node):
     val=jsonleaf | jsonflatarray | jsonflatobject,
     data=hs.data(),
 )
-def test_insert_json(doc, val, data):
+def test_json_insert(doc, val, data):
     def _insert_values(node, jnode):
         nonlocal inserted
 
@@ -184,7 +184,7 @@ def test_insert_json(doc, val, data):
     val=jsonleaf | jsonflatarray | jsonflatobject,
     data=hs.data(),
 )
-def test_set_json(doc, val, data):
+def test_json_setitem(doc, val, data):
     def _set_values(node, jnode):
         nonlocal updated
 
@@ -216,7 +216,7 @@ def test_set_json(doc, val, data):
     doc=json.filter(lambda x: isinstance(x, (list, dict))),
     data=hs.data(),
 )
-def test_del_json(doc, data):
+def test_json_delitem(doc, data):
     def _del_values(node, jnode):
         nonlocal deleted
 
