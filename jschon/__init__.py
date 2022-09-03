@@ -3,7 +3,7 @@ from .exceptions import CatalogError, JSONError, JSONPatchError, JSONPointerErro
 from .json import JSON
 from .jsonpatch import JSONPatch, JSONPatchOperation
 from .jsonpointer import JSONPointer, RelativeJSONPointer
-from .jsonschema import JSONSchema
+from .jsonschema import JSONSchema, Result
 from .uri import URI
 
 __all__ = [
@@ -16,12 +16,13 @@ __all__ = [
     'JSONPatchOperation',
     'JSONPointer',
     'JSONPointerError',
-    'RelativeJSONPointer',
-    'RelativeJSONPointerError',
     'JSONSchema',
     'JSONSchemaError',
     'LocalSource',
+    'RelativeJSONPointer',
+    'RelativeJSONPointerError',
     'RemoteSource',
+    'Result',
     'URI',
     'URIError',
     'create_catalog',
