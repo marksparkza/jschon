@@ -32,12 +32,13 @@ __version__ = '0.10.0'
 
 
 def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
-    """Create and return a :class:`Catalog` instance, configured with
-    support for the specified JSON Schema vocabularies.
+    """Create and return a :class:`~jschon.catalog.Catalog` instance,
+    initialized with a meta-schema and keyword support for each of the
+    specified JSON Schema `vocabularies`.
 
-    :param vocabularies: any of ``2019-09``, ``2020-12``
-    :param name: a unique name for the :class:`Catalog` instance
-    :raise ValueError: if a supplied vocabulary parameter is not recognized
+    :param vocabularies: Any of ``2019-09``, ``2020-12``.
+    :param name: A unique name for the :class:`~jschon.catalog.Catalog` instance.
+    :raise ValueError: If any of `vocabularies` is unrecognized.
     """
     from .catalog import _2019_09, _2020_12
 
