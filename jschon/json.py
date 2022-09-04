@@ -317,8 +317,6 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_add`,
         this method performs an in-place JSON Patch ``add`` operation on `self`.
-
-        Supported for JSON types ``array`` and ``object``.
         """
         if not path:
             self.__init__(
@@ -334,7 +332,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             target_parent: JSON = path[:-1].evaluate(self)
             target_key = path[-1]
         except JSONPointerError as e:
-            raise JSONError(f'Expecting an array or object at {path[:-1]}') from e
+            raise JSONError(f"Expecting an array or object at '{path[:-1]}'") from e
 
         if target_parent.type == 'array':
             try:
@@ -353,7 +351,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             target_parent[target_key] = obj
 
         else:
-            raise JSONError(f'Expecting an array or object at {path[:-1]}')
+            raise JSONError(f"Expecting an array or object at '{path[:-1]}'")
 
     def remove(self, path: JSONPointer) -> None:
         pass

@@ -198,7 +198,7 @@ class JSONPointer(Sequence[str]):
             except (KeyError, IndexError):
                 pass
 
-            raise JSONPointerError(f"Failed to resolve '{self}' against the given document")
+            raise JSONPointerError(f"Path '{self}' not found in document")
 
         return resolve(document, collections.deque(self._keys))
 
