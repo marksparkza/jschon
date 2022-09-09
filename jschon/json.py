@@ -326,6 +326,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
                 itemclass=self.itemclass,
                 **self.itemkwargs,
             )
+            self._invalidate_value()
             return
 
         try:

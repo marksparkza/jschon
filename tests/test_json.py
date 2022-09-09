@@ -12,7 +12,7 @@ from jschon import JSON, JSONError, JSONPointer
 from jschon.json import JSONCompatible
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonflatarray, jsonflatobject, jsonleaf, jsonnumber, jsonstring
-from tests.test_jsonpointer import jsonpointer_escape
+from tests.test_jsonpointer import generate_jsonpointers, jsonpointer_escape
 from tests.test_validators import isequal
 
 
@@ -245,7 +245,7 @@ def test_json_delitem(doc, data):
 
 
 def pytest_generate_tests(metafunc):
-    if metafunc.definition.name == 'test_json_add':
+    if metafunc.definition.name == 'test_json_add_example':
         argnames = ('doc', 'path', 'val', 'result')
         argvalues = []
         testids = []
@@ -263,7 +263,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize(argnames, argvalues, ids=testids)
 
 
-def test_json_add(doc, path, val, result):
+def test_json_add_example(doc, path, val, result):
     original_value = deepcopy(val)
     jdoc = JSON(doc)
 
@@ -275,3 +275,64 @@ def test_json_add(doc, path, val, result):
             jdoc.add(JSONPointer(path), val if randint(0, 1) else JSON(val))
 
     assert val == original_value
+
+
+@given(
+    doc=json.filter(lambda x: isinstance(x, (list, dict))),
+    val=jsonleaf | jsonflatarray | jsonflatobject,
+    data=hs.data(),
+)
+def test_json_add(doc, val, data):
+    _cache_json(jdoc := JSON(doc))
+
+    # select a JSON node (jnode) on which to call add
+    generate_jsonpointers(nodes := {}, doc)
+    node_path = data.draw(hs.sampled_from(list(nodes.keys())))
+    jnode = JSONPointer(node_path).evaluate(jdoc)
+
+    # select a target (add_ptr) relative to jnode
+    generate_jsonpointers(targets := {}, jnode.value)
+    add_path = data.draw(hs.sampled_from(list(targets.keys())))
+    add_ptr = JSONPointer(add_path)
+
+    # the target relative to root
+    target_ptr = JSONPointer(node_path + add_path)
+
+    if not target_ptr:
+        # replace the whole doc with val
+        jnode.add(add_ptr, val if randint(0, 1) else JSON(val))
+        assert_json_node(jdoc, val)
+        return
+
+    target_parent = target_ptr[:-1].evaluate(doc)
+    target_key = target_ptr[-1]
+
+    if isinstance(target_parent, list):
+        if not add_ptr:
+            # replace the target item with val
+            target_parent[int(target_key)] = val
+        else:
+            if randint(0, 1):
+                # insert val at the selected index
+                target_idx = int(target_key)
+            else:
+                # append val
+                target_idx = len(target_parent)
+                add_ptr = add_ptr[:-1] / '-'
+
+            target_parent.insert(target_idx, val)
+
+    elif isinstance(target_parent, dict):
+        if add_ptr:
+            if randint(0, 1):
+                # add a new key
+                target_key = data.draw(hs.text())
+                add_ptr = add_ptr[:-1] / target_key
+
+        target_parent[target_key] = val
+
+    else:
+        assert False
+
+    jnode.add(add_ptr, val if randint(0, 1) else JSON(val))
+    assert_json_node(jdoc, doc)

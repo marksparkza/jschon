@@ -1,13 +1,35 @@
 import pathlib
 import re
-from typing import List, Union
+from typing import Dict, List, Union
 
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon import JSON, JSONPointer, JSONPointerError, RelativeJSONPointer, RelativeJSONPointerError
+from jschon import JSON, JSONCompatible, JSONPointer, JSONPointerError, RelativeJSONPointer, RelativeJSONPointerError
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonpointer, jsonpointer_key, relative_jsonpointer, relative_jsonpointer_regex
+
+
+def generate_jsonpointers(
+        targets: Dict[str, JSONCompatible],
+        target: JSONCompatible,
+        ptr: str = '',
+):
+    targets[ptr] = target
+    if isinstance(target, list):
+        for i, item in enumerate(target):
+            generate_jsonpointers(targets, item, f'{ptr}/{i}')
+    elif isinstance(target, dict):
+        for k, item in target.items():
+            generate_jsonpointers(targets, item, f'{ptr}/{jsonpointer_escape(k)}')
+
+
+def jsonpointer_escape(key: str):
+    return key.replace('~', '~0').replace('/', '~1')
+
+
+def jsonpointer_unescape(token: str):
+    return token.replace('~1', '/').replace('~0', '~')
 
 
 @given(hs.lists(jsonpointer | hs.lists(jsonpointer_key)))
@@ -53,21 +75,10 @@ def test_extend_jsonpointer_multi_keys(value, newkeys):
 
 @given(json, jsonpointer_key)
 def test_evaluate_jsonpointer(value, testkey):
-    resolved_pointers = {}
-
-    def generate_pointers(ptr, val):
-        resolved_pointers[ptr] = val
-        if isinstance(val, list):
-            for i, item in enumerate(val):
-                generate_pointers(f'{ptr}/{i}', item)
-        elif isinstance(val, dict):
-            for k, item in val.items():
-                generate_pointers(f"{ptr}/{jsonpointer_escape(k)}", item)
-
     assert JSONPointer().evaluate(value) == value
     assert JSONPointer().evaluate(JSON(value)) == value
 
-    generate_pointers('', value)
+    generate_jsonpointers(resolved_pointers := {}, value)
     for pointer, target in resolved_pointers.items():
         assert JSONPointer(pointer).evaluate(value) == target
         assert JSONPointer(pointer).evaluate(JSON(value)) == target
@@ -107,14 +118,6 @@ def test_compare_jsonpointer(value1, value2):
     assert (ptr1 >= ptr2) == ([k for k in ptr1[:len(ptr2)]] == [k for k in ptr2])
     assert (ptr1 < ptr2) == (ptr1 <= ptr2 and ptr1 != ptr2)
     assert (ptr1 > ptr2) == (ptr1 >= ptr2 and ptr1 != ptr2)
-
-
-def jsonpointer_escape(key: str):
-    return key.replace('~', '~0').replace('/', '~1')
-
-
-def jsonpointer_unescape(token: str):
-    return token.replace('~1', '/').replace('~0', '~')
 
 
 @given(relative_jsonpointer)
