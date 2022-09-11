@@ -161,9 +161,11 @@ def test_json_insert(doc, val, data):
         if isinstance(node, list):
             for i in range(len(node)):
                 _insert_values(node[i], jnode[i])
+
             index = data.draw(hs.integers(min_value=0, max_value=len(node)))
+            ins_val = data.draw(hs.sampled_from((val, JSON(val))))
             node.insert(index, val)
-            jnode.insert(index, val if randint(0, 1) else JSON(val))
+            jnode.insert(index, ins_val)
             inserted = True
 
         elif isinstance(node, dict):
@@ -199,8 +201,9 @@ def test_json_setitem(doc, val, data):
                     _set_values(node[k], jnode[k])
                 index = data.draw(hs.sampled_from(tuple(node.keys())))
 
+            set_val = data.draw(hs.sampled_from((val, JSON(val))))
             node[index] = val
-            jnode[index] = val if randint(0, 1) else JSON(val)
+            jnode[index] = set_val
             updated = True
 
     updated = False
@@ -264,15 +267,16 @@ def pytest_generate_tests(metafunc):
 
 
 def test_json_add_example(doc, path, val, result):
-    original_value = deepcopy(val)
     jdoc = JSON(doc)
+    original_value = deepcopy(val)
+    add_val = val if randint(0, 1) else JSON(val)
 
     if result is not None:
-        jdoc.add(JSONPointer(path), val if randint(0, 1) else JSON(val))
+        jdoc.add(JSONPointer(path), add_val)
         assert_json_node(jdoc, result)
     else:
         with pytest.raises(JSONError):
-            jdoc.add(JSONPointer(path), val if randint(0, 1) else JSON(val))
+            jdoc.add(JSONPointer(path), add_val)
 
     assert val == original_value
 
@@ -294,13 +298,14 @@ def test_json_add(doc, val, data):
     generate_jsonpointers(targets := {}, jnode.value)
     add_path = data.draw(hs.sampled_from(list(targets.keys())))
     add_ptr = JSONPointer(add_path)
+    add_val = data.draw(hs.sampled_from((val, JSON(val))))
 
     # the target relative to root
     target_ptr = JSONPointer(node_path + add_path)
 
     if not target_ptr:
         # replace the whole doc with val
-        jnode.add(add_ptr, val if randint(0, 1) else JSON(val))
+        jnode.add(add_ptr, add_val)
         assert_json_node(jdoc, val)
         return
 
@@ -312,7 +317,7 @@ def test_json_add(doc, val, data):
             # replace the target item with val
             target_parent[int(target_key)] = val
         else:
-            if randint(0, 1):
+            if data.draw(hs.booleans()):
                 # insert val at the selected index
                 target_idx = int(target_key)
             else:
@@ -324,7 +329,7 @@ def test_json_add(doc, val, data):
 
     elif isinstance(target_parent, dict):
         if add_ptr:
-            if randint(0, 1):
+            if data.draw(hs.booleans()):
                 # add a new key
                 target_key = data.draw(hs.text())
                 add_ptr = add_ptr[:-1] / target_key
@@ -334,5 +339,5 @@ def test_json_add(doc, val, data):
     else:
         assert False
 
-    jnode.add(add_ptr, val if randint(0, 1) else JSON(val))
+    jnode.add(add_ptr, add_val)
     assert_json_node(jdoc, doc)
