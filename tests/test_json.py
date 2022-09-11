@@ -269,14 +269,15 @@ def pytest_generate_tests(metafunc):
 def test_json_add_example(doc, path, val, result):
     jdoc = JSON(doc)
     original_value = deepcopy(val)
+    add_ptr = path if randint(0, 1) else JSONPointer(path)
     add_val = val if randint(0, 1) else JSON(val)
 
     if result is not None:
-        jdoc.add(JSONPointer(path), add_val)
+        jdoc.add(add_ptr, add_val)
         assert_json_node(jdoc, result)
     else:
         with pytest.raises(JSONError):
-            jdoc.add(JSONPointer(path), add_val)
+            jdoc.add(add_ptr, add_val)
 
     assert val == original_value
 
@@ -305,6 +306,7 @@ def test_json_add(doc, val, data):
 
     if not target_ptr:
         # replace the whole doc with val
+        add_ptr = data.draw(hs.sampled_from((add_path, add_ptr)))
         jnode.add(add_ptr, add_val)
         assert_json_node(jdoc, val)
         return
@@ -339,5 +341,6 @@ def test_json_add(doc, val, data):
     else:
         assert False
 
+    add_ptr = data.draw(hs.sampled_from((add_ptr, str(add_ptr))))
     jnode.add(add_ptr, add_val)
     assert_json_node(jdoc, doc)

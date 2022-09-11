@@ -312,7 +312,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             return self.data < other.data
         return self.data < other
 
-    def add(self, path: JSONPointer, obj: Union[JSON, JSONCompatible]) -> None:
+    def add(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
         """Add `obj` at `path` relative to `self`.
 
         The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_add`,
@@ -328,6 +328,9 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             )
             self._invalidate_value()
             return
+
+        if not isinstance(path, JSONPointer):
+            path = JSONPointer(path)
 
         try:
             target_parent: JSON = path[:-1].evaluate(self)
@@ -352,19 +355,19 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             target_parent[target_key] = obj
 
         else:
-            raise JSONError(f"Expecting an array or object at '{path[:-1]}'")
+            raise JSONError(f"Expecting an array or object at '{target_parent.path}'")
 
-    def remove(self, path: JSONPointer) -> None:
+    def remove(self, path: Union[str, JSONPointer]) -> None:
         pass
 
-    def replace(self, path: JSONPointer, obj: Union[JSON, JSONCompatible]) -> None:
+    def replace(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
         pass
 
-    def move(self, from_: JSONPointer, to: JSONPointer) -> None:
+    def move(self, from_: Union[str, JSONPointer], to: Union[str, JSONPointer]) -> None:
         pass
 
-    def copy(self, from_: JSONPointer, to: JSONPointer) -> None:
+    def copy(self, from_: Union[str, JSONPointer], to: Union[str, JSONPointer]) -> None:
         pass
 
-    def test(self, path: JSONPointer, obj: Union[JSON, JSONCompatible]) -> None:
+    def test(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
         pass
