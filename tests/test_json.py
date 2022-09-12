@@ -8,8 +8,7 @@ import pytest
 from hypothesis import assume, given, strategies as hs
 from pytest_httpserver import HTTPServer
 
-from jschon import JSON, JSONError, JSONPointer
-from jschon.json import JSONCompatible
+from jschon import JSON, JSONCompatible, JSONError, JSONPatch, JSONPointer
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonflatarray, jsonflatobject, jsonleaf, jsonnumber, jsonstring
 from tests.test_jsonpointer import generate_jsonpointers, jsonpointer_escape
@@ -248,38 +247,44 @@ def test_json_delitem(doc, data):
 
 
 def pytest_generate_tests(metafunc):
-    if metafunc.definition.name == 'test_json_add_example':
-        argnames = ('doc', 'path', 'val', 'result')
+    if metafunc.definition.name == 'test_json_patch_example':
+        argnames = ('document', 'patch', 'result')
         argvalues = []
         testids = []
         example_file = pathlib.Path(__file__).parent / 'data' / 'jsonpatch.json'
         examples = json_loadf(example_file)
         for example in examples:
-            if example['patch'][0]['op'] == 'add':
-                argvalues += [pytest.param(
-                    example['document'],
-                    example['patch'][0]['path'],
-                    example['patch'][0]['value'],
-                    example['result'],
-                )]
-                testids += [example['description']]
+            argvalues += [pytest.param(
+                example['document'],
+                example['patch'],
+                example['result'],
+            )]
+            testids += [example['description']]
         metafunc.parametrize(argnames, argvalues, ids=testids)
 
 
-def test_json_add_example(doc, path, val, result):
-    jdoc = JSON(doc)
-    original_value = deepcopy(val)
-    add_ptr = path if randint(0, 1) else JSONPointer(path)
-    add_val = val if randint(0, 1) else JSON(val)
+def test_json_patch_example(document, patch, result):
+    jsondoc = JSON(document)
+    jsonpatch = JSONPatch(*patch)
 
-    if result is not None:
-        jdoc.add(add_ptr, add_val)
-        assert_json_node(jdoc, result)
-    else:
-        with pytest.raises(JSONError):
-            jdoc.add(add_ptr, add_val)
+    op = jsonpatch[0]
+    original_value = deepcopy(op.value)
+    path = op.path if randint(0, 1) else JSONPointer(op.path)
+    value = op.value if randint(0, 1) else JSON(op.value)
 
-    assert val == original_value
+    if op.op == 'add':
+        if result is not None:
+            jsondoc.add(path, value)
+            assert_json_node(jsondoc, result)
+        else:
+            with pytest.raises(JSONError):
+                jsondoc.add(path, value)
+
+    elif op.op == 'remove':
+        jsondoc.remove(path)
+        assert_json_node(jsondoc, result)
+
+    assert op.value == original_value
 
 
 @given(

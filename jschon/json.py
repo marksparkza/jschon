@@ -336,7 +336,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             target_parent: JSON = path[:-1].evaluate(self)
             target_key = path[-1]
         except JSONPointerError as e:
-            raise JSONError(f"Expecting an array or object at '{path[:-1]}'") from e
+            raise JSONError(f"Parent node must exist at '{path[:-1]}'") from e
 
         if target_parent.type == 'array':
             try:
@@ -358,7 +358,35 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             raise JSONError(f"Expecting an array or object at '{target_parent.path}'")
 
     def remove(self, path: Union[str, JSONPointer]) -> None:
-        pass
+        """Remove the instance at `path` relative to `self`.
+
+        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_remove`,
+        this method performs an in-place JSON Patch ``remove`` operation on `self`.
+        """
+        if not path:
+            self.__init__(
+                None,
+                parent=self.parent,
+                key=self.key,
+                itemclass=self.itemclass,
+                **self.itemkwargs,
+            )
+            self._invalidate_value()
+            return
+
+        if not isinstance(path, JSONPointer):
+            path = JSONPointer(path)
+
+        try:
+            target: JSON = path.evaluate(self)
+        except JSONPointerError as e:
+            raise JSONError(f"Target must exist at '{path}'") from e
+
+        if target.parent.type == 'array':
+            del target.parent[int(target.key)]
+
+        elif target.parent.type == 'object':
+            del target.parent[target.key]
 
     def replace(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
         pass
