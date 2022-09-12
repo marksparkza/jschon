@@ -12,12 +12,12 @@ __all__ = [
     'JSONPatch',
     'JSONPatchOperation',
     'PatchOp',
-    'apply_add',
-    'apply_remove',
-    'apply_replace',
-    'apply_move',
-    'apply_copy',
-    'apply_test',
+    'add',
+    'remove',
+    'replace',
+    'move',
+    'copy',
+    'test',
 ]
 
 
@@ -69,17 +69,17 @@ class JSONPatchOperation:
         """Apply the patch operation to `document` and return the
         resultant document."""
         if self.op == 'add':
-            return apply_add(document, self.path, self.value)
+            return add(document, self.path, self.value)
         if self.op == 'remove':
-            return apply_remove(document, self.path)
+            return remove(document, self.path)
         if self.op == 'replace':
-            return apply_replace(document, self.path, self.value)
+            return replace(document, self.path, self.value)
         if self.op == 'move':
-            return apply_move(document, self.path, self.from_)
+            return move(document, self.path, self.from_)
         if self.op == 'copy':
-            return apply_copy(document, self.path, self.from_)
+            return copy(document, self.path, self.from_)
         if self.op == 'test':
-            return apply_test(document, self.path, self.value)
+            return test(document, self.path, self.value)
 
     def asdict(self) -> Dict[str, JSONCompatible]:
         """Return `self` as a dict."""
@@ -227,7 +227,12 @@ class Node:
             assert False
 
 
-def apply_add(document: JSONCompatible, path: JSONPointer, value: JSONCompatible) -> JSONCompatible:
+def add(
+        document: JSONCompatible,
+        path: JSONPointer,
+        value: JSONCompatible,
+) -> JSONCompatible:
+    """Add `value` to `document` at `path`."""
     target = Node(document, path)
     value = deepcopy(value)
     if target.type == NodeType.ROOT:
@@ -242,7 +247,11 @@ def apply_add(document: JSONCompatible, path: JSONPointer, value: JSONCompatible
     return document
 
 
-def apply_remove(document: JSONCompatible, path: JSONPointer) -> JSONCompatible:
+def remove(
+        document: JSONCompatible,
+        path: JSONPointer,
+) -> JSONCompatible:
+    """Remove the value at `path` in `document`."""
     target = Node(document, path)
     if target.type == NodeType.ROOT:
         return None
@@ -256,7 +265,12 @@ def apply_remove(document: JSONCompatible, path: JSONPointer) -> JSONCompatible:
     return document
 
 
-def apply_replace(document: JSONCompatible, path: JSONPointer, value: JSONCompatible) -> JSONCompatible:
+def replace(
+        document: JSONCompatible,
+        path: JSONPointer,
+        value: JSONCompatible,
+) -> JSONCompatible:
+    """Replace the value at `path` in `document` with `value`."""
     target = Node(document, path)
     value = deepcopy(value)
     if target.type == NodeType.ROOT:
@@ -271,26 +285,41 @@ def apply_replace(document: JSONCompatible, path: JSONPointer, value: JSONCompat
     return document
 
 
-def apply_move(document: JSONCompatible, path: JSONPointer, from_: JSONPointer) -> JSONCompatible:
+def move(
+        document: JSONCompatible,
+        path: JSONPointer,
+        from_: JSONPointer,
+) -> JSONCompatible:
+    """Move the value at `from_` in `document` to `path`."""
     try:
         value = from_.evaluate(document)
     except JSONPointerError as e:
         raise JSONPatchError(f'Cannot move from nonexistent location {from_}') from e
 
-    document = apply_remove(document, from_)
-    return apply_add(document, path, value)
+    document = remove(document, from_)
+    return add(document, path, value)
 
 
-def apply_copy(document: JSONCompatible, path: JSONPointer, from_: JSONPointer) -> JSONCompatible:
+def copy(
+        document: JSONCompatible,
+        path: JSONPointer,
+        from_: JSONPointer,
+) -> JSONCompatible:
+    """Copy the value at `from_` in `document` to `path`."""
     try:
         value = from_.evaluate(document)
     except JSONPointerError as e:
         raise JSONPatchError(f'Cannot copy from nonexistent location {from_}') from e
 
-    return apply_add(document, path, value)
+    return add(document, path, value)
 
 
-def apply_test(document: JSONCompatible, path: JSONPointer, value: JSONCompatible) -> JSONCompatible:
+def test(
+        document: JSONCompatible,
+        path: JSONPointer,
+        value: JSONCompatible,
+) -> JSONCompatible:
+    """Test whether the value at `path` in `document` is equal to `value`."""
     target = Node(document, path)
     if target.type in (NodeType.ROOT, NodeType.ARRAY_ITEM, NodeType.OBJECT_PROPERTY):
         if JSON(path.evaluate(document)) != JSON(value):

@@ -315,7 +315,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
     def add(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
         """Add `obj` at `path` relative to `self`.
 
-        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_add`,
+        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.add`,
         this method performs an in-place JSON Patch ``add`` operation on `self`.
 
         If `path` is empty, the value of `self` is replaced by `obj`.
@@ -362,7 +362,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
     def remove(self, path: Union[str, JSONPointer]) -> None:
         """Remove the instance at `path` relative to `self`.
 
-        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_remove`,
+        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.remove`,
         this method performs an in-place JSON Patch ``remove`` operation on `self`.
 
         If `path` is empty, the value of `self` is set to `None`.
