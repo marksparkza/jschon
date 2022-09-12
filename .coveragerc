@@ -8,5 +8,6 @@ exclude_lines =
     return NotImplemented
     raise NotImplementedError
     raise TypeError
-    # ignore @overload-decorated definitions:
+    # @overload function body:
     ^\s+\.\.\.$
+    assert False

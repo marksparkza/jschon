@@ -317,6 +317,8 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_add`,
         this method performs an in-place JSON Patch ``add`` operation on `self`.
+
+        If `path` is empty, the value of `self` is replaced by `obj`.
         """
         if not path:
             self.__init__(
@@ -362,6 +364,8 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.apply_remove`,
         this method performs an in-place JSON Patch ``remove`` operation on `self`.
+
+        If `path` is empty, the value of `self` is set to `None`.
         """
         if not path:
             self.__init__(

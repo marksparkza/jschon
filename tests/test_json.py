@@ -349,3 +349,53 @@ def test_json_add(doc, val, data):
     add_ptr = data.draw(hs.sampled_from((add_ptr, str(add_ptr))))
     jnode.add(add_ptr, add_val)
     assert_json_node(jdoc, doc)
+
+
+@given(
+    doc=json.filter(lambda x: isinstance(x, (list, dict))),
+    data=hs.data(),
+)
+def test_json_remove(doc, data):
+    _cache_json(jdoc := JSON(doc))
+
+    # select a JSON node (jnode) on which to call remove
+    generate_jsonpointers(nodes := {}, doc)
+    node_path = data.draw(hs.sampled_from(list(nodes.keys())))
+    jnode = JSONPointer(node_path).evaluate(jdoc)
+
+    # select a target (rmv_ptr) relative to jnode
+    generate_jsonpointers(targets := {}, jnode.value)
+    rmv_path = data.draw(hs.sampled_from(list(targets.keys())))
+    rmv_ptr = data.draw(hs.sampled_from((rmv_path, JSONPointer(rmv_path))))
+
+    # the target relative to root
+    target_ptr = JSONPointer(node_path + rmv_path)
+
+    if not target_ptr:
+        # replace the whole doc with null
+        jnode.remove(rmv_ptr)
+        assert_json_node(jdoc, None)
+        return
+
+    target_parent = target_ptr[:-1].evaluate(doc)
+    target_key = target_ptr[-1]
+
+    if isinstance(target_parent, list):
+        if not rmv_ptr:
+            # replace target with null
+            target_parent[int(target_key)] = None
+        else:
+            del target_parent[int(target_key)]
+
+    elif isinstance(target_parent, dict):
+        if not rmv_ptr:
+            # replace target with null
+            target_parent[target_key] = None
+        else:
+            del target_parent[target_key]
+
+    else:
+        assert False
+
+    jnode.remove(rmv_ptr)
+    assert_json_node(jdoc, doc)
