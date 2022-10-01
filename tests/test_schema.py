@@ -54,7 +54,7 @@ def assert_keyword_order(keyword_list, keyword_pairs):
 
 @given(value=interdependent_keywords)
 def test_keyword_dependency_resolution_2019_09(value: list, catalog):
-    metaschema = catalog.get_schema(metaschema_uri_2019_09)
+    metaschema = catalog.get_schema(metaschema_uri_2019_09, cacheid='__meta__')
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
@@ -96,7 +96,7 @@ def test_keyword_dependency_resolution_2019_09(value: list, catalog):
 
 @given(value=interdependent_keywords)
 def test_keyword_dependency_resolution_2020_12(value: list, catalog):
-    metaschema = catalog.get_schema(metaschema_uri_2020_12)
+    metaschema = catalog.get_schema(metaschema_uri_2020_12, cacheid='__meta__')
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }

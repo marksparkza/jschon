@@ -150,36 +150,36 @@ def test_get_schema(example_schema_uri, ptr, is_schema, catalog):
             catalog.get_schema(uri)
 
 
-def sessioned_schema(uri, schema, session):
+def cached_schema(uri, schema, cacheid):
     kwargs = {'uri': uri, 'metaschema_uri': metaschema_uri_2020_12}
-    if session is not None:
-        kwargs['session'] = session
+    if cacheid is not None:
+        kwargs['cacheid'] = cacheid
     return JSONSchema(schema, **kwargs)
 
 
-def test_session_independence(catalog):
+def test_cache_independence(catalog):
     uri = URI("http://example.com")
-    sessioned_schema(uri, {"const": 0}, None)  # 'default' session
-    sessioned_schema(uri, {"const": 1}, 'one')
-    sessioned_schema(uri, {"const": 2}, 'two')
+    cached_schema(uri, {"const": 0}, None)  # 'default' cache
+    cached_schema(uri, {"const": 1}, 'one')
+    cached_schema(uri, {"const": 2}, 'two')
     assert catalog.get_schema(uri)["const"] == 0
-    assert catalog.get_schema(uri, session='default')["const"] == 0
-    assert catalog.get_schema(uri, session='one')["const"] == 1
-    assert catalog.get_schema(uri, session='two')["const"] == 2
+    assert catalog.get_schema(uri, cacheid='default')["const"] == 0
+    assert catalog.get_schema(uri, cacheid='one')["const"] == 1
+    assert catalog.get_schema(uri, cacheid='two')["const"] == 2
 
 
 def test_metaschema_isolation():
     new_catalog = create_catalog('2019-09', '2020-12', name=str(uuid.uuid4()))
     assert new_catalog._schema_cache.keys() == {'__meta__'}
 
-    # mask the metaschema with a boolean false schema, in the fubar session
-    sessioned_schema(metaschema_uri_2020_12, False, 'fubar')
+    # mask the metaschema with a boolean false schema, in the fubar cache
+    cached_schema(metaschema_uri_2020_12, False, 'fubar')
     uri = URI("http://example.com")
-    fubar_schema = sessioned_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, 'fubar')
+    fubar_schema = cached_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, 'fubar')
     assert fubar_schema.evaluate(JSON(True)).valid is False
 
-    # masking the metaschema has no impact on other sessions
-    okay_schema = sessioned_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, 'okay')
+    # masking the metaschema has no impact on other caches
+    okay_schema = cached_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, 'okay')
     assert okay_schema.evaluate(JSON(True)).valid is True
-    okay_schema = sessioned_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, None)
+    okay_schema = cached_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, None)
     assert okay_schema.evaluate(JSON(True)).valid is True

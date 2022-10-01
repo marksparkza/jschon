@@ -42,7 +42,7 @@ class Metaschema(JSONSchema):
         self.core_vocabulary: Vocabulary = core_vocabulary
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
         self.kwclasses: Dict[str, KeywordClass] = {}
-        super().__init__(value, catalog=catalog, session='__meta__', **kwargs)
+        super().__init__(value, catalog=catalog, cacheid='__meta__', **kwargs)
 
     def _bootstrap(self, value: Mapping[str, JSONCompatible]) -> None:
         super()._bootstrap(value)
@@ -123,7 +123,7 @@ class Applicator(ApplicatorMixin):
                 parent=parentschema,
                 key=key,
                 catalog=parentschema.catalog,
-                session=parentschema.session,
+                cacheid=parentschema.cacheid,
             )
 
 
@@ -140,7 +140,7 @@ class ArrayApplicator(ApplicatorMixin):
                 key=key,
                 itemclass=JSONSchema,
                 catalog=parentschema.catalog,
-                session=parentschema.session,
+                cacheid=parentschema.cacheid,
             )
 
 
@@ -157,5 +157,5 @@ class PropertyApplicator(ApplicatorMixin):
                 key=key,
                 itemclass=JSONSchema,
                 catalog=parentschema.catalog,
-                session=parentschema.session,
+                cacheid=parentschema.cacheid,
             )

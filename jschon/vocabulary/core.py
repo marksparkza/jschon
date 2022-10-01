@@ -95,7 +95,7 @@ class RefKeyword(Keyword):
                 raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
         self.refschema = self.parentschema.catalog.get_schema(
-            uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
+            uri, metaschema_uri=self.parentschema.metaschema_uri, cacheid=self.parentschema.cacheid
         )
 
     def evaluate(self, instance: JSON, result: Result) -> None:
@@ -115,7 +115,7 @@ class AnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for "$anchor" value "{value}"')
 
-        parentschema.catalog.add_schema(uri, parentschema, session=parentschema.session)
+        parentschema.catalog.add_schema(uri, parentschema, cacheid=parentschema.cacheid)
 
 
 class DynamicRefKeyword(Keyword):
@@ -142,7 +142,7 @@ class DynamicRefKeyword(Keyword):
                 raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
 
         self.refschema = self.parentschema.catalog.get_schema(
-            uri, metaschema_uri=self.parentschema.metaschema_uri, session=self.parentschema.session
+            uri, metaschema_uri=self.parentschema.metaschema_uri, cacheid=self.parentschema.cacheid
         )
         if (dynamic_anchor := self.refschema.get("$dynamicAnchor")) and dynamic_anchor.data == self.fragment:
             self.dynamic = True
@@ -160,7 +160,7 @@ class DynamicRefKeyword(Keyword):
                     target_uri = URI(f"#{self.fragment}").resolve(base_uri)
                     try:
                         found_schema = self.parentschema.catalog.get_schema(
-                            target_uri, session=self.parentschema.session
+                            target_uri, cacheid=self.parentschema.cacheid
                         )
                         if (dynamic_anchor := found_schema.get("$dynamicAnchor")) and \
                                 dynamic_anchor.data == self.fragment:
@@ -186,7 +186,7 @@ class DynamicAnchorKeyword(Keyword):
         else:
             raise JSONSchemaError(f'No base URI for "$dynamicAnchor" value "{value}"')
 
-        parentschema.catalog.add_schema(uri, parentschema, session=parentschema.session)
+        parentschema.catalog.add_schema(uri, parentschema, cacheid=parentschema.cacheid)
 
 
 class DefsKeyword(Keyword, PropertyApplicator):

@@ -29,7 +29,7 @@ class JSONSchema(JSON):
             value: Union[bool, Mapping[str, JSONCompatible]],
             *,
             catalog: Union[str, Catalog] = 'catalog',
-            session: Hashable = 'default',
+            cacheid: Hashable = 'default',
             uri: URI = None,
             metaschema_uri: URI = None,
             parent: JSON = None,
@@ -39,9 +39,8 @@ class JSONSchema(JSON):
         schema-compatible `value`.
 
         :param value: a schema-compatible Python object
-        :param catalog: the catalog in which the schema is cached
-        :param session: a session identifier, identifying which session
-            cache to put the schema in
+        :param catalog: catalog instance or catalog name
+        :param cacheid: schema cache identifier
         :param uri: the URI identifying the schema; an ``"$id"`` keyword
             appearing in `value` will override this
         :param metaschema_uri: the URI identifying the schema's metaschema;
@@ -59,12 +58,11 @@ class JSONSchema(JSON):
         self.catalog: Catalog = catalog
         """The catalog in which the schema is cached."""
 
-        self.session: Hashable = session
-        """A session identifier, identifying which session
-        cache to use for the schema."""
+        self.cacheid: Hashable = cacheid
+        """Schema cache identifier."""
 
         if uri is not None:
-            catalog.add_schema(uri, self, session=session)
+            catalog.add_schema(uri, self, cacheid=cacheid)
 
         self._uri: Optional[URI] = uri
         self._metaschema_uri: Optional[URI] = metaschema_uri
@@ -229,7 +227,7 @@ class JSONSchema(JSON):
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
         if not isinstance(
-                metaschema := self.catalog.get_schema(uri, session='__meta__'),
+                metaschema := self.catalog.get_schema(uri, cacheid='__meta__'),
                 Metaschema,
         ):
             raise JSONSchemaError(f"The schema referenced by {uri} is not a metachema")
@@ -276,12 +274,12 @@ class JSONSchema(JSON):
     def uri(self, value: Optional[URI]) -> None:
         if self._uri != value:
             if self._uri is not None:
-                self.catalog.del_schema(self._uri, session=self.session)
+                self.catalog.del_schema(self._uri, cacheid=self.cacheid)
 
             self._uri = value
 
             if self._uri is not None:
-                self.catalog.add_schema(self._uri, self, session=self.session)
+                self.catalog.add_schema(self._uri, self, cacheid=self.cacheid)
 
     @property
     def canonical_uri(self) -> Optional[URI]:

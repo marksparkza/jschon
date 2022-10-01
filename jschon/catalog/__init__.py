@@ -59,10 +59,8 @@ class RemoteSource(Source):
 
 
 class Catalog:
-    """The :class:`Catalog` acts as a schema cache, enabling schemas and subschemas
-    to be indexed, re-used, and cross-referenced by URI. The cache is transparently
-    partitioned by (arbitrary) session identifiers, which may optionally be provided
-    when creating :class:`~jschon.jsonschema.JSONSchema` objects."""
+    """The :class:`Catalog` acts as a schema cache, enabling schemas and
+    subschemas to be indexed, re-used, and cross-referenced by URI."""
 
     _catalog_registry: Dict[Hashable, Catalog] = {}
 
@@ -215,75 +213,68 @@ class Catalog:
             uri: URI,
             schema: JSONSchema,
             *,
-            session: Hashable = 'default',
+            cacheid: Hashable = 'default',
     ) -> None:
-        """Add a (sub)schema to a session cache.
+        """Add a (sub)schema to a cache.
 
         :param uri: the URI identifying the (sub)schema
         :param schema: the :class:`~jschon.jsonschema.JSONSchema` instance to cache
-        :param session: a session identifier
+        :param cacheid: schema cache identifier
         """
-        self._schema_cache.setdefault(session, {})
-        self._schema_cache[session][uri] = schema
+        self._schema_cache.setdefault(cacheid, {})
+        self._schema_cache[cacheid][uri] = schema
 
     def del_schema(
             self,
             uri: URI,
             *,
-            session: Hashable = 'default',
+            cacheid: Hashable = 'default',
     ) -> None:
-        """Remove a (sub)schema from a session cache.
+        """Remove a (sub)schema from a cache.
 
         :param uri: the URI identifying the (sub)schema
-        :param session: a session identifier
+        :param cacheid: schema cache identifier
         """
-        if session in self._schema_cache:
-            self._schema_cache[session].pop(uri, None)
+        if cacheid in self._schema_cache:
+            self._schema_cache[cacheid].pop(uri, None)
 
     def get_schema(
             self,
             uri: URI,
             *,
             metaschema_uri: URI = None,
-            session: Hashable = 'default',
+            cacheid: Hashable = 'default',
     ) -> JSONSchema:
-        """Get a (sub)schema identified by `uri` from a session cache, or
+        """Get a (sub)schema identified by `uri` from a cache, or
         load it from disk if not already cached.
 
         :param uri: the URI identifying the (sub)schema
         :param metaschema_uri: passed to the :class:`~jschon.jsonschema.JSONSchema`
             constructor when loading a new instance from disk
-        :param session: a session identifier
+        :param cacheid: schema cache identifier
         :raise CatalogError: if a schema cannot be found for `uri`, or if the
             object referenced by `uri` is not a :class:`~jschon.jsonschema.JSONSchema`
         """
-        try_caches = ('__meta__',) \
-            if session == '__meta__' \
-            else (session, '__meta__')
-
-        for cacheid in try_caches:
-            try:
-                return self._schema_cache[cacheid][uri]
-            except KeyError:
-                pass
+        try:
+            return self._schema_cache[cacheid][uri]
+        except KeyError:
+            pass
 
         schema = None
         base_uri = uri.copy(fragment=False)
 
         if uri.fragment is not None:
-            for cacheid in try_caches:
-                try:
-                    schema = self._schema_cache[cacheid][base_uri]
-                    break
-                except KeyError:
-                    pass
+            try:
+                schema = self._schema_cache[cacheid][base_uri]
+            except KeyError:
+                pass
 
         if schema is None:
             doc = self.load_json(base_uri)
             schema = JSONSchema(
                 doc,
                 catalog=self,
-                session=session,
+                cacheid=cacheid,
                 uri=base_uri,
                 metaschema_uri=metaschema_uri,
             )
@@ -301,14 +292,24 @@ class Catalog:
         return schema
 
     @contextmanager
-    def session(self, session: Hashable = None) -> ContextManager[Hashable]:
-        if session is None:
-            session = uuid.uuid4()
+    def cache(self, cacheid: Hashable = None) -> ContextManager[Hashable]:
+        """Context manager for a schema cache.
 
-        if session in self._schema_cache:
-            raise CatalogError("session is already in use")
+        Example usage::
+
+            with catalog.cache() as cacheid:
+                schema = JSONSchema(..., cacheid=cacheid)
+
+        The cache and its contents are popped from the catalog
+        upon exiting the ``with`` block.
+        """
+        if cacheid is None:
+            cacheid = uuid.uuid4()
+
+        if cacheid in self._schema_cache:
+            raise CatalogError("cache identifier is already in use")
 
         try:
-            yield session
+            yield cacheid
         finally:
-            self._schema_cache.pop(session, None)
+            self._schema_cache.pop(cacheid, None)
