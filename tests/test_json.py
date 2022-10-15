@@ -284,6 +284,10 @@ def test_json_patch_example(document, patch, result):
         jsondoc.remove(path)
         assert_json_node(jsondoc, result)
 
+    elif op.op == 'replace':
+        jsondoc.replace(path, value)
+        assert_json_node(jsondoc, result)
+
     assert op.value == original_value
 
 
@@ -399,3 +403,58 @@ def test_json_remove(doc, data):
 
     jnode.remove(rmv_ptr)
     assert_json_node(jdoc, doc)
+
+
+@given(
+    doc=json.filter(lambda x: isinstance(x, (list, dict))),
+    val=jsonleaf | jsonflatarray | jsonflatobject,
+    data=hs.data(),
+)
+def test_json_replace(doc, val, data):
+    _cache_json(jdoc := JSON(doc))
+    _cache_json(jdoc_1 := JSON(doc))  # test the equivalent remove + add
+
+    # select a JSON node (jnode) on which to call replace
+    generate_jsonpointers(nodes := {}, doc)
+    node_path = data.draw(hs.sampled_from(list(nodes.keys())))
+    jnode = JSONPointer(node_path).evaluate(jdoc)
+    jnode_1 = JSONPointer(node_path).evaluate(jdoc_1)
+
+    # select a target (repl_ptr) relative to jnode
+    generate_jsonpointers(targets := {}, jnode.value)
+    repl_path = data.draw(hs.sampled_from(list(targets.keys())))
+    repl_ptr = data.draw(hs.sampled_from((repl_path, JSONPointer(repl_path))))
+    repl_val = data.draw(hs.sampled_from((val, JSON(val))))
+
+    # the target relative to root
+    target_ptr = JSONPointer(node_path + repl_path)
+
+    if not target_ptr:
+        # replace the whole doc with val
+        jnode.replace(repl_ptr, repl_val)
+        assert_json_node(jdoc, val)
+
+        jnode_1.remove(repl_ptr)
+        jnode_1.add(repl_ptr, repl_val)
+        assert jdoc_1 == jdoc
+
+        return
+
+    target_parent = target_ptr[:-1].evaluate(doc)
+    target_key = target_ptr[-1]
+
+    if isinstance(target_parent, list):
+        target_parent[int(target_key)] = val
+
+    elif isinstance(target_parent, dict):
+        target_parent[target_key] = val
+
+    else:
+        assert False
+
+    jnode.replace(repl_ptr, repl_val)
+    assert_json_node(jdoc, doc)
+
+    jnode_1.remove(repl_ptr)
+    jnode_1.add(repl_ptr, repl_val)
+    assert jdoc_1 == jdoc

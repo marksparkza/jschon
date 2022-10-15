@@ -393,7 +393,37 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             del target.parent[target.key]
 
     def replace(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
-        pass
+        """Set `obj` at `path` relative to `self`.
+
+        The :class:`JSON` equivalent to :func:`~jschon.jsonpatch.replace`,
+        this method performs an in-place JSON Patch ``replace`` operation on `self`.
+
+        If `path` is empty, the value of `self` is replaced by `obj`.
+        """
+        if not path:
+            self.__init__(
+                obj.value if isinstance(obj, JSON) else obj,
+                parent=self.parent,
+                key=self.key,
+                itemclass=self.itemclass,
+                **self.itemkwargs,
+            )
+            self._invalidate_value()
+            return
+
+        if not isinstance(path, JSONPointer):
+            path = JSONPointer(path)
+
+        try:
+            target: JSON = path.evaluate(self)
+        except JSONPointerError as e:
+            raise JSONError(f"Target must exist at '{path}'") from e
+
+        if target.parent.type == 'array':
+            target.parent[int(target.key)] = obj
+
+        elif target.parent.type == 'object':
+            target.parent[target.key] = obj
 
     def move(self, from_: Union[str, JSONPointer], to: Union[str, JSONPointer]) -> None:
         pass
