@@ -4,8 +4,9 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
-from jschon import JSON, JSONPointer, JSONSchema, URI, JSONSchemaError
-from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, example_schema, example_valid, example_invalid
+from jschon import JSON, JSONPointer, JSONSchema, URI
+from jschon.json import false, true
+from tests import example_invalid, example_schema, example_valid, metaschema_uri_2019_09, metaschema_uri_2020_12
 from tests.strategies import *
 
 schema_tests = (
@@ -217,10 +218,10 @@ def test_uri(ptr: str, uri: str, canonical: bool, catalog):
 tree_2019_09 = {
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "https://example.com/tree",
-    "$recursiveAnchor": True,
+    "$recursiveAnchor": true,
     "type": "object",
     "properties": {
-        "data": True,
+        "data": true,
         "children": {
             "type": "array",
             "items": {
@@ -234,9 +235,9 @@ tree_2019_09 = {
 strict_tree_2019_09 = {
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "$id": "https://example.com/strict-tree",
-    "$recursiveAnchor": True,
+    "$recursiveAnchor": true,
     "$ref": "tree",
-    "unevaluatedProperties": False
+    "unevaluatedProperties": false
 }
 
 # instance with misspelled field
@@ -261,7 +262,7 @@ tree_2020_12 = {
     "$dynamicAnchor": "node",
     "type": "object",
     "properties": {
-        "data": True,
+        "data": true,
         "children": {
             "type": "array",
             "items": {
@@ -277,7 +278,7 @@ strict_tree_2020_12 = {
     "$id": "https://example.com/strict-tree",
     "$dynamicAnchor": "node",
     "$ref": "tree",
-    "unevaluatedProperties": False
+    "unevaluatedProperties": false
 }
 
 # instance with misspelled field

@@ -9,6 +9,7 @@ from hypothesis import assume, given, strategies as hs
 from pytest_httpserver import HTTPServer
 
 from jschon import JSON, JSONCompatible, JSONError, JSONPatch, JSONPointer
+from jschon.json import false, null, true
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonflatarray, jsonflatobject, jsonleaf, jsonnumber, jsonstring
 from tests.test_jsonpointer import generate_jsonpointers, jsonpointer_escape
@@ -458,3 +459,16 @@ def test_json_replace(doc, val, data):
     jnode_1.remove(repl_ptr)
     jnode_1.add(repl_ptr, repl_val)
     assert jdoc_1 == jdoc
+
+
+def test_json_literals():
+    doc = JSON({
+        "foo": null,
+        "bar": true,
+        "baz": false
+    })
+    assert_json_node(doc, {
+        "foo": None,
+        "bar": True,
+        "baz": False
+    })

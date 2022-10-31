@@ -13,10 +13,22 @@ from jschon.utils import json_dumpf, json_dumps, json_loadf, json_loadr, json_lo
 __all__ = [
     'JSON',
     'JSONCompatible',
+    'null',
+    'true',
+    'false',
 ]
 
 JSONCompatible = Union[None, bool, int, float, str, Sequence[Any], Mapping[str, Any]]
 """Type hint for a JSON-compatible Python object."""
+
+null = None
+"""Use to represent the JSON `null` value literally in Python code."""
+
+true = True
+"""Use to represent the JSON `true` value literally in Python code."""
+
+false = False
+"""Use to represent the JSON `false` value literally in Python code."""
 
 
 class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
