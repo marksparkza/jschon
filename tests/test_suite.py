@@ -2,9 +2,9 @@ import pathlib
 
 import pytest
 
-from jschon import JSON, JSONSchema, URI, Catalog, LocalSource
+from jschon import Catalog, JSON, JSONSchema, LocalSource, URI
 from jschon.utils import json_loadf
-from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
+from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, metaschema_uri_next
 
 testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
@@ -27,6 +27,12 @@ def configure_catalog(catalog: Catalog):
         URI('https://json-schema.org/draft/2020-12/vocab/applicator'),
         metaschema_uri=metaschema_uri_2020_12,
     )
+    catalog.create_metaschema(
+        URI('http://localhost:1234/draft-next/metaschema-no-validation.json'),
+        URI('https://json-schema.org/draft/next/vocab/core'),
+        URI('https://json-schema.org/draft/next/vocab/applicator'),
+        metaschema_uri=metaschema_uri_2020_12,
+    )
 
 
 def pytest_generate_tests(metafunc):
@@ -34,7 +40,7 @@ def pytest_generate_tests(metafunc):
     argvalues = []
     testids = []
 
-    only_version = metafunc.config.getoption("testsuite_version")
+    test_versions = metafunc.config.getoption("testsuite_version")
     include_optionals = metafunc.config.getoption("testsuite_optionals")
     include_formats = metafunc.config.getoption("testsuite_formats")
 
@@ -42,12 +48,13 @@ def pytest_generate_tests(metafunc):
     version_dirs = {
         '2019-09': (metaschema_uri_2019_09, base_dir / 'draft2019-09'),
         '2020-12': (metaschema_uri_2020_12, base_dir / 'draft2020-12'),
+        'next': (metaschema_uri_next, base_dir / 'draft-next'),
     }
 
     for version, (metaschema_uri, dir_) in version_dirs.items():
         testfile_paths = []
 
-        if not only_version or version == only_version:
+        if not test_versions or version in test_versions:
             testfile_paths += sorted(dir_.glob('*.json'))
             if include_optionals:
                 testfile_paths += sorted((dir_ / 'optional').glob('*.json'))

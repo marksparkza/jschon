@@ -37,17 +37,18 @@ def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
     initialized with a meta-schema and keyword support for each of the
     specified JSON Schema `vocabularies`.
 
-    :param vocabularies: Any of ``2019-09``, ``2020-12``.
+    :param vocabularies: Any of ``2019-09``, ``2020-12``, ``next``.
     :param name: A unique name for the :class:`~jschon.catalog.Catalog` instance.
     :raise ValueError: If any of `vocabularies` is unrecognized.
     """
-    from .catalog import _2019_09, _2020_12
+    from .catalog import _2019_09, _2020_12, _next
 
     catalog = Catalog(name=name)
 
     vocabulary_initializers = {
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
+        'next': _next.initialize,
     }
     try:
         for vocabulary in vocabularies:

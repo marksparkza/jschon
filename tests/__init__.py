@@ -2,6 +2,7 @@ from jschon import URI
 
 metaschema_uri_2019_09 = URI("https://json-schema.org/draft/2019-09/schema")
 metaschema_uri_2020_12 = URI("https://json-schema.org/draft/2020-12/schema")
+metaschema_uri_next = URI("https://json-schema.org/draft/next/schema")
 
 example_schema = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
