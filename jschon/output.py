@@ -1,7 +1,7 @@
 from typing import Any, Callable, Dict, Iterable
 
 from jschon.json import JSONCompatible
-from jschon.jsonschema import Result
+from jschon.jsonschema import JSONSchema, Result
 
 __all__ = [
     'OutputFormatter',
@@ -124,3 +124,42 @@ def verbose(result: Result) -> JSONCompatible:
         return output
 
     return visit(result)
+
+
+@output_formatter('hierarchical')
+def hierarchical(result: Result) -> JSONCompatible:
+    def visit(node: Result):
+        if isinstance(node.schema_node, JSONSchema):
+            output = {
+                "valid": (valid := node.valid),
+                "evaluationPath": str(node.path),
+                "schemaLocation": str(node.absolute_uri),
+                "instanceLocation": str(node.instance.path),
+            }
+            nested = []
+            annotations = {}
+            errors = {}
+            for child in node.children.values():
+                nested += [
+                    childout for childout in (visit(child))
+                    if child.valid == valid
+                ]
+                if valid and child.annotation is not None:
+                    annotations[child.key] = child.annotation
+                elif not valid and child.error is not None:
+                    errors[child.key] = child.error
+
+            if nested:
+                output["nested"] = nested
+            if valid and annotations:
+                output["annotations"] = annotations
+            elif not valid and errors:
+                output["errors"] = errors
+
+            yield output
+
+        else:
+            for child in node.children.values():
+                yield from visit(child)
+
+    return list(visit(result))[0]

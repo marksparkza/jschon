@@ -3,7 +3,7 @@ from copy import deepcopy
 import pytest
 from pytest import param as p
 
-from jschon import JSON, JSONPointer, JSONSchema
+from jschon import JSON, JSONPointer, JSONSchema, URI
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12
 
 schema_valid = {
@@ -413,3 +413,26 @@ def test_basic_output_filtering(annotations):
             if JSONPointer(annotation['keywordLocation'])[-1] in annotations
         ]
         assert result == filtered_output
+
+
+@pytest.mark.parametrize('input, valid', [
+    ([1, 2], True),
+    (['one'], True),
+    ([1, 'two'], False),
+    ([None, False], False),
+])
+def test_hierarchical_output(input, valid, catalog):
+    schema = JSONSchema({
+        "$schema": "https://json-schema.org/draft/next/schema",
+        "type": "array",
+        "anyOf": [
+            {"items": {"type": "integer"}},
+            {"items": {"type": "string"}},
+        ]
+    })
+    output = schema.evaluate(JSON(input)).output('hierarchical')
+    assert output['valid'] is valid
+
+    output_schema = catalog.get_schema(URI('https://json-schema.org/draft/next/output/schema'))
+    output_validity = output_schema.evaluate(JSON(output))
+    assert output_validity.valid is True
