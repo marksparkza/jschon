@@ -417,7 +417,7 @@ def test_basic_output_filtering(annotations):
 
 @pytest.mark.parametrize('input, valid', [
     ([1, 2], True),
-    (['one'], True),
+    (['one', 'two'], True),
     ([1, 'two'], False),
     ([None, False], False),
 ])
