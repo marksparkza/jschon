@@ -1,0 +1,15 @@
+{
+    "title": "Hierarchical output validation schema",
+    "$schema": "https://json-schema.org/draft/next/schema",
+    "$id": "https://jschon.dev/output/hierarchical",
+    "$ref": "#/$defs/hierarchicalOutputUnit",
+    "$defs": {
+        "hierarchicalOutputUnit": {
+            "$dynamicAnchor": "output-unit",
+            "$ref": "base#/$defs/outputUnit",
+            "properties": {
+                "nested": { "$ref": "base#/$defs/outputUnitArray" }
+            }
+        }
+    }
+}

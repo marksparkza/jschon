@@ -13,4 +13,4 @@
 [submodule "json-schema-next"]
 	path = jschon/catalog/json-schema-next
 	url = https://github.com/marksparkza/json-schema-spec
-	branch = main
+	branch = keyword-output-vocabulary

@@ -1,0 +1,10 @@
+{
+    "title": "Flag output validation schema",
+    "$schema": "https://json-schema.org/draft/next/schema",
+    "$id": "https://jschon.dev/output/flag",
+    "type": "object",
+    "properties": {
+        "valid": { "type": "boolean" }
+    },
+    "required": [ "valid" ]
+}

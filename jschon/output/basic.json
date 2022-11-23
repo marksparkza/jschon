@@ -1,0 +1,11 @@
+{
+    "title": "Basic output validation schema",
+    "$schema": "https://json-schema.org/draft/next/schema",
+    "$id": "https://jschon.dev/output/basic",
+    "type": "object",
+    "properties": {
+        "valid": { "type": "boolean" },
+        "nested": { "$ref": "base#/$defs/outputUnitArray" }
+    },
+    "required": [ "valid", "nested" ]
+}

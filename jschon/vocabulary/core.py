@@ -1,10 +1,11 @@
-from typing import Mapping
+from typing import Mapping, Optional, Union
 
 from jschon.exceptions import CatalogError, JSONSchemaError, URIError
-from jschon.json import JSON
+from jschon.json import JSON, JSONCompatible
+from jschon.jsonpointer import RelativeJSONPointer
 from jschon.jsonschema import JSONSchema, Result
 from jschon.uri import URI
-from jschon.vocabulary import Keyword, Metaschema, PropertyApplicator
+from jschon.vocabulary import ApplicatorMixin, Keyword, Metaschema, PropertyApplicator
 
 __all__ = [
     'SchemaKeyword',
@@ -16,6 +17,7 @@ __all__ = [
     'DynamicAnchorKeyword',
     'DefsKeyword',
     'CommentKeyword',
+    'AnnotationKeyword',
 ]
 
 
@@ -197,3 +199,34 @@ class DefsKeyword(Keyword, PropertyApplicator):
 class CommentKeyword(Keyword):
     key = "$comment"
     static = True
+
+
+class AnnotationKeyword(Keyword, ApplicatorMixin):
+    key = "$annotation"
+
+    @classmethod
+    def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
+        if isinstance(value, (bool, Mapping)):
+            annotation_schema = JSONSchema(
+                value,
+                parent=parentschema,
+                key=key,
+                catalog=parentschema.catalog,
+                cacheid=parentschema.cacheid,
+            )
+            parentschema.metaschema.annotation_schemas[parentschema.key] = annotation_schema
+            return annotation_schema
+
+    def __init__(self, parentschema: JSONSchema, value: Union[str, bool, Mapping[str, JSONCompatible]]):
+        super().__init__(parentschema, value)
+        self.keyref = RelativeJSONPointer(value) if isinstance(value, str) else None
+
+    def can_evaluate(self, instance: JSON) -> bool:
+        return super().can_evaluate(instance) and self.keyref is not None
+
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        key = self.keyref.evaluate(instance)
+        annotation_schema = self.parentschema.metaschema.annotation_schemas[key]
+        annotation_schema.evaluate(instance, result)
+        if not result.passed:
+            result.fail(f'The annotation is invalid against the annotation schema for "{key}"')

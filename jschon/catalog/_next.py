@@ -15,6 +15,11 @@ def initialize(catalog: Catalog):
         LocalSource(pathlib.Path(__file__).parent / 'json-schema-next', suffix='.json'),
     )
 
+    catalog.add_uri_source(
+        URI('https://jschon.dev/output/'),
+        LocalSource(pathlib.Path(__file__).parent.parent / 'output', suffix='.json'),
+    )
+
     catalog.create_vocabulary(
         URI("https://json-schema.org/draft/next/vocab/core"),
         SchemaKeyword,
@@ -26,6 +31,7 @@ def initialize(catalog: Catalog):
         DynamicAnchorKeyword,
         DefsKeyword,
         CommentKeyword,
+        AnnotationKeyword,
     )
 
     catalog.create_vocabulary(

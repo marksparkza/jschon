@@ -1,0 +1,61 @@
+{
+    "title": "Abstract base output validation schema",
+    "$schema": "https://json-schema.org/draft/next/schema",
+    "$id": "https://jschon.dev/output/base",
+    "$defs": {
+        "outputUnit": {
+            "$dynamicAnchor": "output-unit",
+            "type": "object",
+            "properties": {
+                "valid": { "type": "boolean" },
+                "evaluationPath": {
+                    "type": "string",
+                    "format": "json-pointer"
+                },
+                "schemaLocation": {
+                    "type": "string",
+                    "format": "uri"
+                },
+                "instanceLocation": {
+                    "type": "string",
+                    "format": "json-pointer"
+                },
+                "annotations": {
+                    "type": "object",
+                    "additionalProperties": { "$annotation": "0#" }
+                },
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": { "$error": "0#" }
+                }
+            },
+            "required": [ "valid", "evaluationPath", "schemaLocation", "instanceLocation" ],
+            "allOf": [
+                {
+                    "if": {
+                        "required": [ "errors" ]
+                    },
+                    "then": {
+                        "properties": {
+                            "valid": { "const": false }
+                        }
+                    }
+                },
+                {
+                    "if": {
+                        "required": [ "annotations" ]
+                    },
+                    "then": {
+                        "properties": {
+                            "valid": { "const": true }
+                        }
+                    }
+                }
+            ]
+        },
+        "outputUnitArray": {
+            "type": "array",
+            "items": { "$dynamicRef": "#output-unit" }
+        }
+    }
+}

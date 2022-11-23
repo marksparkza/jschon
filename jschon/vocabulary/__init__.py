@@ -42,6 +42,7 @@ class Metaschema(JSONSchema):
         self.core_vocabulary: Vocabulary = core_vocabulary
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
         self.kwclasses: Dict[str, KeywordClass] = {}
+        self.annotation_schemas: Dict[str, JSONSchema] = {}
         super().__init__(value, catalog=catalog, cacheid='__meta__', **kwargs)
 
     def _bootstrap(self, value: Mapping[str, JSONCompatible]) -> None:
@@ -108,7 +109,7 @@ KeywordClass = Type[Keyword]
 class ApplicatorMixin:
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
-        raise NotImplementedError
+        pass
 
 
 class Applicator(ApplicatorMixin):
