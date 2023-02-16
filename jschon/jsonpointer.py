@@ -17,7 +17,12 @@ __all__ = [
 
 JSON_POINTER_RE = '(/([^~/]|(~[01]))*)*'
 JSON_INDEX_RE = '0|([1-9][0-9]*)'
-RELATIVE_JSON_POINTER_RE = f'(?P<up>{JSON_INDEX_RE})(?P<ref>#|{JSON_POINTER_RE})'
+JSON_INDEX_MANIP_RE = r'((\+|-)[1-9][0-9]*)?'
+RELATIVE_JSON_POINTER_RE = (
+    f'(?P<up>{JSON_INDEX_RE})'
+    f'(?P<over>{JSON_INDEX_MANIP_RE})'
+    f'(?P<ref>#|{JSON_POINTER_RE})'
+)
 
 
 class JSONPointer(Sequence[str]):
@@ -264,6 +269,7 @@ class RelativeJSONPointer:
             /,
             *,
             up: int = 0,
+            over: int = 0,
             ref: Union[str, JSONPointer] = '',
     ) -> RelativeJSONPointer:
         """Create and return a new :class:`RelativeJSONPointer` instance.
@@ -272,6 +278,10 @@ class RelativeJSONPointer:
             given, keyword args are ignored
         :param up: the number of levels up from the current referenced JSON node
             from which to evaluate `ref`
+        :param over: the integer value used to adjust the array index after
+            applying `up`, which is only valid if that location is an array item;
+            a value of 0, which is not allowed by the grammar, is treated as if
+            there is no adjutsment.
         :param ref: either the literal ``#``, or a :class:`JSONPointer` instance,
             or a JSON pointer-conformant string
         :raise RelativeJSONPointerError: for any invalid arguments
@@ -282,7 +292,14 @@ class RelativeJSONPointer:
             if not (match := RelativeJSONPointer._regex.fullmatch(value)):
                 raise RelativeJSONPointerError(f"'{value}' is not a valid relative JSON pointer")
 
-            up, ref = match.group('up', 'ref')
+            up, over, ref = match.group('up', 'over', 'ref')
+
+        if over in (0, ''):
+            self.over = 0
+            self._over_str = ''
+        else:
+            self.over = int(over)
+            self._over_str = str(over) if self.over < 0 else f'+{self.over}'
 
         self.up = int(up)
         self.index = ref == '#'
@@ -298,19 +315,20 @@ class RelativeJSONPointer:
         """Return `self == other`."""
         if isinstance(other, RelativeJSONPointer):
             return (self.up == other.up and
+                    self.over == other.over and
                     self.index == other.index and
                     self.path == other.path)
         return NotImplemented
 
     def __hash__(self) -> int:
         """Return `hash(self)`."""
-        return hash((self.up, self.index, self.path))
+        return hash((self.up, self.over, self.index, self.path))
 
     def __str__(self) -> str:
         """Return `str(self)`."""
         if self.index:
-            return f'{self.up}#'
-        return f'{self.up}{self.path}'
+            return f'{self.up}{self._over_str}#'
+        return f'{self.up}{self._over_str}{self.path}'
 
     def __repr__(self) -> str:
         """Return `repr(self)`."""
@@ -322,6 +340,16 @@ class RelativeJSONPointer:
             if node.parent is None:
                 raise RelativeJSONPointerError('Up too many levels')
             node = node.parent
+
+        if self.over:
+            if node.parent is None:
+                raise RelativeJSONPointerError('No containing node for index adjustment')
+            if node.parent.type != "array":
+                raise RelativeJSONPointerError(f'Index adjustment not valid for type {node.parent.type}')
+            adjusted = int(node.key) + self.over
+            if adjusted < 0 or adjusted > len(node.parent):
+                raise RelativeJSONPointerError(f'Index adjustment out of range')
+            node = node.parent[adjusted]
 
         if self.index:
             if node.parent is None:

@@ -41,9 +41,14 @@ jsonproperties = hs.dictionaries(propname, jsonleaf, max_size=10)
 
 jsonpointer_regex = '(/([^~/]|(~[01]))*)*'
 jsonpointer_index = '0|([1-9][0-9]*)'
+jsonpointer_index_manip = r'((\+|-)[1-9][0-9]*)?'
 jsonpointer = hs.from_regex(jsonpointer_regex, fullmatch=True)
 jsonpointer_key = hs.text() | hs.sampled_from(['~', '/', '-']) | hs.from_regex(jsonpointer_index, fullmatch=True)
-relative_jsonpointer_regex = f'(?P<up>{jsonpointer_index})(?P<ref>#|{jsonpointer_regex})'
+relative_jsonpointer_regex = (
+    f'(?P<up>{jsonpointer_index})'
+    f'(?P<over>{jsonpointer_index_manip})'
+    f'(?P<ref>#|{jsonpointer_regex})'
+)
 relative_jsonpointer = hs.from_regex(relative_jsonpointer_regex, fullmatch=True)
 
 interdependent_keywords = hs.lists(hs.sampled_from([
