@@ -264,6 +264,11 @@
                 "start": "/0",
                 "ref": "1+1/2/baz",
                 "result": "<fail>"
+            },
+            {
+                "start": "/0",
+                "ref": "0/anything",
+                "result": "<fail>"
             }
         ]
     }
