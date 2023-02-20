@@ -51,7 +51,7 @@ setup(
         'dev': [
             'pytest',
             'coverage',
-            'hypothesis',
+            'hypothesis<6.0.4',
             'pytest-benchmark',
             'pytest-httpserver',
             'requests',
