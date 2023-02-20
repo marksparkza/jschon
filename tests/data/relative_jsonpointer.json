@@ -247,12 +247,17 @@
             },
             {
                 "start": "/2/baz",
-                "ref": "1+5",
+                "ref": "1+1",
                 "result": "<fail>"
             },
             {
                 "start": "/2/baz",
                 "ref": "0+1",
+                "result": "<fail>"
+            },
+            {
+                "start": "/1",
+                "ref": "0-2",
                 "result": "<fail>"
             }
         ]

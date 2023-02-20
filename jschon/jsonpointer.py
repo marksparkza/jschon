@@ -281,7 +281,7 @@ class RelativeJSONPointer:
         :param over: the integer value used to adjust the array index after
             applying `up`, which is only valid if that location is an array item;
             a value of 0, which is not allowed by the grammar, is treated as if
-            there is no adjutsment.
+            there is no adjustment.
         :param ref: either the literal ``#``, or a :class:`JSONPointer` instance,
             or a JSON pointer-conformant string
         :raise RelativeJSONPointerError: for any invalid arguments
@@ -294,7 +294,7 @@ class RelativeJSONPointer:
 
             up, over, ref = match.group('up', 'over', 'ref')
 
-        if over in (0, ''):
+        if not over:
             self.over = 0
             self._over_str = ''
         else:
@@ -347,7 +347,7 @@ class RelativeJSONPointer:
             if node.parent.type != "array":
                 raise RelativeJSONPointerError(f'Index adjustment not valid for type {node.parent.type}')
             adjusted = int(node.key) + self.over
-            if adjusted < 0 or adjusted > len(node.parent):
+            if adjusted < 0 or adjusted >= len(node.parent):
                 raise RelativeJSONPointerError(f'Index adjustment out of range')
             node = node.parent[adjusted]
 

@@ -126,10 +126,9 @@ def test_create_relative_jsonpointer(value):
     up, over, ref = match.group('up', 'over', 'ref')
     kwargs = {
         'up': up,
+        'over': over,
         'ref': ref,
     }
-    if over:
-        kwargs['over'] = over
 
     r1 = RelativeJSONPointer(value)
     r2 = RelativeJSONPointer(**kwargs)
