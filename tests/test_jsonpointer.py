@@ -136,14 +136,18 @@ def test_create_relative_jsonpointer(value):
     assert str(r1) == value
     assert eval(repr(r1)) == r1
 
-    if up == 0:
-        assert r1 == RelativeJSONPointer(ref=ref)
-        if ref == '':
-            assert r1 == RelativeJSONPointer()
-        if ref != '#':
-            assert r1 == RelativeJSONPointer(ref=JSONPointer(ref))
+    if ref != '#':
+        kwargs['ref'] = JSONPointer(ref)
+        assert r1 == RelativeJSONPointer(**kwargs)
+
+    oldkwargs = kwargs
+    if up == '0':
+        del kwargs['up']
+    if over == '':
+        del kwargs['over']
     if ref == '':
         del kwargs['ref']
+    if kwargs != oldkwargs:
         assert r1 == RelativeJSONPointer(**kwargs)
 
 
