@@ -110,7 +110,7 @@ class JSONSchema(JSON):
             kwclasses = {
                 key: kwclass for key in value
                 if (key not in self.keywords and  # skip bootstrapped keywords
-                    (kwclass := self.metaschema.kwclasses.get(key)))
+                    (kwclass := self.metaschema.get_kwclass(key)))
             }
 
             for kwclass in self._resolve_dependencies(kwclasses):

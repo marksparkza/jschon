@@ -1,6 +1,6 @@
 from jschon.json import JSON
 from jschon.jsonschema import Result
-from jschon.vocabulary import Keyword
+from jschon.vocabulary import AnnotationKeyword
 
 __all__ = [
     'TitleKeyword',
@@ -14,13 +14,6 @@ __all__ = [
     'ContentEncodingKeyword',
     'ContentSchemaKeyword',
 ]
-
-
-class AnnotationKeyword(Keyword):
-
-    def evaluate(self, instance: JSON, result: Result) -> None:
-        result.annotate(self.json.data)
-        result.noassert()
 
 
 class TitleKeyword(AnnotationKeyword):
