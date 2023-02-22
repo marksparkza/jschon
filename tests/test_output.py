@@ -436,3 +436,21 @@ def test_hierarchical_output(input, valid, catalog):
     output_schema = catalog.get_schema(URI('https://json-schema.org/draft/next/output/schema'))
     output_validity = output_schema.evaluate(JSON(output))
     assert output_validity.valid is True
+
+@pytest.mark.parametrize('draft', ['2019-09', '2020-12', 'next'])
+def test_unknown_keywords_as_annotations(draft):
+    schema = JSONSchema({
+        "$schema": f"https://json-schema.org/draft/{draft}/schema",
+        "$id": "https://example.com/schema",
+        "extra": "annotation",
+    })
+    output = schema.evaluate(JSON({})).output('basic')
+    assert output == {
+        'valid': True,
+        'annotations': [{
+            'instanceLocation': '',
+            'keywordLocation': '/extra',
+            'absoluteKeywordLocation': 'https://example.com/schema#/extra',
+            'annotation': 'annotation',
+        }],
+    }
