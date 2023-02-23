@@ -123,25 +123,38 @@ def test_compare_jsonpointer(value1, value2):
 @given(relative_jsonpointer)
 def test_create_relative_jsonpointer(value):
     match = re.fullmatch(relative_jsonpointer_regex, value)
-    up, ref = match.group('up', 'ref')
+    up, over, ref = match.group('up', 'over', 'ref')
+    kwargs = {
+        'up': up,
+        'over': over,
+        'ref': ref,
+    }
+
     r1 = RelativeJSONPointer(value)
-    r2 = RelativeJSONPointer(up=up, ref=ref)
+    r2 = RelativeJSONPointer(**kwargs)
     assert r1 == r2
     assert str(r1) == value
+    assert eval(repr(r1)) == r1
 
-    if up == 0:
-        assert r1 == RelativeJSONPointer(ref=ref)
-        if ref == '':
-            assert r1 == RelativeJSONPointer()
-        if ref != '#':
-            assert r1 == RelativeJSONPointer(ref=JSONPointer(ref))
+    if ref != '#':
+        kwargs['ref'] = JSONPointer(ref)
+        assert r1 == RelativeJSONPointer(**kwargs)
+
+    oldkwargs = kwargs
+    if up == '0':
+        del kwargs['up']
+    if over == '':
+        del kwargs['over']
     if ref == '':
-        assert r1 == RelativeJSONPointer(up=up)
+        del kwargs['ref']
+    if kwargs != oldkwargs:
+        assert r1 == RelativeJSONPointer(**kwargs)
 
 
 # Examples from:
 # https://datatracker.ietf.org/doc/html/draft-handrews-relative-json-pointer-01#section-5.1
 # https://gist.github.com/geraintluff/5911303
+# https://gist.github.com/handrews/62d9ae0abe8938c910f7f4906cfa53f9
 example_file = pathlib.Path(__file__).parent / 'data' / 'relative_jsonpointer.json'
 
 

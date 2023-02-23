@@ -217,5 +217,59 @@
                 "result": "awkwardly/named~variable"
             }
         ]
+    },
+    {
+        "data": [
+            "foo",
+            "bar",
+            {"baz": "value"}
+        ],
+        "tests": [
+            {
+                "start": "/0",
+                "ref": "0+1",
+                "result": "bar"
+            },
+            {
+                "start": "/1",
+                "ref": "0-1#",
+                "result": 0
+            },
+            {
+                "start": "/0",
+                "ref": "0+2/baz",
+                "result": "value"
+            },
+            {
+                "start": "/2/baz",
+                "ref": "1-2",
+                "result": "foo"
+            },
+            {
+                "start": "/2/baz",
+                "ref": "1+1",
+                "result": "<fail>"
+            },
+            {
+                "start": "/2/baz",
+                "ref": "0+1",
+                "result": "<fail>"
+            },
+            {
+                "start": "/1",
+                "ref": "0-2",
+                "result": "<fail>"
+            },
+            {
+                "start": "/0",
+                "ref": "1+1/2/baz",
+                "result": "<fail>"
+            },
+            {
+                "start": "/0",
+                "ref": "0/anything",
+                "result": "<fail>"
+            }
+        ]
     }
 ]
