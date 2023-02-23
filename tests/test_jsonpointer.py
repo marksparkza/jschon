@@ -1,5 +1,6 @@
 import pathlib
 import re
+from copy import copy
 from typing import Dict, List, Union
 
 import pytest
@@ -124,11 +125,11 @@ def test_compare_jsonpointer(value1, value2):
 def test_create_relative_jsonpointer(value):
     match = re.fullmatch(relative_jsonpointer_regex, value)
     up, over, ref = match.group('up', 'over', 'ref')
-    kwargs = {
-        'up': up,
-        'over': over,
-        'ref': ref,
-    }
+    kwargs = dict(
+        up=int(up),
+        over=int(over) if over else 0,
+        ref=JSONPointer(ref) if ref != '#' else ref,
+    )
 
     r1 = RelativeJSONPointer(value)
     r2 = RelativeJSONPointer(**kwargs)
@@ -136,11 +137,7 @@ def test_create_relative_jsonpointer(value):
     assert str(r1) == value
     assert eval(repr(r1)) == r1
 
-    if ref != '#':
-        kwargs['ref'] = JSONPointer(ref)
-        assert r1 == RelativeJSONPointer(**kwargs)
-
-    oldkwargs = kwargs
+    oldkwargs = copy(kwargs)
     if up == '0':
         del kwargs['up']
     if over == '':

@@ -3,7 +3,7 @@ from __future__ import annotations
 import collections
 import re
 import urllib.parse
-from typing import Any, Iterable, Mapping, Sequence, TYPE_CHECKING, Union, overload
+from typing import Any, Iterable, Literal, Mapping, Sequence, TYPE_CHECKING, Union, overload
 
 from jschon.exceptions import JSONPointerError, RelativeJSONPointerError
 
@@ -270,7 +270,7 @@ class RelativeJSONPointer:
             *,
             up: int = 0,
             over: int = 0,
-            ref: Union[str, JSONPointer] = '',
+            ref: Union[JSONPointer, Literal['#']] = JSONPointer(),
     ) -> RelativeJSONPointer:
         """Create and return a new :class:`RelativeJSONPointer` instance.
 
@@ -282,8 +282,7 @@ class RelativeJSONPointer:
             applying `up`, which is only valid if that location is an array item;
             a value of 0, which is not allowed by the grammar, is treated as if
             there is no adjustment.
-        :param ref: either the literal ``#``, or a :class:`JSONPointer` instance,
-            or a JSON pointer-conformant string
+        :param ref: a :class:`JSONPointer` instance, or the literal ``'#'``
         :raise RelativeJSONPointerError: for any invalid arguments
         """
         self = object.__new__(cls)
@@ -293,21 +292,21 @@ class RelativeJSONPointer:
                 raise RelativeJSONPointerError(f"'{value}' is not a valid relative JSON pointer")
 
             up, over, ref = match.group('up', 'over', 'ref')
+            self.up = int(up)
+            self.over = int(over) if over else 0
+            self.path = JSONPointer(ref) if ref != '#' else None
 
-        if not over:
-            self.over = 0
-            self._over_str = ''
         else:
-            self.over = int(over)
-            self._over_str = str(over) if self.over < 0 else f'+{self.over}'
+            self.up = up
+            self.over = over
+            self.path = ref if isinstance(ref, JSONPointer) else None
 
-        self.up = int(up)
         self.index = ref == '#'
 
-        if self.index:
-            self.path = None
+        if self.over:
+            self._over_str = str(over) if self.over < 0 else f'+{self.over}'
         else:
-            self.path = JSONPointer(ref) if isinstance(ref, str) else ref
+            self._over_str = ''
 
         return self
 
