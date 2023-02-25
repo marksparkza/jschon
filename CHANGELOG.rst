@@ -1,6 +1,42 @@
 Changelog
 =========
 
+v0.10.0 (in development)
+------------------------
+Features:
+
+* ``@format_validator`` decorator
+* `json-pointer` format validator
+* Annotation filtering for `basic` output format (#32)
+* JSON ``null``, ``true``, ``false`` literals
+
+Experimental:
+
+* Catalog support for the `next` JSON Schema draft
+* `hierarchical` output format
+* In-place JSON Patch `add`, `remove` and `replace` operations on ``JSON`` class
+
+Breaking changes:
+
+* ``Catalog.add_format_validators()`` superseded by ``@format_validator`` / ``Catalog.enable_formats()``
+* Rename ``Catalog.session()`` context manager to ``Catalog.cache()``
+* Rename ``session`` parameter to ``cacheid`` in many places
+* Rename public functions in the ``jsonpatch`` module
+
+Documentation:
+
+* Rename `User Guide` to `Tutorial`
+* Restructure the API docs index page
+
+Miscellaneous:
+
+* ``@output_formatter`` decorator now identifies output formats explicitly
+* Add ``JSONCompatible`` and ``Result`` classes to the top-level package API
+* Remove implicit fall-through to looking up a schema in the `__meta__` cache
+  if not found in the parameterized cache, in ``Catalog.get_schema()`` (#40)
+* Improve kwarg-based construction of ``RelativeJSONPointer``
+
+
 v0.9.0 (2022-08-14)
 -------------------
 Features:

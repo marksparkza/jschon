@@ -15,6 +15,7 @@ Catalog
 JSON
 ^^^^
 * :class:`~jschon.json.JSON`
+* :class:`~jschon.json.JSONCompatible`
 * :class:`~jschon.exceptions.JSONError`
 
 JSON Patch
