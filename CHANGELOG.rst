@@ -10,6 +10,7 @@ Features:
 * Annotation filtering for `basic` output format (#32)
 * JSON ``null``, ``true``, ``false`` literals
 * Relative JSON Pointer ``+``/``-`` array index adjustments
+* Unknown keywords are collected as annotations
 
 Experimental:
 
