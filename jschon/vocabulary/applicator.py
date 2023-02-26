@@ -16,13 +16,24 @@ __all__ = [
     'PrefixItemsKeyword',
     'ItemsKeyword',
     'UnevaluatedItemsKeyword',
-    'ContainsKeyword',
+    'ContainsKeyword_2019_09',
+    'ContainsKeyword_Next',
+    'MinContainsKeyword_Next',
+    'MaxContainsKeyword_Next',
     'PropertiesKeyword',
     'PatternPropertiesKeyword',
     'AdditionalPropertiesKeyword',
-    'UnevaluatedPropertiesKeyword',
+    'UnevaluatedPropertiesKeyword_2019_09',
+    'UnevaluatedPropertiesKeyword_Next',
     'PropertyNamesKeyword',
 ]
+
+
+class _ApplicatorAnnotationKeyword(Keyword):
+
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        result.annotate(self.json.data)
+        result.noassert()
 
 
 class AllOfKeyword(Keyword, ArrayOfSubschemas):
@@ -232,12 +243,13 @@ class UnevaluatedItemsKeyword(Keyword, Subschema):
             result.annotate(annotation)
 
 
-class ContainsKeyword(Keyword, Subschema):
+class ContainsKeyword_2019_09(Keyword, Subschema):
     key = "contains"
     instance_types = "array",
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         annotation = []
+
         for index, item in enumerate(instance):
             if self.json.evaluate(item, result).passed:
                 annotation += [index]
@@ -248,6 +260,64 @@ class ContainsKeyword(Keyword, Subschema):
         if not annotation:
             result.fail('The array does not contain any element that is valid '
                         f'against the "{self.key}" subschema')
+
+
+class ContainsKeyword_Next(Keyword, Subschema):
+    key = "contains"
+    instance_types = "array", "object",
+    depends_on = "minContains", "maxContains",
+
+    # def _evaluate_array(self, instance: JSON, result: Result) -> [Integer]:
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        annotation = []
+
+        for identifier, item in (
+            enumerate(instance) if instance.type == 'array' else instance.items()
+        ):
+            if self.json.evaluate(item, result).passed:
+                annotation += [identifier]
+            else:
+                result.pass_()
+        result.annotate(annotation)
+
+        # TODO: What should happen if both minContains and
+        #       maxContains are violated, which can only
+        #       happen if they are in the wrong relationship
+        #       to each other?  Is that a failure or
+        #       a runtime error of some sort?
+        minimum = 1
+        maximum = None
+        if minContains := result.sibling(instance, "minContains"):
+            minimum = minContains.annotation
+        if maxContains := result.sibling(instance, "maxContains"):
+            maximum = maxContains.annotation
+
+        if len(annotation) < minimum:
+            result.fail(
+                f'The array contains too few elements ({len(annotation)}) that '
+                f'are valid against the "{self.key}" subschema; '
+                f'at least {minimum} are required.'
+            )
+        if maximum is not None and len(annotation) > maximum:
+            result.fail(
+                f'The array contains too many elements ({len(annotation)}) that '
+                f'are valid against the "{self.key}" subschema; '
+                f'at most {maximum} are allowed.'
+            )
+
+        if minContains is None and maxContains is None and not annotation:
+            result.fail('The array does not contain any element that is valid '
+                        f'against the "{self.key}" subschema')
+
+
+class MaxContainsKeyword_Next(_ApplicatorAnnotationKeyword):
+    key = "maxContains"
+    instance_types = "array", "object",
+
+
+class MinContainsKeyword_Next(_ApplicatorAnnotationKeyword):
+    key = "minContains"
+    instance_types = "array", "object",
 
 
 class PropertiesKeyword(Keyword, ObjectOfSubschemas):
@@ -330,23 +400,23 @@ class AdditionalPropertiesKeyword(Keyword, Subschema):
             result.annotate(annotation)
 
 
-class UnevaluatedPropertiesKeyword(Keyword, Subschema):
+class UnevaluatedPropertiesKeyword_2019_09(Keyword, Subschema):
     key = "unevaluatedProperties"
     instance_types = "object",
     depends_on = "properties", "patternProperties", "additionalProperties", \
                  "if", "then", "else", "dependentSchemas", \
                  "allOf", "anyOf", "oneOf", "not",
+    @classmethod
+    def _annotation_sources(cls):
+        return "properties", "patternProperties", \
+               "additionalProperties", "unevaluatedProperties",
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         evaluated_names = set()
-        for properties_annotation in result.parent.collect_annotations(instance, "properties"):
-            evaluated_names |= set(properties_annotation)
-        for pattern_properties_annotation in result.parent.collect_annotations(instance, "patternProperties"):
-            evaluated_names |= set(pattern_properties_annotation)
-        for additional_properties_annotation in result.parent.collect_annotations(instance, "additionalProperties"):
-            evaluated_names |= set(additional_properties_annotation)
-        for unevaluated_properties_annotation in result.parent.collect_annotations(instance, "unevaluatedProperties"):
-            evaluated_names |= set(unevaluated_properties_annotation)
+
+        for source in self._annotation_sources():
+            for evaluated in result.parent.collect_annotations(instance, source):
+                evaluated_names |= set(evaluated)
 
         annotation = []
         error = []
@@ -363,6 +433,14 @@ class UnevaluatedPropertiesKeyword(Keyword, Subschema):
             result.fail(error)
         else:
             result.annotate(annotation)
+
+
+class UnevaluatedPropertiesKeyword_Next(UnevaluatedPropertiesKeyword_2019_09):
+    depends_on = UnevaluatedPropertiesKeyword_2019_09.depends_on + ("contains",)
+
+    @classmethod
+    def _annotation_sources(cls):
+        return super()._annotation_sources() + ("contains",)
 
 
 class PropertyNamesKeyword(Keyword, Subschema):

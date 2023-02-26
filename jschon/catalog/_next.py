@@ -40,7 +40,9 @@ def initialize(catalog: Catalog):
         DependentSchemasKeyword,
         PrefixItemsKeyword,
         ItemsKeyword,
-        ContainsKeyword,
+        ContainsKeyword_Next,
+        MaxContainsKeyword_Next,
+        MinContainsKeyword_Next,
         PropertiesKeyword,
         PatternPropertiesKeyword,
         AdditionalPropertiesKeyword,
@@ -50,7 +52,7 @@ def initialize(catalog: Catalog):
     catalog.create_vocabulary(
         URI("https://json-schema.org/draft/next/vocab/unevaluated"),
         UnevaluatedItemsKeyword,
-        UnevaluatedPropertiesKeyword,
+        UnevaluatedPropertiesKeyword_Next,
     )
 
     catalog.create_vocabulary(
@@ -69,8 +71,6 @@ def initialize(catalog: Catalog):
         MaxItemsKeyword,
         MinItemsKeyword,
         UniqueItemsKeyword,
-        MaxContainsKeyword,
-        MinContainsKeyword,
         MaxPropertiesKeyword,
         MinPropertiesKeyword,
         RequiredKeyword,

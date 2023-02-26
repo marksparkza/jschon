@@ -21,8 +21,8 @@ __all__ = [
     'MaxItemsKeyword',
     'MinItemsKeyword',
     'UniqueItemsKeyword',
-    'MaxContainsKeyword',
-    'MinContainsKeyword',
+    'MaxContainsKeyword_2019_09',
+    'MinContainsKeyword_2019_09',
     'MaxPropertiesKeyword',
     'MinPropertiesKeyword',
     'RequiredKeyword',
@@ -177,7 +177,7 @@ class UniqueItemsKeyword(Keyword):
             result.fail("The array's elements must all be unique")
 
 
-class MaxContainsKeyword(Keyword):
+class MaxContainsKeyword_2019_09(Keyword):
     key = "maxContains"
     instance_types = "array",
     depends_on = "contains",
@@ -189,7 +189,7 @@ class MaxContainsKeyword(Keyword):
                             f'"contains" subschema (maximum {self.json})')
 
 
-class MinContainsKeyword(Keyword):
+class MinContainsKeyword_2019_09(Keyword):
     key = "minContains"
     instance_types = "array",
     depends_on = "contains", "maxContains",

@@ -40,7 +40,7 @@ def initialize(catalog: Catalog):
         DependentSchemasKeyword,
         PrefixItemsKeyword,
         ItemsKeyword,
-        ContainsKeyword,
+        ContainsKeyword_2019_09,
         PropertiesKeyword,
         PatternPropertiesKeyword,
         AdditionalPropertiesKeyword,
@@ -50,7 +50,7 @@ def initialize(catalog: Catalog):
     catalog.create_vocabulary(
         URI("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
         UnevaluatedItemsKeyword,
-        UnevaluatedPropertiesKeyword,
+        UnevaluatedPropertiesKeyword_2019_09,
     )
 
     catalog.create_vocabulary(
@@ -69,8 +69,8 @@ def initialize(catalog: Catalog):
         MaxItemsKeyword,
         MinItemsKeyword,
         UniqueItemsKeyword,
-        MaxContainsKeyword,
-        MinContainsKeyword,
+        MaxContainsKeyword_2019_09,
+        MinContainsKeyword_2019_09,
         MaxPropertiesKeyword,
         MinPropertiesKeyword,
         RequiredKeyword,

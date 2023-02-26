@@ -3,6 +3,11 @@ Changelog
 
 v0.10.1 (in development)
 ------------------------
+Experimental:
+
+* draft-next ``contains``, ``minContains``, ``maxContains``, and
+  related``unevaluatedProperties``  support
+
 Miscellaneous:
 
 * Rename submodules `json-schema-spec-2019-09` and `json-schema-spec-2020-12` to
