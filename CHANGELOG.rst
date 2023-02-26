@@ -9,6 +9,7 @@ Features:
 * `json-pointer` format validator
 * Annotation filtering for `basic` output format (#32)
 * JSON ``null``, ``true``, ``false`` literals
+* Relative JSON Pointer ``+``/``-`` array index adjustments
 
 Experimental:
 
@@ -35,6 +36,10 @@ Miscellaneous:
 * Remove implicit fall-through to looking up a schema in the `__meta__` cache
   if not found in the parameterized cache, in ``Catalog.get_schema()`` (#40)
 * Improve kwarg-based construction of ``RelativeJSONPointer``
+* Allow passthrough of arguments to ``pytest`` when invoking ``tox``
+* Pinned ``hypothesis<6.0.4`` to avoid
+  `python/cpython#102126 <https://github.com/python/cpython/issues/102126>`_
+  in Python 3.10.10 and 3.11.2
 
 
 v0.9.0 (2022-08-14)
