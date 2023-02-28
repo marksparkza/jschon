@@ -15,4 +15,4 @@ Then, ``cd`` to the jschon source directory (``pip show jschon`` will give you
 the location), and type ``tox``.
 
 Note that a complete test run requires all of the supported Python versions
-(3.8, 3.9, 3.10) to be installed on your system.
+(3.8, 3.9, 3.10, 3.11) to be installed on your system.

@@ -37,6 +37,7 @@ Miscellaneous:
   if not found in the parameterized cache, in ``Catalog.get_schema()`` (#40)
 * Improve kwarg-based construction of ``RelativeJSONPointer``
 * Allow passthrough of arguments to ``pytest`` when invoking ``tox``
+* Python 3.11 is now tested (no changes were required to support it)
 * Pinned ``hypothesis<6.0.4`` to avoid
   `python/cpython#102126 <https://github.com/python/cpython/issues/102126>`_
   in Python 3.10.10 and 3.11.2
