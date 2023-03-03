@@ -68,20 +68,24 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             parent: JSON = None,
             key: str = None,
             itemclass: Type[JSON] = None,
+            descendentclasses: Sequence[Type[JSON]] = None,
             **itemkwargs: Any,
     ):
         """Initialize a :class:`JSON` instance from the given JSON-compatible
         `value`.
 
-        The `parent`, `key`, `itemclass` and `itemkwargs` parameters should
-        typically only be used in the construction of compound :class:`JSON`
-        documents by :class:`JSON` subclasses.
+        The `parent`, `key`, `itemclass`, `descendentclasses` and `itemkwargs`
+        parameters should typically only be used in the construction of compound
+        :class:`JSON` documents by :class:`JSON` subclasses.
 
         :param value: a JSON-compatible Python object
         :param parent: the parent node of the instance
         :param key: the index of the instance within its parent
         :param itemclass: the :class:`JSON` subclass used to instantiate
             child nodes of arrays and objects (default: :class:`JSON`)
+        :param descendentclasses: a list of :class:`JSON` subclasses,
+            the first of which will be passed to child nodes as `itemclass`,
+            and the remainder as `descendentclasses`
         :param itemkwargs: keyword arguments to pass to the `itemclass`
             constructor
         """
@@ -116,6 +120,10 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         self.itemkwargs: Dict[str, Any] = itemkwargs
         """Keyword arguments to the :attr:`itemclass` constructor."""
+
+        if descendentclasses:
+            self.itemkwargs['itemclass'] = descendentclasses[0]
+            self.itemkwargs['descendentclasses'] = descendentclasses[1:]
 
         if value is None:
             self.type = "null"
