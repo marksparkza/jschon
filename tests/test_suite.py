@@ -1,4 +1,5 @@
 import pathlib
+import warnings
 
 import pytest
 
@@ -43,6 +44,7 @@ def pytest_generate_tests(metafunc):
     test_versions = metafunc.config.getoption("testsuite_version")
     include_optionals = metafunc.config.getoption("testsuite_optionals")
     include_formats = metafunc.config.getoption("testsuite_formats")
+    test_files = metafunc.config.getoption("testsuite_file")
 
     base_dir = testsuite_dir / 'tests'
     version_dirs = {
@@ -55,11 +57,21 @@ def pytest_generate_tests(metafunc):
         testfile_paths = []
 
         if not test_versions or version in test_versions:
-            testfile_paths += sorted(dir_.glob('*.json'))
-            if include_optionals:
-                testfile_paths += sorted((dir_ / 'optional').glob('*.json'))
-            if include_formats:
-                testfile_paths += sorted((dir_ / 'optional' / 'format').glob('*.json'))
+            if test_files:
+                for tf in test_files:
+                    tf_path = dir_.joinpath(tf)
+                    if tf_path.exists():
+                        testfile_paths.append(tf_path)
+                    else:
+                        # Warn because it might exist under other versions
+                        warnings.warn(f'Test suite file "{tf_path}" does not exist for "{version}"')
+
+            else:
+                testfile_paths += sorted(dir_.glob('*.json'))
+                if include_optionals:
+                    testfile_paths += sorted((dir_ / 'optional').glob('*.json'))
+                if include_formats:
+                    testfile_paths += sorted((dir_ / 'optional' / 'format').glob('*.json'))
 
         for testfile_path in testfile_paths:
             testcases = json_loadf(testfile_path)
