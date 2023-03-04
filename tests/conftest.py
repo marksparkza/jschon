@@ -30,6 +30,11 @@ def pytest_addoption(parser):
         action="store_true",
         help="Include format tests",
     )
+    testsuite.addoption(
+        "--testsuite-file",
+        action="append",
+        help="Run only this file from the JSON Schema test suite. The option may be repeated to run multiple files. Using this option causes --testsuite-optionals and --testsuite-formats to be ignored"
+    )
 
 
 @pytest.fixture(scope='module', autouse=True)
