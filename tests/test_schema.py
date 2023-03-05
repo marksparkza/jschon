@@ -5,6 +5,7 @@ from hypothesis import given
 from pytest import param as p
 
 from jschon import JSON, JSONPointer, JSONSchema, URI, create_catalog
+from jschon.catalog import Source
 from jschon.json import false, true
 from tests import example_invalid, example_schema, example_valid, metaschema_uri_2019_09, metaschema_uri_2020_12
 from tests.strategies import *
@@ -338,3 +339,94 @@ def test_recursive_schema_extension_2020_12():
     tree_json = JSON(tree_instance_2020_12)
     assert tree_schema.evaluate(tree_json).valid is True
     assert strict_tree_schema.evaluate(tree_json).valid is False
+
+
+def test_mixed_metaschemas(catalog):
+    class DictSource(Source):
+        def __call__(self, relative_path):
+            # A schema can be valid against at most one of these two
+            # metaschemas.  The 'max' metaschema uses a boolean False schema
+            # to ensure that the "$schema" switch happens before even
+            # boolean schemas are processed, as they are handled separately.
+            return {
+                'min': {
+                    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+                    '$id': 'https://example.com/min',
+                    'title': 'min',
+                    '$vocabulary': {
+                        'https://json-schema.org/draft/2020-12/vocab/core': True,
+                        'https://json-schema.org/draft/2020-12/vocab/applicator': True,
+                    },
+                    '$dynamicAnchor': 'meta',
+                    'additionalProperties': {'$dynamicRef': '#meta'},
+                    'minProperties': 4,
+                },
+                'max': {
+                    '$schema': 'https://json-schema.org/draft/2020-12/schema',
+                    '$id': 'https://example.com/max',
+                    'title': 'max',
+                    '$vocabulary': {
+                        'https://json-schema.org/draft/2020-12/vocab/core': True,
+                        'https://json-schema.org/draft/2020-12/vocab/applicator': True,
+                    },
+                    '$dynamicAnchor': 'meta',
+                    'properties': {
+                        'additionalProperties': False,
+                    },
+                    'additionalProperties': {'$dynamicRef': '#meta'},
+                    'maxProperties': 3,
+                },
+            }[relative_path]
+
+    catalog = create_catalog('2020-12')
+    catalog.add_uri_source(URI('https://example.com/'), DictSource())
+
+    min_meta = catalog.create_metaschema(
+        URI('https://example.com/min'),
+        URI('https://json-schema.org/draft/2020-12/vocab/core'),
+    )
+    max_meta = catalog.create_metaschema(
+        URI('https://example.com/max'),
+        URI('https://json-schema.org/draft/2020-12/vocab/core'),
+    )
+
+    # Test switching schemas at least twice, to ensure that
+    # validating_with is set correctly after a switch.
+    uses_min = JSONSchema({
+        '$schema': 'https://example.com/min',
+        '$id': 'https://example/uses-min',
+        '$comment': 'LOL',
+        'additionalProperties': {
+            '$schema': 'https://example.com/max',
+            '$id': 'https://example.com/nested-max',
+            'additionalProperties': {
+                '$schema': 'https://example.com/min',
+                '$id': 'https://example/doubly-nested-min',
+                '$comment': 'lulz',
+                'unknown': 'keyword',
+            }
+        },
+    })
+
+    result = uses_min.validate()
+    basic = result.output('basic')
+
+    assert result.valid
+    assert {
+        'instanceLocation': '',
+        'absoluteKeywordLocation': 'https://example.com/min#/title',
+        'keywordLocation': '/title',
+        'annotation': 'min',
+    } in basic['annotations']
+    assert {
+        'instanceLocation': '/additionalProperties',
+        'absoluteKeywordLocation': 'https://example.com/max#/title',
+        'keywordLocation': '/additionalProperties/title',
+        'annotation': 'max',
+    } in basic['annotations']
+    assert {
+        'instanceLocation': '/additionalProperties/additionalProperties',
+        'absoluteKeywordLocation': 'https://example.com/min#/title',
+        'keywordLocation': '/additionalProperties/properties/additionalProperties/title',
+        'annotation': 'min',
+    } in basic['annotations']

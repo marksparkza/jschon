@@ -8,6 +8,7 @@ Features:
 * Allow adding a source with a base URI of ``None`` to match full URIs as the ``relative_path``
 * ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
   the exceptions that they use, which can be overidden in subclasses
+* ``"$schema"`` can change value in subschemas that have an ``"$id"``
 * Cached properties for accessing document and resource root schemas from subschemas
 
 
