@@ -3,6 +3,7 @@ from jschon.jsonschema import Result
 from jschon.vocabulary import AnnotationKeyword
 
 __all__ = [
+    'AnnotationKeyword',
     'TitleKeyword',
     'DescriptionKeyword',
     'DefaultKeyword',
