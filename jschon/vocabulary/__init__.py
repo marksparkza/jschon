@@ -51,20 +51,18 @@ class Metaschema(JSONSchema):
             for vocabulary in self.default_vocabularies:
                 self.kwclasses.update(vocabulary.kwclasses)
 
-    def get_kwclass(self, key: str) -> Type[Keyword]:
+    def get_kwclass(self, key: str) -> KeywordClass:
         """Return the :class:`Keyword` class this metaschema uses for the given key.
-        If the key is not recognized, a subclass of :class:`AnnotationKeyword` is
-        automatically created, associated with the key, and returned."""
+        If the key is not recognized, a subclass of an internal :class:`Keyword`
+        subclass that treats the keyword as a simple annotation is automatically
+        created, associated with the key, and returned."""
 
         try:
             return self.kwclasses[key]
         except KeyError:
-            capitalized_name = (
-                key[0].upper() + key[1:]
-            )
             unknown_class = type(
-                f'UnknownKeyword{capitalized_name}',
-                (AnnotationKeyword,),
+                f'UnknownKeyword{key[0].upper() + key[1:]}',
+                (_UnknownKeyword,),
                 dict(key=key),
             )
             self.kwclasses[key] = unknown_class
@@ -124,7 +122,7 @@ class Keyword:
 KeywordClass = Type[Keyword]
 
 
-class AnnotationKeyword(Keyword):
+class _UnknownKeyword(Keyword):
     def evaluate(self, instance: JSON, result: Result) -> None:
         result.annotate(self.json.data)
         result.noassert()
