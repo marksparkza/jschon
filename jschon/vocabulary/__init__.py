@@ -51,6 +51,23 @@ class Metaschema(JSONSchema):
             for vocabulary in self.default_vocabularies:
                 self.kwclasses.update(vocabulary.kwclasses)
 
+    def get_kwclass(self, key: str) -> KeywordClass:
+        """Return the :class:`Keyword` class this metaschema uses for the given key.
+        If the key is not recognized, a subclass of an internal :class:`Keyword`
+        subclass that treats the keyword as a simple annotation is automatically
+        created, associated with the key, and returned."""
+
+        try:
+            return self.kwclasses[key]
+        except KeyError:
+            unknown_class = type(
+                f'UnknownKeyword{key[0].upper() + key[1:]}',
+                (_UnknownKeyword,),
+                dict(key=key),
+            )
+            self.kwclasses[key] = unknown_class
+            return unknown_class
+
 
 class Vocabulary:
     """A vocabulary declares a set of keywords that may be used in the
@@ -103,6 +120,12 @@ class Keyword:
 
 
 KeywordClass = Type[Keyword]
+
+
+class _UnknownKeyword(Keyword):
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        result.annotate(self.json.data)
+        result.noassert()
 
 
 class ApplicatorMixin:
