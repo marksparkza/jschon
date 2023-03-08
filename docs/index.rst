@@ -9,3 +9,4 @@
     testing
     contributing
     changelog
+    blog
