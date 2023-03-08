@@ -136,11 +136,11 @@ def hierarchical(result: Result) -> JSONCompatible:
                 "schemaLocation": str(node.absolute_uri),
                 "instanceLocation": str(node.instance.path),
             }
-            nested = []
+            details = []
             annotations = {}
             errors = {}
             for child in node.children.values():
-                nested += [
+                details += [
                     childout for childout in (visit(child))
                     if child.valid == valid
                 ]
@@ -149,8 +149,8 @@ def hierarchical(result: Result) -> JSONCompatible:
                 elif not valid and child.error is not None:
                     errors[child.key] = child.error
 
-            if nested:
-                output["nested"] = nested
+            if details:
+                output["details"] = details
             if valid and annotations:
                 output["annotations"] = annotations
             elif not valid and errors:
