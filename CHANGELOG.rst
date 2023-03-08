@@ -11,6 +11,9 @@ Features:
 * JSON ``null``, ``true``, ``false`` literals
 * Relative JSON Pointer ``+``/``-`` array index adjustments
 * Unknown keywords are collected as annotations
+* Automatically create metaschemas as referenced by ``"$schema"``
+* Automatically detect the core vocabulary in metaschemas,
+  but allow specifying a default to use when none is detectable
 
 Experimental:
 
@@ -23,6 +26,10 @@ Breaking changes:
 * ``Catalog.add_format_validators()`` superseded by ``@format_validator`` / ``Catalog.enable_formats()``
 * Rename ``Catalog.session()`` context manager to ``Catalog.cache()``
 * Rename ``session`` parameter to ``cacheid`` in many places
+* Added ``Catalog.get_metaschema()``, analogous to ``Catalog.get_schema()``
+* Rename ``core_vocabulary`` and ``core_vocabulary_uri`` parameters for
+  ``Metaschema.__init__()`` and ``Catalog.create_metaschema()`` respectively to
+  ``default_core_vocabulary`` and ``default_core_vocabulary_uri``
 * Rename public functions in the ``jsonpatch`` module
 
 Documentation:

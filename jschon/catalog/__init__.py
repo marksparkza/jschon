@@ -162,23 +162,31 @@ class Catalog:
     def create_metaschema(
             self,
             uri: URI,
-            core_vocabulary_uri: URI,
+            default_core_vocabulary_uri: Optional[URI] = None,
             *default_vocabulary_uris: URI,
             **kwargs: Any,
-    ) -> None:
+    ) -> Metaschema:
         """Create, cache and validate a :class:`~jschon.vocabulary.Metaschema`.
 
         :param uri: the URI identifying the metaschema
-        :param core_vocabulary_uri: the URI identifying the metaschema's
-            core :class:`~jschon.vocabulary.Vocabulary`
+        :param default_core_vocabulary_uri: the URI identifying the metaschema's
+            core :class:`~jschon.vocabulary.Vocabulary`, used in the absence
+            of a ``"$vocabulary"`` keyword in the metaschema JSON file, or
+            if a known core vocabulary is not present under ``"$vocabulary"``
         :param default_vocabulary_uris: default :class:`~jschon.vocabulary.Vocabulary`
             URIs, used in the absence of a ``"$vocabulary"`` keyword in the
             metaschema JSON file
         :param kwargs: additional keyword arguments to pass through to the
             :class:`~jschon.jsonschema.JSONSchema` constructor
+
+        :raise CatalogError: if the metaschema is not valid
         """
         metaschema_doc = self.load_json(uri)
-        core_vocabulary = self.get_vocabulary(core_vocabulary_uri)
+        default_core_vocabulary = (
+            self.get_vocabulary(default_core_vocabulary_uri)
+            if default_core_vocabulary_uri
+            else None
+        )
         default_vocabularies = [
             self.get_vocabulary(vocab_uri)
             for vocab_uri in default_vocabulary_uris
@@ -186,13 +194,33 @@ class Catalog:
         metaschema = Metaschema(
             self,
             metaschema_doc,
-            core_vocabulary,
+            default_core_vocabulary,
             *default_vocabularies,
             **kwargs,
             uri=uri,
         )
         if not metaschema.validate().valid:
-            raise CatalogError("The metaschema is invalid against itself")
+            raise CatalogError(
+                "The metaschema is invalid against its own metaschema "
+                f'"{metaschema_doc["$schema"]}"'
+            )
+        return metaschema
+
+    def get_metaschema(self, uri: URI) -> Metaschema:
+        """Get a metaschema identified by `uri` from a cache, or
+        load it from disk if not already cached.
+
+        :param uri: the URI identifying the metaschema
+
+        :raise CatalogError: if the object referenced by `uri` is not
+            a :class:`~jschon.vocabulary.Metaschema`, or if it is not valid
+        """
+        metaschema = self._schema_cache['__meta__'].get(uri)
+        if metaschema and not isinstance(metaschema, Metaschema):
+            raise JSONSchemaError(f"The schema referenced by {uri} is not a metachema")
+        elif not metaschema:
+            metaschema = self.create_metaschema(uri)
+        return metaschema
 
     def enable_formats(self, *format_attr: str) -> None:
         """Enable validation of the specified format attributes.
