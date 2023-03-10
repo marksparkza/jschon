@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import re
 import inspect
 from typing import Any, Dict, Mapping, Optional, Sequence, TYPE_CHECKING, Tuple, Type
 
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Result
+from jschon.exceptions import JSONSchemaError
 from jschon.uri import URI
 
 if TYPE_CHECKING:
@@ -30,17 +32,54 @@ class Metaschema(JSONSchema):
     :class:`Metaschema` is itself a subclass of :class:`~jschon.jsonschema.JSONSchema`,
     and may be used to validate any referencing schema.
     """
+    _CORE_VOCAB_RE = r'https://json-schema\.org/draft/[^/]*/vocab/core$'
 
     def __init__(
             self,
             catalog: Catalog,
             value: Mapping[str, JSONCompatible],
-            core_vocabulary: Vocabulary,
+            default_core_vocabulary: Optional[Vocabulary] = None,
             *default_vocabularies: Vocabulary,
             **kwargs: Any,
     ):
-        self.core_vocabulary: Vocabulary = core_vocabulary
+        """Initialize a :class:`Metaschema` instance from the given
+        schema-compatible `value`.
+
+        :param catalog: catalog instance or catalog name
+        :param value: a schema-compatible Python object
+        :param default_core_vocabulary: the the metaschema's
+            core :class:`~jschon.vocabulary.Vocabulary`, used in the absence
+            of a ``"$vocabulary"`` keyword in the metaschema JSON file, or
+            if a known core vocabulary is not present under ``"$vocabulary"``
+        :param default_vocabulary: default :class:`~jschon.vocabulary.Vocabulary`
+            instances, used in the absence of a ``"$vocabulary"`` keyword in the
+            metaschema JSON file
+        :param kwargs: additional keyword arguments to pass through to the
+            :class:`~jschon.jsonschema.JSONSchema` constructor
+
+        :raise JSONSchemaError: if no core vocabulary can be determined
+        :raise CatalogError: if the created metaschema is not valid
+        """
         self.default_vocabularies: Tuple[Vocabulary, ...] = default_vocabularies
+        self.core_vocabulary: Vocabulary = default_core_vocabulary
+
+        if vocabularies := value.get("$vocabulary"):
+            possible_cores = list(filter(
+                lambda v: re.match(self._CORE_VOCAB_RE, v),
+                vocabularies,
+            ))
+            if len(possible_cores) == 1:
+                self.core_vocabulary = catalog.get_vocabulary(URI(possible_cores[0]))
+            else:
+                raise JSONSchemaError(
+                    'Cannot determine unique known core vocabulary from '
+                    f'candidates "{vocabularies.keys()}"'
+                )
+        if self.core_vocabulary is None:
+            raise JSONSchemaError(
+                f'No core vocabulary in "$vocabulary": {value}, and no default provided'
+            )
+
         self.kwclasses: Dict[str, KeywordClass] = {}
         super().__init__(value, catalog=catalog, cacheid='__meta__', **kwargs)
 
