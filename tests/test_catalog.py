@@ -3,6 +3,7 @@ import pathlib
 import tempfile
 import uuid
 import itertools
+import re
 
 import pytest
 
@@ -82,6 +83,13 @@ def test_local_source(base_uri, setup_tmpdir, new_catalog):
     # incorrect file name
     with pytest.raises(CatalogError):
         new_catalog.load_json(URI(f'{base_uri}{subdir_name}/baz'))
+
+
+def test_local_source_file_not_found(local_catalog):
+    stem = 'not-there'
+    fullname = str(pathlib.Path(__file__).parent / 'data' / f'{stem}.json')
+    with pytest.raises(CatalogError, match=f'"{re.escape(fullname)}"$'):
+        local_catalog.get_schema(URI(f'https://example.com/{stem}'))
 
 
 @pytest.mark.parametrize('base_uri', [
