@@ -22,6 +22,22 @@ json_example = {"foo": "bar"}
 
 
 @pytest.fixture
+def local_catalog():
+    catalog = create_catalog(
+        '2019-09', '2020-12', 'next',
+        name='local'
+    )
+    catalog.add_uri_source(
+        URI('https://example.com/'),
+        LocalSource(
+            pathlib.Path(__file__).parent / 'data',
+            suffix='.json',
+        ),
+    )
+    return catalog
+
+
+@pytest.fixture
 def new_catalog() -> Catalog:
     return Catalog(name=str(uuid.uuid4()))
 
