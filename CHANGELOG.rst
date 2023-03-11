@@ -38,7 +38,8 @@ Miscellaneous:
 * Remove implicit fall-through to looking up a schema in the `__meta__` cache
   if not found in the parameterized cache, in ``Catalog.get_schema()`` (#40)
 * Improve kwarg-based construction of ``RelativeJSONPointer``
-* Allow passthrough of arguments to ``pytest`` when invoking ``tox``
+* Allow passthrough of arguments to pytest when invoking tox
+* Add pytest command line options ``--testsuite-file`` and ``--testsuite-description``
 * Python 3.11 is now tested (no changes were required to support it)
 * Pinned ``hypothesis<6.0.4`` to avoid
   `python/cpython#102126 <https://github.com/python/cpython/issues/102126>`_

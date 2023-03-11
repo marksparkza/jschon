@@ -45,6 +45,7 @@ def pytest_generate_tests(metafunc):
     include_optionals = metafunc.config.getoption("testsuite_optionals")
     include_formats = metafunc.config.getoption("testsuite_formats")
     test_files = metafunc.config.getoption("testsuite_file")
+    test_descriptions = metafunc.config.getoption("testsuite_description")
 
     base_dir = testsuite_dir / 'tests'
     version_dirs = {
@@ -77,6 +78,12 @@ def pytest_generate_tests(metafunc):
             testcases = json_loadf(testfile_path)
             for testcase in testcases:
                 for test in testcase['tests']:
+                    if test_descriptions and not any(
+                            s.lower() in testcase['description'].lower() or s.lower() in test['description'].lower()
+                            for s in test_descriptions
+                    ):
+                        continue
+
                     argvalues.append(pytest.param(metaschema_uri, testcase['schema'], test['data'], test['valid']))
                     testids.append(f"{version} -> {testfile_path.name} -> {testcase['description']} -> {test['description']}")
 

@@ -35,6 +35,12 @@ def pytest_addoption(parser):
         action="append",
         help="Run only this file from the JSON Schema test suite. The option may be repeated to run multiple files. Using this option causes --testsuite-optionals and --testsuite-formats to be ignored"
     )
+    testsuite.addoption(
+        "--testsuite-description",
+        action="append",
+        help="Run only test groups and tests whose descriptions contain the given substring. "
+             "Matching is case insensitive. The option may be repeated.",
+    )
 
 
 @pytest.fixture(scope='module', autouse=True)
