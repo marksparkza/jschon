@@ -3,15 +3,21 @@ import warnings
 
 import pytest
 
-from jschon import Catalog, JSON, JSONSchema, LocalSource, URI
+from jschon import JSON, JSONSchema, LocalSource, URI, create_catalog
 from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, metaschema_uri_next
 
 testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
 
-@pytest.fixture(scope='module', autouse=True)
-def configure_catalog(catalog: Catalog):
+@pytest.fixture(autouse=True)
+def catalog():
+    # replaces the catalog fixture in conftest, for this test module
+    catalog = create_catalog(
+        '2019-09',
+        '2020-12',
+        'next',
+    )
     catalog.add_uri_source(
         URI('http://localhost:1234/'),
         LocalSource(testsuite_dir / 'remotes'),
