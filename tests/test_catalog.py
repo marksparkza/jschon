@@ -6,6 +6,7 @@ import itertools
 import re
 
 import pytest
+from unittest.mock import patch
 
 from jschon import (
     Catalog,
@@ -90,6 +91,15 @@ def test_local_source_file_not_found(local_catalog):
     fullname = str(pathlib.Path(__file__).parent / 'data' / f'{stem}.json')
     with pytest.raises(CatalogError, match=f'"{re.escape(fullname)}"$'):
         local_catalog.get_schema(URI(f'https://example.com/{stem}'))
+
+
+def test_local_source_ioerror_no_file(local_catalog):
+    with patch('builtins.open') as m:
+        # This plain IOError will have an empty string as the message,
+        # without a filename that triggers different exception handling.
+        m.side_effect = IOError
+        with pytest.raises(CatalogError, match=r'^$'):
+            local_catalog.get_schema(URI('https://example.com/does-not-matter'))
 
 
 @pytest.mark.parametrize('base_uri', [
