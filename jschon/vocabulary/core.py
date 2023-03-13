@@ -124,12 +124,7 @@ class DynamicRefKeyword(Keyword):
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
 
-        # this is not required by the spec, but it doesn't make sense
-        # for a $dynamicRef *not* to end in a plain-name fragment
-        if (fragment := URI(value).fragment) is None or '/' in fragment:
-            raise JSONSchemaError('The value for "$dynamicRef" must end in a plain-name fragment')
-
-        self.fragment = fragment
+        self.fragment = URI(value).fragment
         self.refschema = None
         self.dynamic = False
 

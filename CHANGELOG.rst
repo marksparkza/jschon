@@ -25,6 +25,10 @@ Breaking changes:
 * Rename ``session`` parameter to ``cacheid`` in many places
 * Rename public functions in the ``jsonpatch`` module
 
+Bug Fixes:
+
+* "$dynamicRef" works with non-plain-name fragment URIs
+
 Documentation:
 
 * Rename `User Guide` to `Tutorial`
