@@ -203,6 +203,16 @@ def test_cache_independence(catalog):
     assert catalog.get_schema(uri, cacheid='two')["const"] == 2
 
 
+def test_enable_formats(catalog):
+    assert catalog.is_format_enabled('date') is False
+    assert catalog.is_format_enabled('time') is False
+
+    catalog.enable_formats('date', 'time')
+
+    assert catalog.is_format_enabled('date') is True
+    assert catalog.is_format_enabled('time') is True
+
+
 def test_context_manager_with_id(catalog):
     new_id = 'new'
     with catalog.cache(new_id) as cache_id:
