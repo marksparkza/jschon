@@ -278,6 +278,10 @@ class Catalog:
                 uri=base_uri,
                 metaschema_uri=metaschema_uri,
             )
+            try:
+                return self._schema_cache[cacheid][uri]
+            except KeyError:
+                pass
 
         if uri.fragment:
             try:

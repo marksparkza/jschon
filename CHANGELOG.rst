@@ -28,6 +28,7 @@ Breaking changes:
 Bug Fixes:
 
 * "$dynamicRef" works with non-plain-name fragment URIs
+* Fixed remote anchor ref resolution
 
 Documentation:
 
