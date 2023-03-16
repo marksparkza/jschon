@@ -1,7 +1,7 @@
 from jschon.exceptions import JSONSchemaError
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, Result
-from jschon.vocabulary import Applicator, ArrayApplicator, Keyword
+from jschon.vocabulary import ArrayOfSubschemas, Keyword, Subschema
 
 __all__ = [
     'RecursiveRefKeyword_2019_09',
@@ -52,7 +52,7 @@ class RecursiveAnchorKeyword_2019_09(Keyword):
     static = True
 
 
-class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
+class ItemsKeyword_2019_09(Keyword, Subschema, ArrayOfSubschemas):
     key = "items"
     instance_types = "array",
 
@@ -85,7 +85,7 @@ class ItemsKeyword_2019_09(Keyword, Applicator, ArrayApplicator):
                 result.annotate(annotation)
 
 
-class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
+class AdditionalItemsKeyword_2019_09(Keyword, Subschema):
     key = "additionalItems"
     instance_types = "array",
     depends_on = "items",
@@ -111,7 +111,7 @@ class AdditionalItemsKeyword_2019_09(Keyword, Applicator):
             result.discard()
 
 
-class UnevaluatedItemsKeyword_2019_09(Keyword, Applicator):
+class UnevaluatedItemsKeyword_2019_09(Keyword, Subschema):
     key = "unevaluatedItems"
     instance_types = "array",
     depends_on = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",

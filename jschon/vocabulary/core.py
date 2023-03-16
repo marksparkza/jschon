@@ -4,7 +4,7 @@ from jschon.exceptions import CatalogError, JSONSchemaError, URIError
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, Result
 from jschon.uri import URI
-from jschon.vocabulary import Keyword, Metaschema, PropertyApplicator
+from jschon.vocabulary import Keyword, Metaschema, ObjectOfSubschemas
 
 __all__ = [
     'SchemaKeyword',
@@ -184,7 +184,7 @@ class DynamicAnchorKeyword(Keyword):
         parentschema.catalog.add_schema(uri, parentschema, cacheid=parentschema.cacheid)
 
 
-class DefsKeyword(Keyword, PropertyApplicator):
+class DefsKeyword(Keyword, ObjectOfSubschemas):
     key = "$defs"
     static = True
 

@@ -2,7 +2,7 @@ import re
 
 from jschon.json import JSON
 from jschon.jsonschema import Result
-from jschon.vocabulary import Applicator, ArrayApplicator, Keyword, PropertyApplicator
+from jschon.vocabulary import ArrayOfSubschemas, Keyword, ObjectOfSubschemas, Subschema
 
 __all__ = [
     'AllOfKeyword',
@@ -25,7 +25,7 @@ __all__ = [
 ]
 
 
-class AllOfKeyword(Keyword, ArrayApplicator):
+class AllOfKeyword(Keyword, ArrayOfSubschemas):
     key = "allOf"
 
     def evaluate(self, instance: JSON, result: Result) -> None:
@@ -40,7 +40,7 @@ class AllOfKeyword(Keyword, ArrayApplicator):
             result.fail(f'The instance is invalid against subschemas {err_indices}')
 
 
-class AnyOfKeyword(Keyword, ArrayApplicator):
+class AnyOfKeyword(Keyword, ArrayOfSubschemas):
     key = "anyOf"
 
     def evaluate(self, instance: JSON, result: Result) -> None:
@@ -55,7 +55,7 @@ class AnyOfKeyword(Keyword, ArrayApplicator):
             result.fail(f'The instance must be valid against at least one subschema')
 
 
-class OneOfKeyword(Keyword, ArrayApplicator):
+class OneOfKeyword(Keyword, ArrayOfSubschemas):
     key = "oneOf"
 
     def evaluate(self, instance: JSON, result: Result) -> None:
@@ -74,7 +74,7 @@ class OneOfKeyword(Keyword, ArrayApplicator):
                         f'it is valid against {valid_indices} and invalid against {err_indices}')
 
 
-class NotKeyword(Keyword, Applicator):
+class NotKeyword(Keyword, Subschema):
     key = "not"
 
     def evaluate(self, instance: JSON, result: Result) -> None:
@@ -86,7 +86,7 @@ class NotKeyword(Keyword, Applicator):
             result.pass_()
 
 
-class IfKeyword(Keyword, Applicator):
+class IfKeyword(Keyword, Subschema):
     key = "if"
 
     def evaluate(self, instance: JSON, result: Result) -> None:
@@ -94,7 +94,7 @@ class IfKeyword(Keyword, Applicator):
         result.noassert()
 
 
-class ThenKeyword(Keyword, Applicator):
+class ThenKeyword(Keyword, Subschema):
     key = "then"
     depends_on = "if",
 
@@ -105,7 +105,7 @@ class ThenKeyword(Keyword, Applicator):
             result.discard()
 
 
-class ElseKeyword(Keyword, Applicator):
+class ElseKeyword(Keyword, Subschema):
     key = "else"
     depends_on = "if",
 
@@ -116,7 +116,7 @@ class ElseKeyword(Keyword, Applicator):
             result.discard()
 
 
-class DependentSchemasKeyword(Keyword, PropertyApplicator):
+class DependentSchemasKeyword(Keyword, ObjectOfSubschemas):
     key = "dependentSchemas"
     instance_types = "object",
 
@@ -139,7 +139,7 @@ class DependentSchemasKeyword(Keyword, PropertyApplicator):
             result.annotate(annotation)
 
 
-class PrefixItemsKeyword(Keyword, ArrayApplicator):
+class PrefixItemsKeyword(Keyword, ArrayOfSubschemas):
     key = "prefixItems"
     instance_types = "array",
 
@@ -160,7 +160,7 @@ class PrefixItemsKeyword(Keyword, ArrayApplicator):
             result.annotate(annotation)
 
 
-class ItemsKeyword(Keyword, Applicator):
+class ItemsKeyword(Keyword, Subschema):
     key = "items"
     instance_types = "array",
     depends_on = "prefixItems",
@@ -187,7 +187,7 @@ class ItemsKeyword(Keyword, Applicator):
             result.annotate(annotation)
 
 
-class UnevaluatedItemsKeyword(Keyword, Applicator):
+class UnevaluatedItemsKeyword(Keyword, Subschema):
     key = "unevaluatedItems"
     instance_types = "array",
     depends_on = "prefixItems", "items", "contains", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
@@ -232,7 +232,7 @@ class UnevaluatedItemsKeyword(Keyword, Applicator):
             result.annotate(annotation)
 
 
-class ContainsKeyword(Keyword, Applicator):
+class ContainsKeyword(Keyword, Subschema):
     key = "contains"
     instance_types = "array",
 
@@ -250,7 +250,7 @@ class ContainsKeyword(Keyword, Applicator):
                         f'against the "{self.key}" subschema')
 
 
-class PropertiesKeyword(Keyword, PropertyApplicator):
+class PropertiesKeyword(Keyword, ObjectOfSubschemas):
     key = "properties"
     instance_types = "object",
 
@@ -272,7 +272,7 @@ class PropertiesKeyword(Keyword, PropertyApplicator):
             result.annotate(annotation)
 
 
-class PatternPropertiesKeyword(Keyword, PropertyApplicator):
+class PatternPropertiesKeyword(Keyword, ObjectOfSubschemas):
     key = "patternProperties"
     instance_types = "object",
 
@@ -295,7 +295,7 @@ class PatternPropertiesKeyword(Keyword, PropertyApplicator):
             result.annotate(list(matched_names))
 
 
-class AdditionalPropertiesKeyword(Keyword, Applicator):
+class AdditionalPropertiesKeyword(Keyword, Subschema):
     key = "additionalProperties"
     instance_types = "object",
     depends_on = "properties", "patternProperties",
@@ -330,7 +330,7 @@ class AdditionalPropertiesKeyword(Keyword, Applicator):
             result.annotate(annotation)
 
 
-class UnevaluatedPropertiesKeyword(Keyword, Applicator):
+class UnevaluatedPropertiesKeyword(Keyword, Subschema):
     key = "unevaluatedProperties"
     instance_types = "object",
     depends_on = "properties", "patternProperties", "additionalProperties", \
@@ -365,7 +365,7 @@ class UnevaluatedPropertiesKeyword(Keyword, Applicator):
             result.annotate(annotation)
 
 
-class PropertyNamesKeyword(Keyword, Applicator):
+class PropertyNamesKeyword(Keyword, Subschema):
     key = "propertyNames"
     instance_types = "object",
 

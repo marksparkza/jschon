@@ -24,6 +24,7 @@ Breaking changes:
 * Rename ``Catalog.session()`` context manager to ``Catalog.cache()``
 * Rename ``session`` parameter to ``cacheid`` in many places
 * Rename public functions in the ``jsonpatch`` module
+* Rename ``*Applicator*`` keyword class mixins to ``*Subschema*``
 
 Bug Fixes:
 

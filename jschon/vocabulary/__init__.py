@@ -15,10 +15,10 @@ __all__ = [
     'Vocabulary',
     'Keyword',
     'KeywordClass',
-    'ApplicatorMixin',
-    'Applicator',
-    'ArrayApplicator',
-    'PropertyApplicator',
+    'SubschemaMixin',
+    'Subschema',
+    'ArrayOfSubschemas',
+    'ObjectOfSubschemas',
 ]
 
 
@@ -94,7 +94,7 @@ class Keyword:
 
     def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
         for base_cls in inspect.getmro(self.__class__):
-            if issubclass(base_cls, ApplicatorMixin):
+            if issubclass(base_cls, SubschemaMixin):
                 if (kwjson := base_cls.jsonify(parentschema, self.key, value)) is not None:
                     break
         else:
@@ -128,15 +128,15 @@ class _UnknownKeyword(Keyword):
         result.noassert()
 
 
-class ApplicatorMixin:
+class SubschemaMixin:
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
         raise NotImplementedError
 
 
-class Applicator(ApplicatorMixin):
+class Subschema(SubschemaMixin):
     """A :class:`~Keyword` class mixin that sets up a subschema for
-    an applicator keyword."""
+    a keyword."""
 
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
@@ -150,9 +150,9 @@ class Applicator(ApplicatorMixin):
             )
 
 
-class ArrayApplicator(ApplicatorMixin):
+class ArrayOfSubschemas(SubschemaMixin):
     """A :class:`~Keyword` class mixin that sets up an array of subschemas
-    for an applicator keyword."""
+    for a keyword."""
 
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
@@ -167,9 +167,9 @@ class ArrayApplicator(ApplicatorMixin):
             )
 
 
-class PropertyApplicator(ApplicatorMixin):
+class ObjectOfSubschemas(SubschemaMixin):
     """A :class:`~Keyword` class mixin that sets up property-based subschemas
-    for an applicator keyword."""
+    for a keyword."""
 
     @classmethod
     def jsonify(cls, parentschema: JSONSchema, key: str, value: JSONCompatible) -> Optional[JSON]:
