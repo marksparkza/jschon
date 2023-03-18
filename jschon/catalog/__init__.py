@@ -80,10 +80,17 @@ class Catalog:
         except KeyError:
             raise CatalogError(f'Catalog name "{name}" not found.')
 
-    def __init__(self, name: str = 'catalog') -> None:
+    def __init__(
+        self,
+        name: str = 'catalog',
+        *,
+        resolve_references: bool = True,
+    ) -> None:
         """Initialize a :class:`Catalog` instance.
 
         :param name: a unique name for this :class:`Catalog` instance
+        :param resolve_references: passed through to any
+            :class:`~jschon.jsonschema.JSONSChema` constructor calls
         """
         self.__class__._catalog_registry[name] = self
 
@@ -94,6 +101,7 @@ class Catalog:
         self._vocabularies: Dict[URI, Vocabulary] = {}
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
         self._enabled_formats: Set[str] = set()
+        self._auto_resolve_references: bool = resolve_references
 
     def __repr__(self) -> str:
         """Return `repr(self)`."""
@@ -230,6 +238,8 @@ class Catalog:
             **kwargs,
             uri=uri,
         )
+        if not self._auto_resolve_references:
+            self.resolve_references(cacheid='__meta__')
         if not metaschema.validate().valid:
             raise CatalogError(
                 "The metaschema is invalid against its own metaschema "
@@ -349,6 +359,7 @@ class Catalog:
                 cacheid=cacheid,
                 uri=base_uri,
                 metaschema_uri=metaschema_uri,
+                resolve_references=self._auto_resolve_references,
             )
             try:
                 return self._schema_cache[cacheid][uri]
@@ -366,6 +377,30 @@ class Catalog:
             raise CatalogError(f"The object referenced by {uri} is not a JSON Schema")
 
         return schema
+
+    def resolve_references(self, cacheid: Hashable = 'default') -> None:
+        """Ensures that all references in all schemas in a cache have been resolved.
+
+        This method is a convenience method for use after instantiatng numerous schemas
+        with ``resolve_references=False``.  It ensures that reference resolution will
+        not fail during :meth:`~jschon.jsonschema.JSONSchema.evaluate` by calling
+        :meth:`~jschon.jsonschema.JSONSchema.resolve_references` on each schema.
+
+        :param cacheid: The cache in which to resolve all schema references.
+        """
+        # Note that self._auto_resolve_references is irrelevant as JSONSchema
+        # instances can be independently instantiated without resolving references.
+
+        # Resolving references can load additional schemas, so we need to iterate
+        # over a frozen copy and keep re-checking the cache.
+        cache = self._schema_cache[cacheid]
+        cache_keys = frozenset(cache.keys())
+        resolved = set()
+        while len(resolved) < len(cache.keys()):
+            for schema_uri in cache_keys:
+                cache[schema_uri].resolve_references()
+                resolved.add(schema_uri)
+            cache_keys = cache.keys() - resolved
 
     @contextmanager
     def cache(self, cacheid: Hashable = None) -> ContextManager[Hashable]:

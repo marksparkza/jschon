@@ -11,6 +11,9 @@ Features:
 * Cached properties for accessing document and resource root schemas from subschemas
 * Support mutually referencing embedded subschema resources with the
   ``resolve_references`` constructor parameter and method for ``JSONSchema``.
+* Support mutually referencing embedded subschema resources with the
+  ``resolve_references`` constructor parameters and methods on
+  ``JSONSchema``, ``Catalog``, and ``create_catalog``.
 
 
 v0.11.0 (2023-06-03)
