@@ -4,9 +4,11 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
-from jschon import JSON, JSONPointer, JSONSchema, URI, create_catalog
+from jschon import JSON, JSONPointer, JSONSchema, URI, CatalogError, create_catalog
 from jschon.json import false, true
-from tests import example_invalid, example_schema, example_valid, metaschema_uri_2019_09, metaschema_uri_2020_12
+from tests import example_invalid, example_schema, example_valid, \
+    metaschema_uri_2019_09, metaschema_uri_2020_12, schema_bundle1, schema_bundle2
+
 from tests.strategies import *
 
 schema_tests = (
@@ -31,6 +33,7 @@ def test_schema_examples(example, json1_valid, json2_valid):
     assert schema.key is None
     assert not schema.path
     assert schema.metaschema_uri == metaschema_uri_2020_12
+    assert schema.references_resolved is True
     assert schema.evaluate(json1).valid is json1_valid
     assert schema.evaluate(json2).valid is json2_valid
 
@@ -88,6 +91,85 @@ def test_resource_rootschema(weird_parent_schema):
         .resource_rootschema is wps['foo']['$defs']['a']
     assert wps['foo']['$defs']['a']['$defs']['b']['properties']['c'] \
         .resource_rootschema is wps['foo']['$defs']['a']
+
+
+def test_deferred_ref_resolution():
+    bundle_catalog = create_catalog('2019-09', '2020-12', name='bundle')
+    bundle1 = JSONSchema(
+        schema_bundle1,
+        catalog='bundle',
+        cacheid='bundle',
+        resolve_references=False,
+    )
+    bundle2 = JSONSchema(schema_bundle2,
+        catalog='bundle',
+        cacheid='bundle',
+        resolve_references=False,
+    )
+
+    assert bundle1.references_resolved is False
+    assert bundle2.references_resolved is False
+    with pytest.raises(AttributeError):
+        bundle1['$defs']['a'].evaluate(JSON([]))
+
+    ref1 = bundle1['$defs']['a'].keywords['$ref']
+    ref2 = bundle2['$defs']['a'].keywords['$ref']
+    dynRef = bundle1['$defs']['b']['$defs']['inner'].keywords['$dynamicRef']
+    recRef = bundle2['$defs']['b']['$defs']['inner'].keywords['$recursiveRef']
+
+    for kwd in (ref1, ref2, dynRef, recRef):
+        assert kwd.refschema is None
+        with pytest.raises(AttributeError):
+            kwd.evaluate(kwd.parentschema, JSON({}))
+
+    bundle1.resolve_references()
+
+    assert bundle1.references_resolved is True
+    for kwd in (ref1, dynRef):
+        assert isinstance(kwd.refschema, JSONSchema)
+
+    assert bundle2.references_resolved is False
+    for kwd in (ref2, recRef):
+        assert kwd.refschema is None
+        with pytest.raises(AttributeError):
+            kwd.evaluate(kwd.parentschema, JSON({}))
+    with pytest.raises(AttributeError):
+        bundle1['$defs']['a'].evaluate(JSON([]))
+
+    bundle2.resolve_references()
+
+    assert bundle2.references_resolved is True
+    for kwd in (ref2, recRef):
+        assert isinstance(kwd.refschema, JSONSchema)
+
+    result1 = bundle1['$defs']['a'].evaluate(JSON([]))
+    assert result1.valid is True
+
+    result2 = bundle2['$defs']['a'].evaluate(JSON({}))
+    assert result2.valid is True
+
+
+def test_unresolvable_references():
+    schema = {
+        "$schema": str(metaschema_uri_2020_12),
+        "$id": "https://example.com/foo",
+        "$ref": "bar",
+    }
+
+    with pytest.raises(CatalogError):
+        JSONSchema(schema)
+
+    foo_schema = JSONSchema(schema, resolve_references=False)
+    assert isinstance(foo_schema, JSONSchema)
+
+    with pytest.raises(CatalogError):
+        foo_schema.resolve_references()
+
+    JSONSchema({
+        "$schema": str(metaschema_uri_2020_12),
+        "$id": "https://example.com/bar",
+    })
+    assert foo_schema.resolve_references() is None
 
 
 def assert_keyword_order(keyword_list, keyword_pairs):

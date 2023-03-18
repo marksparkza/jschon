@@ -9,6 +9,8 @@ Features:
 * ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
   the exceptions that they use, which can be overidden in subclasses
 * Cached properties for accessing document and resource root schemas from subschemas
+* Support mutually referencing embedded subschema resources with the
+  ``resolve_references`` constructor parameter and method for ``JSONSchema``.
 
 
 v0.11.0 (2023-06-03)
