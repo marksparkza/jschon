@@ -37,6 +37,10 @@ def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
     initialized with a meta-schema and keyword support for each of the
     specified JSON Schema `vocabularies`.
 
+    The catalog created with the default name of ``'catalog'`` will
+    automatically be used wherevere a :class:`~jschon.catalog.Catalog`
+    instance is needed, unless a different instance is provided.
+
     :param vocabularies: Any of ``2019-09``, ``2020-12``, ``next``.
     :param name: A unique name for the :class:`~jschon.catalog.Catalog` instance.
     :raise ValueError: If any of `vocabularies` is unrecognized.
