@@ -17,7 +17,9 @@ from jschon import (
     JSON,
     create_catalog,
     LocalSource,
+    RewritingLocalSource,
     RemoteSource,
+    RewritingRemoteSource,
 )
 from jschon.catalog import Source
 from jschon.vocabulary import Metaschema, Keyword
@@ -75,14 +77,46 @@ def setup_tmpdir():
                 yield tmpdir_path, pathlib.Path(subdir_path).name, pathlib.Path(f.name).name
 
 
-@pytest.mark.parametrize('base_uri', [
-    'http://example.com/',
-    'http://example.com/foo/',
-    'http://example.com/foo/bar/',
+@pytest.mark.parametrize('base_uri, source_class, rewrite_kwargs_func', [
+    ('http://example.com/', LocalSource, None),
+    ('http://example.com/foo/', LocalSource, None),
+    ('http://example.com/foo/bar/', LocalSource, None),
+    ('http://example.com/', RewritingLocalSource, None),
+    (
+        'http://example.com/',
+        RewritingLocalSource,
+        lambda src, dest: {'rewrite_map': {src: dest}},
+    ),
+    (
+        'http://example.com/',
+        RewritingLocalSource,
+        lambda src, dest: {
+            'rewrite_call': lambda x: dest if x == src else src
+        },
+    ),
 ])
-def test_local_source(base_uri, setup_tmpdir, new_catalog):
+def test_local_source(
+    base_uri,
+    source_class,
+    rewrite_kwargs_func,
+    setup_tmpdir,
+    new_catalog
+):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    new_catalog.add_uri_source(URI(base_uri), LocalSource(pathlib.Path(tmpdir_path)))
+    if rewrite_kwargs_func is None:
+        kwargs = {}
+    else:
+        new_name = 'foo'
+        kwargs = rewrite_kwargs_func(
+            f'{subdir_name}/{new_name}',
+            f'{subdir_name}/{jsonfile_name}'
+        )
+        jsonfile_name = new_name
+
+    new_catalog.add_uri_source(
+        URI(base_uri),
+        source_class(pathlib.Path(tmpdir_path), **kwargs)
+    )
     json_doc = new_catalog.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
     assert json_doc == json_example
     # incorrect base URI
@@ -125,19 +159,50 @@ def test_default_source(local_catalog):
     assert schema['$id'].data == id_str
 
 
-@pytest.mark.parametrize('base_uri', [
-    'http://example.com/',
-    'http://example.com/foo/',
-    'http://example.com/foo/bar/',
+@pytest.mark.parametrize('base_uri, source_class, rewrite_kwargs_func', [
+    ('http://example.com/', RemoteSource, None),
+    ('http://example.com/foo/', RemoteSource, None),
+    ('http://example.com/foo/bar/', RemoteSource, None),
+    ('http://example.com/foo/bar/', RewritingRemoteSource, None),
+    (
+        'http://example.com/foo/bar/',
+        RewritingRemoteSource,
+        lambda src, dest: {'rewrite_map': {src: dest}},
+    ),
+    (
+        'http://example.com/foo/bar/',
+        RewritingRemoteSource,
+        lambda src, dest: {
+            'rewrite_call': lambda x: dest if x == src else src
+        },
+    ),
 ])
-def test_remote_source(base_uri, httpserver, new_catalog):
-    new_catalog.add_uri_source(URI(base_uri), RemoteSource(URI(httpserver.url_for(''))))
-    httpserver.expect_request('/baz/quux').respond_with_json(json_example)
-    json_doc = new_catalog.load_json(URI(f'{base_uri}baz/quux'))
+def test_remote_source(
+    base_uri,
+    source_class,
+    rewrite_kwargs_func,
+    httpserver,
+    new_catalog,
+):
+    target_path = 'baz/quux'
+    httpserver.expect_request(f'/{target_path}').respond_with_json(json_example)
+    if rewrite_kwargs_func is None:
+        kwargs = {}
+    else:
+        new_name = 'foo'
+        kwargs = rewrite_kwargs_func(new_name, target_path)
+        target_path = new_name
+
+    new_catalog.add_uri_source(
+        URI(base_uri),
+        source_class(URI(httpserver.url_for('')), **kwargs),
+    )
+
+    json_doc = new_catalog.load_json(URI(f'{base_uri}{target_path}'))
     assert json_doc == json_example
     # incorrect base URI
     with pytest.raises(CatalogError):
-        new_catalog.load_json(URI('http://example.net/baz/quux'))
+        new_catalog.load_json(URI('http://example.net/{target_path}'))
     # incorrect path
     with pytest.raises(CatalogError):
         new_catalog.load_json(URI(f'{base_uri}baz/quuz'))

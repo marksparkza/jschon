@@ -20,6 +20,9 @@ __all__ = [
     'Source',
     'LocalSource',
     'RemoteSource',
+    'RewritingLocalSource',
+    'RewritingRemoteSource',
+    'RewritingSourceMixin',
 ]
 
 
@@ -65,6 +68,72 @@ class RemoteSource(Source):
             url += self.suffix
 
         return json_loadr(url)
+
+
+class RewritingSourceMixin(Source):
+    """Source that allows rewriting the ``relative_path`` when called.
+
+    This class helps support embedded schema resources (subschemas
+    with their own ``"$id"`` keywords, as are used in schema bundles),
+    as well as source organizations that do not map directly to the
+    schema's ``"$id"`` URI structure.
+
+    This class MUST be used in multiple inheritance as a left base
+    class compared to the source class that will actualy resolve
+    the schema request.  It checks any provided map first, then
+    the function.  If neither map nor function is provided,
+    this class is essentially a no-op, as the function defaults
+    to returning the original ``relative_path``.
+
+    The rewritten (but potentialy unchanged) ``relative_path`` is
+    then forwarded to the next class in the method resolution order.
+    """
+    def __init__(
+        self,
+        *args: Any,
+        rewrite_map: Mapping[str, str] = None,
+        rewrite_call: Callable[[str], str] = lambda x: x,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the RewritingSourceMixin functionality.
+
+        :param rewrite_map: A dictionary for simple replacement of one
+            ``relative_path`` with another
+        :param rewrite_call: A callable to support arbitrarily complex
+            remapping, such as replacement using regular expressions;
+            callables used in this way should return the original
+            value if they do not understand how to rewrite it
+        """
+        self._rewrite_map = rewrite_map or {}
+        self._rewrite_call = rewrite_call
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, relative_path: str) -> JSONCompatible:
+        """Rewrites the relative path if necessary and forwards to the next base class."""
+        try:
+            relative_path = self._rewrite_map[relative_path]
+        except KeyError:
+            relative_path = self._rewrite_call(relative_path)
+        import sys
+        sys.stderr.write(f'"{self._rewrite_map}"\n')
+        sys.stderr.write(f'"{relative_path}"\n')
+        return super().__call__(relative_path)
+
+
+class RewritingLocalSource(RewritingSourceMixin, LocalSource):
+    """A :class:`Source` that can rewrite paths before reading from disk.
+
+    This adds :class:`RewritingSourceMixin`'s features to :class:`LocalSource`
+    """
+    pass
+
+
+class RewritingRemoteSource(RewritingSourceMixin, RemoteSource):
+    """A :class:`Source` that can rewrite URIs before HTTP(S) requests.
+
+    This adds :class:`RewritingSourceMixin`'s features to :class:`RemoteSource`
+    """
+    pass
 
 
 class Catalog:
