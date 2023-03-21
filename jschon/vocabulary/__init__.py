@@ -127,7 +127,7 @@ class Vocabulary:
 class Keyword:
     key: str = ...
 
-    instance_types: Tuple[str, ...] = "null", "boolean", "integer", "number", "string", "array", "object",
+    instance_types: Tuple[str, ...] = "null", "boolean", "number", "string", "array", "object",
     """The types of instance that the keyword can evaluate."""
 
     depends_on: Tuple[str, ...] = ()
@@ -147,13 +147,7 @@ class Keyword:
         self.parentschema: JSONSchema = parentschema
 
     def can_evaluate(self, instance: JSON) -> bool:
-        if instance.type in self.instance_types:
-            return True
-
-        if instance.type == "number" and "integer" in self.instance_types:
-            return instance.data == int(instance.data)
-
-        return False
+        return instance.type in self.instance_types
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         pass
