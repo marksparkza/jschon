@@ -221,7 +221,13 @@ class JSONSchema(JSON):
         :param instance: the JSON document to evaluate
         :param result: the current result node; given by keywords
             when invoking this method recursively
+        :raises JSONSchemaError: if references have not yet been resolved;
+            by default references are resolved during construction
         """
+        if self.references_resolved is False:
+            raise JSONSchemaError(
+                'resolve_references() must be called before evaluate()'
+            )
         if result is None:
             result = Result(self, instance)
 
