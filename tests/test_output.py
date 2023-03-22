@@ -415,13 +415,17 @@ def test_basic_output_filtering(annotations):
         assert result == filtered_output
 
 
-@pytest.mark.parametrize('input, valid', [
-    ([1, 2], True),
-    (['one', 'two'], True),
-    ([1, 'two'], False),
-    ([None, False], False),
+@pytest.mark.parametrize('input, valid, format', [
+    ([1, 2], True, 'list'),
+    (['one', 'two'], True, 'list'),
+    ([1, 'two'], False, 'list'),
+    ([None, False], False, 'list'),
+    ([1, 2], True, 'hierarchical'),
+    (['one', 'two'], True, 'hierarchical'),
+    ([1, 'two'], False, 'hierarchical'),
+    ([None, False], False, 'hierarchical'),
 ])
-def test_hierarchical_output(input, valid, catalog):
+def test_list_and_hierarchical_output(input, valid, format, catalog):
     schema = JSONSchema({
         "$schema": "https://json-schema.org/draft/next/schema",
         "type": "array",
@@ -430,12 +434,13 @@ def test_hierarchical_output(input, valid, catalog):
             {"items": {"type": "string"}},
         ]
     })
-    output = schema.evaluate(JSON(input)).output('hierarchical')
+    output = schema.evaluate(JSON(input)).output(format)
     assert output['valid'] is valid
 
     output_schema = catalog.get_schema(URI('https://json-schema.org/draft/next/output/schema'))
     output_validity = output_schema.evaluate(JSON(output))
     assert output_validity.valid is True
+
 
 @pytest.mark.parametrize('draft', ['2019-09', '2020-12', 'next'])
 def test_unknown_keywords_as_annotations(draft):

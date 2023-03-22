@@ -70,6 +70,23 @@ def basic(result: Result, annotations: Iterable[str] = None) -> JSONCompatible:
     }
 
 
+@output_formatter('list')
+def list_output(result: Result, annotations: Iterable[str] = None) -> JSONCompatible:
+    def visit(node: Result):
+        if isinstance(node.schema_node, JSONSchema):
+            yield {
+                "valid": node.valid,
+                "evaluationPath": str(node.path),
+                "schemaLocation": str(node.absolute_uri),
+                "instanceLocation": str(node.instance.path),
+            }
+
+    return {
+        "valid": result.valid,
+        "details": [output for output in visit(result)],
+    }
+
+
 @output_formatter('detailed')
 def detailed(result: Result) -> JSONCompatible:
     def visit(node: Result):
