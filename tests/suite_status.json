@@ -1,0 +1,3560 @@
+{
+  "2019-09": {
+    "optional/cross-draft.json": {
+      "refs to historic drafts are processed as historic drafts": {
+        "missing bar is valid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/dependencies-compatibility.json": {
+      "single dependency": {
+        "missing dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "multiple dependents required": {
+        "missing dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "missing other dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "missing both dependencies": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "dependencies with escaped characters": {
+        "CRLF missing dependent": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted quotes missing dependent": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "single schema dependency": {
+        "wrong type": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "wrong type other": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "wrong type both": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "boolean subschemas": {
+        "object with property having schema false is invalid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "object with both properties is invalid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "schema dependencies with escaped characters": {
+        "quoted quote": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted tab invalid under dependent schema": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted quote invalid under dependent schema": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/ecmascript-regex.json": {
+      "ECMA 262 regex escapes control codes with \\c and upper letter": {
+        "does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 regex escapes control codes with \\c and lower letter": {
+        "does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\d matches ascii digits only": {
+        "NKO DIGIT ZERO does not match (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "NKO DIGIT ZERO (as \\u escape) does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\D matches everything but ascii digits": {
+        "NKO DIGIT ZERO matches (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "NKO DIGIT ZERO (as \\u escape) matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\w matches ascii letters only": {
+        "latin-1 e-acute does not match (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\W matches everything but ascii letters": {
+        "latin-1 e-acute matches (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\s matches whitespace": {
+        "zero-width whitespace matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\S matches everything but whitespace": {
+        "zero-width whitespace does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patterns always use unicode semantics with pattern": {
+        "ascii character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode matching is case-sensitive": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\w in patterns matches [A-Za-z0-9_], not unicode letters": {
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\d in pattern matches [0-9], not unicode digits": {
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "pattern with non-ASCII digits": {
+        "ascii digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "ascii non-digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patterns always use unicode semantics with patternProperties": {
+        "ascii character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode matching is case-sensitive": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\w in patternProperties matches [A-Za-z0-9_], not unicode letters": {
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\d in patternProperties matches [0-9], not unicode digits": {
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patternProperties with non-ASCII digits": {
+        "ascii digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "ascii non-digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/float-overflow.json": {
+      "all integers are multiples of 0.5, if overflow is handled": {
+        "valid if optional overflow handling is implemented": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/refOfUnknownKeyword.json": {
+      "reference of a root arbitrary keyword": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "reference of an arbitrary keyword of a sub-schema": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/format/date-time.json": {
+      "validation of date-time strings": {
+        "an invalid date-time past leap second, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time with leap second on a wrong minute, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time with leap second on a wrong hour, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid day in date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid offset in date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid closing Z after time-zone offset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-padded month dates": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-padded day dates": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in date portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in time portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/date.json": {
+      "validation of date strings": {
+        "a invalid date string with 32 days in January": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 29 days in February (normal)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 30 days in February (leap)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in March": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in April": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in May": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in June": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in July": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in August": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in September": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in October": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in November": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in December": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with invalid month": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "non-padded month dates are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "non-padded day dates are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid month": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid month-day combination": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "2021 is not a leap year": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: YYYYMMDD without dashes (2023-03-28)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number implicit day of week (2023-01-02)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number with day of week (2023-03-28)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number rollover to next year (2023-01-01)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/duration.json": {
+      "validation of duration strings": {
+        "an invalid duration string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no date or time elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "elements out of order": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing time separator": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "time element in the date position": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "weeks cannot be combined with other units": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "element without unit": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/email.json": {
+      "validation of e-mail addresses": {
+        "an invalid e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dot before local part is not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dot after local part is not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "two subsequent dots inside local part are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/hostname.json": {
+      "validation of host names": {
+        "a host name starting with an illegal character": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name containing illegal characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name with a component too long": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "starts with hyphen": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ends with hyphen": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "starts with underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ends with underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "exceeds maximum label length": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/idn-email.json": {
+      "validation of an internationalized e-mail addresses": {
+        "an invalid idn e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/idn-hostname.json": {
+      "validation of internationalized host names": {
+        "illegal first char U+302E Hangul single dot tone mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains illegal char U+302E Hangul single dot tone mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name with a component too long": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid label, correct Punycode": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid Punycode": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label contains \"--\" in the 3rd and 4th position": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label starts with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label ends with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label starts and ends with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with a Spacing Combining Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with a Nonspacing Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with an Enclosing Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Exceptions that are DISALLOWED, right-to-left chars": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Exceptions that are DISALLOWED, left-to-right chars": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with no preceding 'l'": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with nothing preceding": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with no following 'l'": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with nothing following": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Greek KERAIA not followed by Greek": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Greek KERAIA not followed by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERESH not preceded by Hebrew": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERESH not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERSHAYIM not preceded by Hebrew": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERSHAYIM not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "KATAKANA MIDDLE DOT with no Hiragana, Katakana, or Han": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "KATAKANA MIDDLE DOT with no other characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Arabic-Indic digits mixed with Extended Arabic-Indic digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ZERO WIDTH JOINER not preceded by Virama": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ZERO WIDTH JOINER not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/ipv4.json": {
+      "validation of IP addresses": {
+        "an IP address with too many components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address with out-of-range values": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address without 4 components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address as an integer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address as an integer (decimal)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leading zeroes, as they are treated as octals": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/ipv6.json": {
+      "validation of IPv6 addresses": {
+        "an IPv6 address with out-of-range values": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "trailing 5 hex symbols is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IPv6 address with too many components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IPv6 address containing illegal characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing leading octet is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing trailing octet is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing leading octet with omitted octets later": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "two sets of double colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "mixed format with ipv4 section with octet out of range": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "mixed format with ipv4 section with a hex octet": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "triple colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "insufficient octets without double colons": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ipv4 is not ipv6": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ipv4 segment must have 4 octets": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "leading whitespace is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "trailing whitespace is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "netmask is not a part of ipv6 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zone id is not a part of ipv6 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a long invalid ipv6, below length limit, first": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a long invalid ipv6, below length limit, second": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in the IPv4 portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/iri-reference.json": {
+      "validation of IRI References": {
+        "an invalid IRI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI fragment": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/iri.json": {
+      "validation of IRIs": {
+        "an invalid IRI based on IPv6": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid relative IRI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI though valid IRI reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/json-pointer.json": {
+      "validation of JSON-pointers (JSON String Representation)": {
+        "not a valid JSON-pointer (~ not escaped)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #3": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (some escaped, but not all) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (some escaped, but not all) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (wrong escape character) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (wrong escape character) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (multiple characters not escaped)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #3": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/regex.json": {
+      "validation of regular expressions": {
+        "a regular expression with unclosed parens is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/relative-json-pointer.json": {
+      "validation of Relative JSON Pointers (RJP)": {
+        "an invalid RJP that is a valid JSON Pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "negative prefix": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "explicit positive prefix": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "## is not a valid json-pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zero cannot be followed by other digits, plus json-pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zero cannot be followed by other digits, plus octothorpe": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "empty string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/time.json": {
+      "validation of time strings": {
+        "invalid time string with extra leading zeros": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid time string with no leading zero for single digit": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "hour, minute, second must be two digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, Zulu (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, Zulu (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, zero time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, zero time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, positive time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, positive time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, negative time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, negative time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "hour, minute in time-offset must be two digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid hour": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid minute": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid second": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid leap second (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid leap second (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time numoffset hour": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time numoffset minute": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time with both Z and numoffset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid offset indicator": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time offset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time offset with second fraction": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "offset not starting with plus or minus": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains letters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri-reference.json": {
+      "validation of URI References": {
+        "an invalid URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI fragment": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri-template.json": {
+      "format: uri-template": {
+        "an invalid uri-template": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri.json": {
+      "validation of URIs": {
+        "an invalid protocol-relative URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid relative URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI though valid URI reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with spaces": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with spaces and missing scheme": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with comma in scheme": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uuid.json": {
+      "uuid format": {
+        "wrong length": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing section": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "bad characters (not hex)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "too few dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "too many dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dashes in the wrong spot": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    }
+  },
+  "2020-12": {
+    "optional/dependencies-compatibility.json": {
+      "single dependency": {
+        "missing dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "multiple dependents required": {
+        "missing dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "missing other dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "missing both dependencies": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "dependencies with escaped characters": {
+        "CRLF missing dependent": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted quotes missing dependent": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "single schema dependency": {
+        "wrong type": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "wrong type other": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "wrong type both": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "boolean subschemas": {
+        "object with property having schema false is invalid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "object with both properties is invalid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "schema dependencies with escaped characters": {
+        "quoted quote": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted tab invalid under dependent schema": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted quote invalid under dependent schema": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/ecmascript-regex.json": {
+      "ECMA 262 regex escapes control codes with \\c and upper letter": {
+        "does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 regex escapes control codes with \\c and lower letter": {
+        "does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\d matches ascii digits only": {
+        "NKO DIGIT ZERO does not match (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "NKO DIGIT ZERO (as \\u escape) does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\D matches everything but ascii digits": {
+        "NKO DIGIT ZERO matches (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "NKO DIGIT ZERO (as \\u escape) matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\w matches ascii letters only": {
+        "latin-1 e-acute does not match (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\W matches everything but ascii letters": {
+        "latin-1 e-acute matches (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\s matches whitespace": {
+        "zero-width whitespace matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\S matches everything but whitespace": {
+        "zero-width whitespace does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patterns always use unicode semantics with pattern": {
+        "ascii character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode matching is case-sensitive": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\w in patterns matches [A-Za-z0-9_], not unicode letters": {
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\d in pattern matches [0-9], not unicode digits": {
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\a is not an ECMA 262 control escape": {
+        "when used as a pattern": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "pattern with non-ASCII digits": {
+        "ascii digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "ascii non-digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patterns always use unicode semantics with patternProperties": {
+        "ascii character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode matching is case-sensitive": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\w in patternProperties matches [A-Za-z0-9_], not unicode letters": {
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\d in patternProperties matches [0-9], not unicode digits": {
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patternProperties with non-ASCII digits": {
+        "ascii digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "ascii non-digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/float-overflow.json": {
+      "all integers are multiples of 0.5, if overflow is handled": {
+        "valid if optional overflow handling is implemented": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/format-assertion.json": {
+      "schema that uses custom metaschema with format-assertion: false": {
+        "format-assertion: false: invalid string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "schema that uses custom metaschema with format-assertion: true": {
+        "format-assertion: true: valid string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "format-assertion: true: invalid string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/refOfUnknownKeyword.json": {
+      "reference of a root arbitrary keyword": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "reference of an arbitrary keyword of a sub-schema": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/format/date-time.json": {
+      "validation of date-time strings": {
+        "an invalid date-time past leap second, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time with leap second on a wrong minute, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time with leap second on a wrong hour, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid day in date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid offset in date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid closing Z after time-zone offset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-padded month dates": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-padded day dates": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in date portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in time portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/date.json": {
+      "validation of date strings": {
+        "a invalid date string with 32 days in January": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 29 days in February (normal)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 30 days in February (leap)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in March": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in April": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in May": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in June": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in July": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in August": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in September": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in October": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in November": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in December": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with invalid month": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "non-padded month dates are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "non-padded day dates are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid month": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid month-day combination": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "2021 is not a leap year": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: YYYYMMDD without dashes (2023-03-28)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number implicit day of week (2023-01-02)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number with day of week (2023-03-28)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number rollover to next year (2023-01-01)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/duration.json": {
+      "validation of duration strings": {
+        "an invalid duration string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no date or time elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "elements out of order": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing time separator": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "time element in the date position": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "weeks cannot be combined with other units": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "element without unit": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/email.json": {
+      "validation of e-mail addresses": {
+        "an invalid e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dot before local part is not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dot after local part is not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "two subsequent dots inside local part are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid domain": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IPv4-address-literal": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/hostname.json": {
+      "validation of host names": {
+        "a host name starting with an illegal character": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name containing illegal characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name with a component too long": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "starts with hyphen": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ends with hyphen": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "starts with underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ends with underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "exceeds maximum label length": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/idn-email.json": {
+      "validation of an internationalized e-mail addresses": {
+        "an invalid idn e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/idn-hostname.json": {
+      "validation of internationalized host names": {
+        "illegal first char U+302E Hangul single dot tone mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains illegal char U+302E Hangul single dot tone mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name with a component too long": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid label, correct Punycode": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid Punycode": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label contains \"--\" in the 3rd and 4th position": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label starts with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label ends with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label starts and ends with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with a Spacing Combining Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with a Nonspacing Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with an Enclosing Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Exceptions that are DISALLOWED, right-to-left chars": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Exceptions that are DISALLOWED, left-to-right chars": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with no preceding 'l'": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with nothing preceding": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with no following 'l'": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with nothing following": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Greek KERAIA not followed by Greek": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Greek KERAIA not followed by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERESH not preceded by Hebrew": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERESH not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERSHAYIM not preceded by Hebrew": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERSHAYIM not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "KATAKANA MIDDLE DOT with no Hiragana, Katakana, or Han": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "KATAKANA MIDDLE DOT with no other characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Arabic-Indic digits mixed with Extended Arabic-Indic digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ZERO WIDTH JOINER not preceded by Virama": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ZERO WIDTH JOINER not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/ipv4.json": {
+      "validation of IP addresses": {
+        "an IP address with too many components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address with out-of-range values": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address without 4 components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address as an integer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address as an integer (decimal)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leading zeroes, as they are treated as octals": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/ipv6.json": {
+      "validation of IPv6 addresses": {
+        "an IPv6 address with out-of-range values": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "trailing 5 hex symbols is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IPv6 address with too many components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IPv6 address containing illegal characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing leading octet is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing trailing octet is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing leading octet with omitted octets later": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "two sets of double colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "mixed format with ipv4 section with octet out of range": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "mixed format with ipv4 section with a hex octet": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "triple colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "insufficient octets without double colons": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ipv4 is not ipv6": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ipv4 segment must have 4 octets": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "leading whitespace is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "trailing whitespace is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "netmask is not a part of ipv6 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zone id is not a part of ipv6 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a long invalid ipv6, below length limit, first": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a long invalid ipv6, below length limit, second": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in the IPv4 portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/iri-reference.json": {
+      "validation of IRI References": {
+        "an invalid IRI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI fragment": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/iri.json": {
+      "validation of IRIs": {
+        "an invalid IRI based on IPv6": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid relative IRI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI though valid IRI reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/json-pointer.json": {
+      "validation of JSON-pointers (JSON String Representation)": {
+        "not a valid JSON-pointer (~ not escaped)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #3": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (some escaped, but not all) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (some escaped, but not all) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (wrong escape character) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (wrong escape character) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (multiple characters not escaped)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #3": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/regex.json": {
+      "validation of regular expressions": {
+        "a regular expression with unclosed parens is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/relative-json-pointer.json": {
+      "validation of Relative JSON Pointers (RJP)": {
+        "an invalid RJP that is a valid JSON Pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "negative prefix": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "explicit positive prefix": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "## is not a valid json-pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zero cannot be followed by other digits, plus json-pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zero cannot be followed by other digits, plus octothorpe": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "empty string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/time.json": {
+      "validation of time strings": {
+        "invalid time string with extra leading zeros": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid time string with no leading zero for single digit": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "hour, minute, second must be two digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, Zulu (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, Zulu (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, zero time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, zero time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, positive time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, positive time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, negative time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, negative time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "hour, minute in time-offset must be two digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid hour": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid minute": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid second": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid leap second (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid leap second (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time numoffset hour": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time numoffset minute": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time with both Z and numoffset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid offset indicator": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time offset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time offset with second fraction": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "offset not starting with plus or minus": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains letters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri-reference.json": {
+      "validation of URI References": {
+        "an invalid URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI fragment": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri-template.json": {
+      "format: uri-template": {
+        "an invalid uri-template": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri.json": {
+      "validation of URIs": {
+        "an invalid protocol-relative URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid relative URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI though valid URI reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with spaces": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with spaces and missing scheme": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with comma in scheme": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uuid.json": {
+      "uuid format": {
+        "wrong length": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing section": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "bad characters (not hex)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "too few dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "too many dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dashes in the wrong spot": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    }
+  },
+  "next": {
+    "contains.json": {
+      "contains keyword validation": {
+        "object without properties matching schema is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "empty object is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "contains keyword with const keyword": {
+        "object without property 5 is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "contains keyword with boolean schema true": {
+        "empty object is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "contains keyword with boolean schema false": {
+        "empty object is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "items + contains": {
+        "matches additionalProperties, does not match contains": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "contains with false if subschema": {
+        "empty object is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      }
+    },
+    "dynamicRef.json": {
+      "A $dynamicRef resolves to the first $dynamicAnchor still in scope that is encountered when the schema is evaluated": {
+        "An array of strings is valid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "An array containing non-strings is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "A $dynamicRef with intermediate scopes that don't include a matching $dynamicAnchor does not affect dynamic scope resolution": {
+        "An array of strings is valid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "An array containing non-strings is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "$dynamicAnchor inside propertyDependencies": {
+        "expected strings - additional property as not string is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "expected integers - additional property as not integer is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      }
+    },
+    "id.json": {
+      "Valid use of empty fragments in location-independent $id": {
+        "Identifier name with absolute URI": {
+          "status": "skip",
+          "reason": "empty fragments no longer allowed in draft-next, test is out of date"
+        },
+        "Identifier name with base URI change in subschema": {
+          "status": "skip",
+          "reason": "empty fragments no longer allowed in draft-next, test is out of date"
+        }
+      },
+      "Unnormalized $ids are allowed but discouraged": {
+        "Unnormalized identifier with empty fragment": {
+          "status": "skip",
+          "reason": "empty fragments no longer allowed in draft-next, test is out of date"
+        },
+        "Unnormalized identifier with empty fragment and no ref": {
+          "status": "skip",
+          "reason": "empty fragments no longer allowed in draft-next, test is out of date"
+        }
+      }
+    },
+    "maxContains.json": {
+      "maxContains with contains": {
+        "empty object": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "all properties match, invalid maxContains": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "some properties match, invalid maxContains": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "minContains < maxContains": {
+        "object with actual < minContains < maxContains": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "object with minContains < maxContains < actual": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      }
+    },
+    "propertyDependencies.json": {
+      "multiple options selects the right one": {
+        "bar with more than 2 properties is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "bar with fewer than 2 properties is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "baz with other properties is invalid": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "quux is disallowed": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      }
+    },
+    "unevaluatedProperties.json": {
+      "unevaluatedProperties depends on adjacent contains": {
+        "bar is evaluated by contains": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "unevaluatedProperties depends on multiple nested contains": {
+        "5 not evaluated, passes unevaluatedItems": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "unevaluatedProperties can see inside propertyDependencies": {
+        "allows bar if foo = foo1": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      }
+    },
+    "optional/dependencies-compatibility.json": {
+      "single dependency": {
+        "missing dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "multiple dependents required": {
+        "missing dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "missing other dependency": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "missing both dependencies": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "dependencies with escaped characters": {
+        "CRLF missing dependent": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted quotes missing dependent": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "single schema dependency": {
+        "wrong type": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "wrong type other": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "wrong type both": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "boolean subschemas": {
+        "object with property having schema false is invalid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "object with both properties is invalid": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "schema dependencies with escaped characters": {
+        "quoted quote": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted tab invalid under dependent schema": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "quoted quote invalid under dependent schema": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/ecmascript-regex.json": {
+      "ECMA 262 regex escapes control codes with \\c and upper letter": {
+        "does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 regex escapes control codes with \\c and lower letter": {
+        "does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\d matches ascii digits only": {
+        "NKO DIGIT ZERO does not match (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "NKO DIGIT ZERO (as \\u escape) does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\D matches everything but ascii digits": {
+        "NKO DIGIT ZERO matches (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "NKO DIGIT ZERO (as \\u escape) matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\w matches ascii letters only": {
+        "latin-1 e-acute does not match (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\W matches everything but ascii letters": {
+        "latin-1 e-acute matches (unlike e.g. Python)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\s matches whitespace": {
+        "zero-width whitespace matches": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "ECMA 262 \\S matches everything but whitespace": {
+        "zero-width whitespace does not match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patterns always use unicode semantics with pattern": {
+        "ascii character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode matching is case-sensitive": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\w in patterns matches [A-Za-z0-9_], not unicode letters": {
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\d in pattern matches [0-9], not unicode digits": {
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\a is not an ECMA 262 control escape": {
+        "when used as a pattern": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "pattern with non-ASCII digits": {
+        "ascii digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "ascii non-digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patterns always use unicode semantics with patternProperties": {
+        "ascii character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode matching is case-sensitive": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\w in patternProperties matches [A-Za-z0-9_], not unicode letters": {
+        "literal unicode character in json string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "unicode character in hex format in string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "\\d in patternProperties matches [0-9], not unicode digits": {
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "patternProperties with non-ASCII digits": {
+        "ascii digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "ascii non-digits": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "non-ascii digits (BENGALI DIGIT FOUR, BENGALI DIGIT TWO)": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/float-overflow.json": {
+      "all integers are multiples of 0.5, if overflow is handled": {
+        "valid if optional overflow handling is implemented": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/format-assertion.json": {
+      "schema that uses custom metaschema with format-assertion: false": {
+        "format-assertion: false: invalid string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "schema that uses custom metaschema with format-assertion: true": {
+        "format-assertion: true: valid string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "format-assertion: true: invalid string": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/refOfUnknownKeyword.json": {
+      "reference of a root arbitrary keyword": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "reference of an arbitrary keyword of a sub-schema": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      }
+    },
+    "optional/format/date-time.json": {
+      "validation of date-time strings": {
+        "an invalid date-time past leap second, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time with leap second on a wrong minute, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time with leap second on a wrong hour, UTC": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid day in date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid offset in date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid closing Z after time-zone offset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date-time string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-padded month dates": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-padded day dates": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in date portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in time portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/date.json": {
+      "validation of date strings": {
+        "a invalid date string with 32 days in January": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 29 days in February (normal)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 30 days in February (leap)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in March": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in April": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in May": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in June": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in July": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in August": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in September": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in October": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 31 days in November": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with 32 days in December": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a invalid date string with invalid month": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid date string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "non-padded month dates are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "non-padded day dates are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid month": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid month-day combination": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "2021 is not a leap year": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: YYYYMMDD without dashes (2023-03-28)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number implicit day of week (2023-01-02)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number with day of week (2023-03-28)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ISO8601 / non-RFC3339: week number rollover to next year (2023-01-01)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/duration.json": {
+      "validation of duration strings": {
+        "an invalid duration string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no date or time elements present": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "elements out of order": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing time separator": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "time element in the date position": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "weeks cannot be combined with other units": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "element without unit": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/email.json": {
+      "validation of e-mail addresses": {
+        "an invalid e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dot before local part is not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dot after local part is not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "two subsequent dots inside local part are not valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid domain": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IPv4-address-literal": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/hostname.json": {
+      "validation of host names": {
+        "a host name starting with an illegal character": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name containing illegal characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name with a component too long": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "starts with hyphen": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ends with hyphen": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "starts with underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ends with underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains underscore": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "exceeds maximum label length": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/idn-email.json": {
+      "validation of an internationalized e-mail addresses": {
+        "an invalid idn e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid e-mail address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/idn-hostname.json": {
+      "validation of internationalized host names": {
+        "illegal first char U+302E Hangul single dot tone mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains illegal char U+302E Hangul single dot tone mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a host name with a component too long": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid label, correct Punycode": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid Punycode": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label contains \"--\" in the 3rd and 4th position": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label starts with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label ends with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "U-label starts and ends with a dash": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with a Spacing Combining Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with a Nonspacing Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Begins with an Enclosing Mark": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Exceptions that are DISALLOWED, right-to-left chars": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Exceptions that are DISALLOWED, left-to-right chars": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with no preceding 'l'": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with nothing preceding": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with no following 'l'": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "MIDDLE DOT with nothing following": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Greek KERAIA not followed by Greek": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Greek KERAIA not followed by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERESH not preceded by Hebrew": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERESH not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERSHAYIM not preceded by Hebrew": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Hebrew GERSHAYIM not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "KATAKANA MIDDLE DOT with no Hiragana, Katakana, or Han": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "KATAKANA MIDDLE DOT with no other characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "Arabic-Indic digits mixed with Extended Arabic-Indic digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ZERO WIDTH JOINER not preceded by Virama": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ZERO WIDTH JOINER not preceded by anything": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/ipv4.json": {
+      "validation of IP addresses": {
+        "an IP address with too many components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address with out-of-range values": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address without 4 components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address as an integer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IP address as an integer (decimal)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leading zeroes, as they are treated as octals": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/ipv6.json": {
+      "validation of IPv6 addresses": {
+        "an IPv6 address with out-of-range values": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "trailing 5 hex symbols is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IPv6 address with too many components": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an IPv6 address containing illegal characters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing leading octet is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing trailing octet is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing leading octet with omitted octets later": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "two sets of double colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "mixed format with ipv4 section with octet out of range": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "mixed format with ipv4 section with a hex octet": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "triple colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "insufficient octets without double colons": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no colons is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ipv4 is not ipv6": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "ipv4 segment must have 4 octets": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "leading whitespace is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "trailing whitespace is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "netmask is not a part of ipv6 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zone id is not a part of ipv6 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a long invalid ipv6, below length limit, first": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "a long invalid ipv6, below length limit, second": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09ea' (a Bengali 4) in the IPv4 portion": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/iri-reference.json": {
+      "validation of IRI References": {
+        "an invalid IRI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI fragment": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/iri.json": {
+      "validation of IRIs": {
+        "an invalid IRI based on IPv6": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid relative IRI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid IRI though valid IRI reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/json-pointer.json": {
+      "validation of JSON-pointers (JSON String Representation)": {
+        "not a valid JSON-pointer (~ not escaped)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (URI Fragment Identifier) #3": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (some escaped, but not all) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (some escaped, but not all) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (wrong escape character) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (wrong escape character) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (multiple characters not escaped)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #1": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #2": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "not a valid JSON-pointer (isn't empty nor starts with /) #3": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/regex.json": {
+      "validation of regular expressions": {
+        "a regular expression with unclosed parens is invalid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/relative-json-pointer.json": {
+      "validation of Relative JSON Pointers (RJP)": {
+        "an invalid RJP that is a valid JSON Pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "negative prefix": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "explicit positive prefix": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "## is not a valid json-pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zero cannot be followed by other digits, plus json-pointer": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "zero cannot be followed by other digits, plus octothorpe": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "empty string": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/time.json": {
+      "validation of time strings": {
+        "invalid time string with extra leading zeros": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid time string with no leading zero for single digit": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "hour, minute, second must be two digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, Zulu (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, Zulu (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, zero time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, zero time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, positive time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, positive time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, negative time-offset (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid leap second, negative time-offset (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "hour, minute in time-offset must be two digits": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid hour": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid minute": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid second": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid leap second (wrong hour)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid leap second (wrong minute)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time numoffset hour": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time numoffset minute": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid time string with invalid time with both Z and numoffset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid offset indicator": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "only RFC3339 not all of ISO 8601 are valid": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time offset": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no time offset with second fraction": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "offset not starting with plus or minus": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "contains letters": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri-reference.json": {
+      "validation of URI References": {
+        "an invalid URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI fragment": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri-template.json": {
+      "format: uri-template": {
+        "an invalid uri-template": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uri.json": {
+      "validation of URIs": {
+        "an invalid protocol-relative URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid relative URI Reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI though valid URI reference": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with spaces": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with spaces and missing scheme": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "an invalid URI with comma in scheme": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    },
+    "optional/format/uuid.json": {
+      "uuid format": {
+        "wrong length": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "missing section": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "bad characters (not hex)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "no dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "too few dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "too many dashes": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "dashes in the wrong spot": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        }
+      }
+    }
+  }
+}

@@ -43,6 +43,17 @@ def pytest_addoption(parser):
         help="Run only test groups and tests whose descriptions contain the given substring. "
              "Matching is case insensitive. The option may be repeated to match alternative substrings.",
     )
+    testsuite.addoption(
+        "--testsuite-generate-status",
+        action="store_true",
+        help="Run all possible tests from all supported versions and updates the tests/suite_status.json "
+             "file.  If a failed test is already in tests/suite_status.json, its status and reason are "
+             "left alone.  Otherwise, all optional and format tests that fail are given an 'xfail' with "
+             "the reason being 'optional' or 'format', respectively, while other failures from the 'next' "
+             "version are given an 'xfail' status with a None (JSON null) reason, which should be set "
+             "manually to an appropriate string.  All other options are ignored when this option is passed."
+             "NOTE: the tests/suite_status.json is updated IN PLACE, overwriting the current contents.",
+    )
 
 
 @pytest.fixture(autouse=True)
