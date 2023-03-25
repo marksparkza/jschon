@@ -9,7 +9,7 @@ from jschon.vocabulary.format import FormatKeyword, format_validator
 from tests.strategies import jsonpointer
 
 
-@pytest.fixture(scope='module', autouse=True)
+@pytest.fixture(autouse=True)
 def setup_validators(catalog):
     catalog.enable_formats(
         "ipv4",

@@ -4,7 +4,7 @@ import pytest
 from hypothesis import given
 from pytest import param as p
 
-from jschon import JSON, JSONPointer, JSONSchema, URI
+from jschon import JSON, JSONPointer, JSONSchema, URI, create_catalog
 from jschon.json import false, true
 from tests import example_invalid, example_schema, example_valid, metaschema_uri_2019_09, metaschema_uri_2020_12
 from tests.strategies import *
@@ -54,8 +54,8 @@ def assert_keyword_order(keyword_list, keyword_pairs):
 
 
 @given(value=interdependent_keywords)
-def test_keyword_dependency_resolution_2019_09(value: list, catalog):
-    metaschema = catalog.get_schema(metaschema_uri_2019_09, cacheid='__meta__')
+def test_keyword_dependency_resolution_2019_09(value: list):
+    metaschema = create_catalog('2019-09').get_metaschema(metaschema_uri_2019_09)
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }
@@ -96,8 +96,8 @@ def test_keyword_dependency_resolution_2019_09(value: list, catalog):
 
 
 @given(value=interdependent_keywords)
-def test_keyword_dependency_resolution_2020_12(value: list, catalog):
-    metaschema = catalog.get_schema(metaschema_uri_2020_12, cacheid='__meta__')
+def test_keyword_dependency_resolution_2020_12(value: list):
+    metaschema = create_catalog('2020-12').get_metaschema(metaschema_uri_2020_12)
     kwclasses = {
         key: kwclass for key in value if (kwclass := metaschema.kwclasses.get(key))
     }

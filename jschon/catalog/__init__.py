@@ -86,6 +86,10 @@ class Catalog:
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
         self._enabled_formats: Set[str] = set()
 
+    def __repr__(self) -> str:
+        """Return `repr(self)`."""
+        return f'{self.__class__.__name__}({self.name!r})'
+
     def add_uri_source(self, base_uri: URI, source: Source):
         """Register a source for URI-identified JSON resources.
 
@@ -165,7 +169,7 @@ class Catalog:
     def create_metaschema(
             self,
             uri: URI,
-            default_core_vocabulary_uri: Optional[URI] = None,
+            default_core_vocabulary_uri: URI = None,
             *default_vocabulary_uris: URI,
             **kwargs: Any,
     ) -> Metaschema:
@@ -212,11 +216,11 @@ class Catalog:
         return metaschema
 
     def get_metaschema(self, uri: URI) -> Metaschema:
-        """Get a metaschema identified by `uri` from a cache, or
+        """Get a metaschema identified by `uri` from the ``'__meta__'`` cache, or
         load it from configured sources if not already cached.
 
         Note that metaschemas that do not declare a known core vocabulary
-        in ``$vocabulary`` must first be created using :meth:`create_schema`.
+        in ``$vocabulary`` must first be created using :meth:`create_metaschema`.
 
         :param uri: the URI identifying the metaschema
 
@@ -225,11 +229,17 @@ class Catalog:
         :raise JSONSchemaError: if the metaschema is loaded from sources
             but no known core vocabulary is present in ``$vocabulary``
         """
-        metaschema = self._schema_cache['__meta__'].get(uri)
+        try:
+            metaschema = self._schema_cache['__meta__'][uri]
+        except KeyError:
+            metaschema = None
+
         if not metaschema:
             metaschema = self.create_metaschema(uri)
+
         if not isinstance(metaschema, Metaschema):
             raise CatalogError(f"The schema referenced by {uri} is not a metaschema")
+
         return metaschema
 
     def enable_formats(self, *format_attr: str) -> None:

@@ -38,7 +38,7 @@ class Metaschema(JSONSchema):
             self,
             catalog: Catalog,
             value: Mapping[str, JSONCompatible],
-            default_core_vocabulary: Optional[Vocabulary] = None,
+            default_core_vocabulary: Vocabulary = None,
             *default_vocabularies: Vocabulary,
             **kwargs: Any,
     ):
@@ -118,6 +118,10 @@ class Vocabulary:
         self.kwclasses: Dict[str, KeywordClass] = {
             kwclass.key: kwclass for kwclass in kwclasses
         }
+
+    def __repr__(self) -> str:
+        """Return `repr(self)`."""
+        return f'{self.__class__.__name__}({self.uri!r})'
 
 
 class Keyword:

@@ -198,9 +198,6 @@ def test_cache_independence(catalog):
 
 
 def test_metaschema_isolation():
-    new_catalog = create_catalog('2019-09', '2020-12', name=str(uuid.uuid4()))
-    assert new_catalog._schema_cache.keys() == {'__meta__'}
-
     # mask the metaschema with a boolean false schema, in the fubar cache
     cached_schema(metaschema_uri_2020_12, False, 'fubar')
     uri = URI("http://example.com")
@@ -221,7 +218,7 @@ def test_get_metaschema_detect_core(local_catalog):
     m = local_catalog.get_metaschema(uri)
     assert isinstance(m, Metaschema)
     assert m['$id'].data == str(uri)
-    assert m.core_vocabulary.uri == core_vocab.uri
+    assert m.core_vocabulary is core_vocab
     assert m.kwclasses == core_vocab.kwclasses
 
     s = local_catalog.get_schema(uri)
@@ -233,7 +230,7 @@ def test_get_metaschema_detect_core(local_catalog):
 def test_get_metaschema_wrong_type(local_catalog):
     uri = URI('https://example.com/meta_with_core')
     non_meta = local_catalog.get_schema(uri)
-    local_catalog._schema_cache['__meta__'][uri] = non_meta
+    local_catalog.add_schema(uri, non_meta, cacheid='__meta__')
     with pytest.raises(CatalogError, match='not a metaschema'):
         local_catalog.get_metaschema(uri)
 
@@ -246,7 +243,7 @@ def test_get_metaschema_invalid(local_catalog):
 
 def test_create_metaschema_no_vocabs(local_catalog):
     class ExtraKeyword(Keyword):
-        key='extra'
+        key = 'extra'
 
     uri = URI('https://example.com/meta_no_vocabs')
     core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
