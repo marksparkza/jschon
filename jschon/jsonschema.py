@@ -221,8 +221,6 @@ class JSONSchema(JSON):
     @cached_property
     def metaschema(self) -> Metaschema:
         """The schema's :class:`~jschon.vocabulary.Metaschema`."""
-        from jschon.vocabulary import Metaschema
-
         if (uri := self.metaschema_uri) is None:
             raise JSONSchemaError("The schema's metaschema URI has not been set")
 
