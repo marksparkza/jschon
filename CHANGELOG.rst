@@ -1,8 +1,8 @@
 Changelog
 =========
 
-v0.10.0 (in development)
-------------------------
+v0.10.0 (2023-04-01)
+--------------------
 Features:
 
 * ``@format_validator`` decorator
