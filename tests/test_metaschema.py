@@ -27,11 +27,7 @@ def test_metaschema_no_core(vocab_data):
     }
     if vocab_data:
         metaschema_data['$vocabulary'] = vocab_data
-        for vocab in vocab_data.keys() - set((
-            core_vocab_uri_2019_09,
-            core_vocab_uri_2020_12,
-            core_vocab_uri_next,
-        )):
+        for vocab in vocab_data:
             catalog.create_vocabulary(URI(vocab))
 
     with pytest.raises(JSONSchemaError):

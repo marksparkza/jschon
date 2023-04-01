@@ -150,7 +150,7 @@ class Catalog:
         :param kwclasses: the :class:`~jschon.vocabulary.Keyword` classes
             constituting the vocabulary
 
-        :returns: the newly created :class:`Vocabulary` instance
+        :returns: the newly created :class:`~jschon.vocabulary.Vocabulary` instance
         """
         self._vocabularies[uri] = Vocabulary(uri, *kwclasses)
         return self._vocabularies[uri]
@@ -186,7 +186,7 @@ class Catalog:
         :param kwargs: additional keyword arguments to pass through to the
             :class:`~jschon.jsonschema.JSONSchema` constructor
 
-        :returns: the newly created :class:`Metaschema` instance
+        :returns: the newly created :class:`~jschon.vocabulary.Metaschema` instance
 
         :raise CatalogError: if the metaschema is not valid
         """
@@ -220,14 +220,14 @@ class Catalog:
         load it from configured sources if not already cached.
 
         Note that metaschemas that do not declare a known core vocabulary
-        in ``$vocabulary`` must first be created using :meth:`create_metaschema`.
+        in ``"$vocabulary"`` must first be created using :meth:`create_metaschema`.
 
         :param uri: the URI identifying the metaschema
 
         :raise CatalogError: if the object referenced by `uri` is not
             a :class:`~jschon.vocabulary.Metaschema`, or if it is not valid
         :raise JSONSchemaError: if the metaschema is loaded from sources
-            but no known core vocabulary is present in ``$vocabulary``
+            but no known core vocabulary is present in ``"$vocabulary"``
         """
         try:
             metaschema = self._schema_cache['__meta__'][uri]

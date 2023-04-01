@@ -48,7 +48,7 @@ Miscellaneous:
 * Remove implicit fall-through to looking up a schema in the `__meta__` cache
   if not found in the parameterized cache, in ``Catalog.get_schema()`` (#40)
 * Added ``Catalog.get_metaschema()``, analogous to ``Catalog.get_schema()``
-* ``Catalog.create_metashema()`` and ``Catalog.create_vocabulary()`` return the created instance
+* ``Catalog.create_metaschema()`` and ``Catalog.create_vocabulary()`` return the created instance
 * Rename ``core_vocabulary`` and ``core_vocabulary_uri`` parameters for
   ``Metaschema.__init__()`` and ``Catalog.create_metaschema()`` respectively to
   ``default_core_vocabulary`` and ``default_core_vocabulary_uri``

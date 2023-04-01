@@ -32,7 +32,7 @@ class Metaschema(JSONSchema):
     :class:`Metaschema` is itself a subclass of :class:`~jschon.jsonschema.JSONSchema`,
     and may be used to validate any referencing schema.
     """
-    _CORE_VOCAB_RE = r'https://json-schema\.org/draft/[^/]*/vocab/core$'
+    _CORE_VOCAB_RE = r'https://json-schema\.org/draft/[^/]+/vocab/core$'
 
     def __init__(
             self,
@@ -45,9 +45,9 @@ class Metaschema(JSONSchema):
         """Initialize a :class:`Metaschema` instance from the given
         schema-compatible `value`.
 
-        :param catalog: catalog instance or catalog name
+        :param catalog: catalog instance
         :param value: a schema-compatible Python object
-        :param default_core_vocabulary: the the metaschema's
+        :param default_core_vocabulary: the metaschema's
             core :class:`~jschon.vocabulary.Vocabulary`, used in the absence
             of a ``"$vocabulary"`` keyword in the metaschema JSON file, or
             if a known core vocabulary is not present under ``"$vocabulary"``
