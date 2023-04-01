@@ -331,6 +331,8 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         this method performs an in-place JSON Patch ``add`` operation on `self`.
 
         If `path` is empty, the value of `self` is replaced by `obj`.
+
+        *Experimental.*
         """
         if not path:
             self.__init__(
@@ -378,6 +380,8 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         this method performs an in-place JSON Patch ``remove`` operation on `self`.
 
         If `path` is empty, the value of `self` is set to `None`.
+
+        *Experimental.*
         """
         if not path:
             self.__init__(
@@ -411,6 +415,8 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         this method performs an in-place JSON Patch ``replace`` operation on `self`.
 
         If `path` is empty, the value of `self` is replaced by `obj`.
+
+        *Experimental.*
         """
         if not path:
             self.__init__(
@@ -438,10 +444,16 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             target.parent[target.key] = obj
 
     def move(self, from_: Union[str, JSONPointer], to: Union[str, JSONPointer]) -> None:
-        pass
+        """
+        *Not yet implemented; experimental.*
+        """
 
     def copy(self, from_: Union[str, JSONPointer], to: Union[str, JSONPointer]) -> None:
-        pass
+        """
+        *Not yet implemented; experimental.*
+        """
 
     def test(self, path: Union[str, JSONPointer], obj: Union[JSON, JSONCompatible]) -> None:
-        pass
+        """
+        *Not yet implemented; experimental.*
+        """

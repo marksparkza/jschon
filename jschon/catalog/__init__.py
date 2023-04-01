@@ -90,8 +90,8 @@ class Catalog:
         """Return `repr(self)`."""
         return f'{self.__class__.__name__}({self.name!r})'
 
-    def add_uri_source(self, base_uri: URI, source: Source):
-        """Register a source for URI-identified JSON resources.
+    def add_uri_source(self, base_uri: URI, source: Source) -> None:
+        """Register a source for loading URI-identified JSON resources.
 
         :param base_uri: a normalized, absolute URI - including scheme, without
             a fragment, and ending with ``'/'``
@@ -264,6 +264,8 @@ class Catalog:
             cacheid: Hashable = 'default',
     ) -> None:
         """Add a (sub)schema to a cache.
+
+        Note that this method is called automatically during schema construction.
 
         :param uri: the URI identifying the (sub)schema
         :param schema: the :class:`~jschon.jsonschema.JSONSchema` instance to cache
