@@ -32,30 +32,30 @@ __all__ = [
 __version__ = '0.10.0'
 
 
-def create_catalog(*vocabularies: str, name: str = 'catalog') -> Catalog:
+def create_catalog(*versions: str, name: str = 'catalog') -> Catalog:
     """Create and return a :class:`~jschon.catalog.Catalog` instance,
     initialized with a meta-schema and keyword support for each of the
-    specified JSON Schema `vocabularies`.
+    specified JSON Schema `versions`.
 
-    :param vocabularies: Any of ``2019-09``, ``2020-12``, ``next``.
+    :param versions: Any of ``2019-09``, ``2020-12``, ``next``.
     :param name: A unique name for the :class:`~jschon.catalog.Catalog` instance.
-    :raise ValueError: If any of `vocabularies` is unrecognized.
+    :raise ValueError: If any of `versions` is unrecognized.
     """
     from .catalog import _2019_09, _2020_12, _next
 
     catalog = Catalog(name=name)
 
-    vocabulary_initializers = {
+    version_initializers = {
         '2019-09': _2019_09.initialize,
         '2020-12': _2020_12.initialize,
         'next': _next.initialize,
     }
     try:
-        for vocabulary in vocabularies:
-            vocabulary_init = vocabulary_initializers[vocabulary]
-            vocabulary_init(catalog)
+        for version in versions:
+            version_init = version_initializers[version]
+            version_init(catalog)
 
     except KeyError as e:
-        raise ValueError(f'Unsupported vocabulary "{e.args[0]}"')
+        raise ValueError(f'Unrecognized version {e.args[0]!r}')
 
     return catalog

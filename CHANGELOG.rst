@@ -54,6 +54,7 @@ Miscellaneous:
   ``default_core_vocabulary`` and ``default_core_vocabulary_uri``
 * Improve kwarg-based construction of ``RelativeJSONPointer``
 * Rename ``AnnotationKeyword`` to ``_AnnotationKeyword``
+* Rename ``vocabularies`` parameter of ``create_catalog()`` to ``versions``
 * Allow passthrough of arguments to pytest when invoking tox
 * Add pytest command line options ``--testsuite-file`` and ``--testsuite-description``
 * Python 3.11 is now tested (no changes were required to support it)

@@ -7,7 +7,7 @@ The role of the :class:`~jschon.catalog.Catalog` in jschon is twofold:
    cooperative schemas that work together to evaluate :class:`~jschon.json.JSON`
    documents.
 #. It provides the infrastructure required for constructing
-   :class:`~jschon.jsonschema.JSONSchema` objects. This can include metaschemas,
+   :class:`~jschon.jsonschema.JSONSchema` objects. This can include meta-schemas,
    vocabularies and keyword implementations, format validators, and URI-to-directory
    mappings enabling URI-identified schemas to be located on disk.
 
@@ -18,14 +18,14 @@ at startup:
 >>> catalog = create_catalog('2020-12')
 
 The :func:`~jschon.create_catalog` function accepts a variable argument list
-indicating which versions of the JSON Schema vocabulary to support. For example,
-the following initialization call will enable our application to work with both
+indicating which versions of the JSON Schema vocabularies to support. For example,
+the following initialization call will enable your application to work with both
 2019-09 and 2020-12 schemas:
 
 >>> catalog = create_catalog('2019-09', '2020-12')
 
-If our application requires distinct :class:`~jschon.catalog.Catalog`
-instances with different configurations, then our setup might look something
+If your application requires distinct :class:`~jschon.catalog.Catalog`
+instances with different configurations, then your setup might look something
 like this:
 
 >>> catalog_1 = create_catalog('2019-09', name='Catalog 1')
