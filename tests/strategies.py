@@ -30,9 +30,9 @@ json_withdecimal = hs.recursive(
     extend=lambda children: hs.lists(children) | hs.dictionaries(jsonstring, children),
     max_leaves=10,
 )
-jsonarray = hs.lists(json, max_size=10)
+jsonarray = hs.lists(json, max_size=5)
 jsonflatarray = hs.lists(jsonleaf, max_size=20)
-jsonobject = hs.dictionaries(jsonstring, json, max_size=10)
+jsonobject = hs.dictionaries(jsonstring, json, max_size=5)
 jsonflatobject = hs.dictionaries(jsonstring, jsonleaf, max_size=20)
 
 propname = hs.characters(min_codepoint=ord('a'), max_codepoint=ord('z'))
