@@ -62,20 +62,6 @@ catalog.create_vocabulary(
     EnumRefKeyword,
 )
 
-# compile the enumRef metaschema, which enables any referencing schema
-# to use the keyword implementations provided by its vocabularies
-catalog.create_metaschema(
-    URI("https://example.com/enumRef/enumRef-metaschema"),
-    URI("https://json-schema.org/draft/2020-12/vocab/core"),
-    URI("https://json-schema.org/draft/2020-12/vocab/applicator"),
-    URI("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
-    URI("https://json-schema.org/draft/2020-12/vocab/validation"),
-    URI("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
-    URI("https://json-schema.org/draft/2020-12/vocab/meta-data"),
-    URI("https://json-schema.org/draft/2020-12/vocab/content"),
-    URI("https://example.com/enumRef"),
-)
-
 # create a schema for validating that a string is a member of a remote enumeration
 schema = JSONSchema({
     "$schema": "https://example.com/enumRef/enumRef-metaschema",

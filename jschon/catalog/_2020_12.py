@@ -99,14 +99,3 @@ def initialize(catalog: Catalog):
         ContentEncodingKeyword,
         ContentSchemaKeyword,
     )
-
-    catalog.create_metaschema(
-        URI("https://json-schema.org/draft/2020-12/schema"),
-        URI("https://json-schema.org/draft/2020-12/vocab/core"),
-        URI("https://json-schema.org/draft/2020-12/vocab/applicator"),
-        URI("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
-        URI("https://json-schema.org/draft/2020-12/vocab/validation"),
-        URI("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
-        URI("https://json-schema.org/draft/2020-12/vocab/meta-data"),
-        URI("https://json-schema.org/draft/2020-12/vocab/content"),
-    )

@@ -3,7 +3,7 @@ import warnings
 
 import pytest
 
-from jschon import JSON, JSONSchema, LocalSource, URI, create_catalog
+from jschon import JSON, JSONSchema, LocalSource, URI
 from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, metaschema_uri_next
 
@@ -11,34 +11,10 @@ testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
 
 @pytest.fixture(autouse=True)
-def catalog():
-    # replaces the catalog fixture in conftest, for this test module
-    catalog = create_catalog(
-        '2019-09',
-        '2020-12',
-        'next',
-    )
+def setup_remotes(catalog):
     catalog.add_uri_source(
         URI('http://localhost:1234/'),
         LocalSource(testsuite_dir / 'remotes'),
-    )
-    catalog.create_metaschema(
-        URI('http://localhost:1234/draft2019-09/metaschema-no-validation.json'),
-        URI('https://json-schema.org/draft/2019-09/vocab/core'),
-        URI('https://json-schema.org/draft/2019-09/vocab/applicator'),
-        metaschema_uri=metaschema_uri_2019_09,
-    )
-    catalog.create_metaschema(
-        URI('http://localhost:1234/draft2020-12/metaschema-no-validation.json'),
-        URI('https://json-schema.org/draft/2020-12/vocab/core'),
-        URI('https://json-schema.org/draft/2020-12/vocab/applicator'),
-        metaschema_uri=metaschema_uri_2020_12,
-    )
-    catalog.create_metaschema(
-        URI('http://localhost:1234/draft-next/metaschema-no-validation.json'),
-        URI('https://json-schema.org/draft/next/vocab/core'),
-        URI('https://json-schema.org/draft/next/vocab/applicator'),
-        metaschema_uri=metaschema_uri_2020_12,
     )
 
 

@@ -2,6 +2,7 @@ import json
 import pathlib
 import tempfile
 import uuid
+import itertools
 
 import pytest
 
@@ -16,9 +17,26 @@ from jschon import (
     LocalSource,
     RemoteSource,
 )
-from tests import example_schema, metaschema_uri_2020_12
+from jschon.vocabulary import Metaschema, Keyword
+from tests import example_schema, metaschema_uri_2020_12, core_vocab_uri_2020_12
 
 json_example = {"foo": "bar"}
+
+
+@pytest.fixture
+def local_catalog():
+    catalog = create_catalog(
+        '2019-09', '2020-12', 'next',
+        name='local'
+    )
+    catalog.add_uri_source(
+        URI('https://example.com/'),
+        LocalSource(
+            pathlib.Path(__file__).parent / 'data',
+            suffix='.json',
+        ),
+    )
+    return catalog
 
 
 @pytest.fixture
@@ -126,6 +144,17 @@ def test_get_vocabulary(uri, is_known, catalog):
             catalog.get_vocabulary(URI(uri))
 
 
+def test_create_vocabulary(catalog):
+    class CustomKeyword(Keyword):
+        key = 'custom'
+
+    custom_uri = URI('https://example.com/custom')
+    custom_vocab = catalog.create_vocabulary(custom_uri, CustomKeyword)
+    assert custom_vocab.uri is custom_uri
+    assert custom_vocab.kwclasses == {CustomKeyword.key: CustomKeyword}
+    assert catalog.get_vocabulary(custom_uri) is custom_vocab
+
+
 @pytest.fixture
 def example_schema_uri():
     schema = JSONSchema(example_schema)
@@ -169,9 +198,6 @@ def test_cache_independence(catalog):
 
 
 def test_metaschema_isolation():
-    new_catalog = create_catalog('2019-09', '2020-12', name=str(uuid.uuid4()))
-    assert new_catalog._schema_cache.keys() == {'__meta__'}
-
     # mask the metaschema with a boolean false schema, in the fubar cache
     cached_schema(metaschema_uri_2020_12, False, 'fubar')
     uri = URI("http://example.com")
@@ -183,3 +209,67 @@ def test_metaschema_isolation():
     assert okay_schema.evaluate(JSON(True)).valid is True
     okay_schema = cached_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, None)
     assert okay_schema.evaluate(JSON(True)).valid is True
+
+
+def test_get_metaschema_detect_core(local_catalog):
+    uri = URI('https://example.com/meta_with_core')
+    core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
+
+    m = local_catalog.get_metaschema(uri)
+    assert isinstance(m, Metaschema)
+    assert m['$id'].data == str(uri)
+    assert m.core_vocabulary is core_vocab
+    assert m.kwclasses == core_vocab.kwclasses
+
+    s = local_catalog.get_schema(uri)
+    assert isinstance(s, JSONSchema)
+    assert s is not m
+    assert s == m
+
+
+def test_get_metaschema_wrong_type(local_catalog):
+    uri = URI('https://example.com/meta_with_core')
+    non_meta = local_catalog.get_schema(uri)
+    local_catalog.add_schema(uri, non_meta, cacheid='__meta__')
+    with pytest.raises(CatalogError, match='not a metaschema'):
+        local_catalog.get_metaschema(uri)
+
+
+def test_get_metaschema_invalid(local_catalog):
+    uri = URI('https://example.com/meta_invalid')
+    with pytest.raises(CatalogError, match='metaschema is invalid'):
+        local_catalog.create_metaschema(uri)
+
+
+def test_create_metaschema_no_vocabs(local_catalog):
+    class ExtraKeyword(Keyword):
+        key = 'extra'
+
+    uri = URI('https://example.com/meta_no_vocabs')
+    core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
+    applicator_vocab = local_catalog.get_vocabulary(
+        URI('https://json-schema.org/draft/2020-12/vocab/applicator')
+    )
+
+    extra_vocab = local_catalog.create_vocabulary(
+        URI('https://example.com/vocab/whatever'),
+        ExtraKeyword,
+    )
+
+    m = local_catalog.create_metaschema(
+        uri,
+        core_vocab.uri,
+        applicator_vocab.uri,
+        extra_vocab.uri,
+    )
+    assert isinstance(m, Metaschema)
+    assert m['$id'].data == str(uri)
+    assert m.core_vocabulary is core_vocab
+    assert m.kwclasses.keys() == frozenset(
+        itertools.chain.from_iterable([
+            v.kwclasses.keys() for v in
+            [core_vocab, applicator_vocab, extra_vocab]
+        ])
+    )
+    m1 = local_catalog.get_metaschema(uri)
+    assert m1 is m

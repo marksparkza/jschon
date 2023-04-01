@@ -1,0 +1,7 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/meta_with_core",
+    "$vocabulary": {
+        "https://json-schema.org/draft/2020-12/vocab/core": true
+    }
+}
