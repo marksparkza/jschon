@@ -53,6 +53,7 @@ Miscellaneous:
   ``Metaschema.__init__()`` and ``Catalog.create_metaschema()`` respectively to
   ``default_core_vocabulary`` and ``default_core_vocabulary_uri``
 * Improve kwarg-based construction of ``RelativeJSONPointer``
+* Rename ``AnnotationKeyword`` to ``_AnnotationKeyword``
 * Allow passthrough of arguments to pytest when invoking tox
 * Add pytest command line options ``--testsuite-file`` and ``--testsuite-description``
 * Python 3.11 is now tested (no changes were required to support it)

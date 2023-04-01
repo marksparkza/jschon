@@ -16,52 +16,52 @@ __all__ = [
 ]
 
 
-class AnnotationKeyword(Keyword):
+class _AnnotationKeyword(Keyword):
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         result.annotate(self.json.data)
         result.noassert()
 
 
-class TitleKeyword(AnnotationKeyword):
+class TitleKeyword(_AnnotationKeyword):
     key = "title"
 
 
-class DescriptionKeyword(AnnotationKeyword):
+class DescriptionKeyword(_AnnotationKeyword):
     key = "description"
 
 
-class DefaultKeyword(AnnotationKeyword):
+class DefaultKeyword(_AnnotationKeyword):
     key = "default"
 
 
-class DeprecatedKeyword(AnnotationKeyword):
+class DeprecatedKeyword(_AnnotationKeyword):
     key = "deprecated"
 
 
-class ReadOnlyKeyword(AnnotationKeyword):
+class ReadOnlyKeyword(_AnnotationKeyword):
     key = "readOnly"
 
 
-class WriteOnlyKeyword(AnnotationKeyword):
+class WriteOnlyKeyword(_AnnotationKeyword):
     key = "writeOnly"
 
 
-class ExamplesKeyword(AnnotationKeyword):
+class ExamplesKeyword(_AnnotationKeyword):
     key = "examples"
 
 
-class ContentMediaTypeKeyword(AnnotationKeyword):
+class ContentMediaTypeKeyword(_AnnotationKeyword):
     key = "contentMediaType"
     instance_types = "string",
 
 
-class ContentEncodingKeyword(AnnotationKeyword):
+class ContentEncodingKeyword(_AnnotationKeyword):
     key = "contentEncoding"
     instance_types = "string",
 
 
-class ContentSchemaKeyword(AnnotationKeyword):
+class ContentSchemaKeyword(_AnnotationKeyword):
     key = "contentSchema"
     instance_types = "string",
     depends_on = "contentMediaType",
