@@ -2,6 +2,7 @@ import pathlib
 
 from jschon.catalog import Catalog, LocalSource
 from jschon.uri import URI
+from jschon.vocabulary import Vocabulary
 from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
 from jschon.vocabulary.core import *
@@ -16,7 +17,7 @@ def initialize(catalog: Catalog):
         LocalSource(pathlib.Path(__file__).parent / 'json-schema-2019-09', suffix='.json'),
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/2019-09/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
@@ -29,7 +30,7 @@ def initialize(catalog: Catalog):
         CommentKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/2019-09/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
@@ -50,7 +51,7 @@ def initialize(catalog: Catalog):
         PropertyNamesKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/2019-09/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
@@ -74,12 +75,12 @@ def initialize(catalog: Catalog):
         DependentRequiredKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/2019-09/vocab/format"),
         FormatKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
@@ -90,7 +91,7 @@ def initialize(catalog: Catalog):
         ExamplesKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/2019-09/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,

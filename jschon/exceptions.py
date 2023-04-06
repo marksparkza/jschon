@@ -24,3 +24,7 @@ class RelativeJSONPointerError(Exception):
 
 class URIError(Exception):
     pass
+
+
+class VocabularyError(Exception):
+    pass

@@ -1,10 +1,10 @@
 from typing import Mapping
 
-from jschon.exceptions import CatalogError, JSONSchemaError, URIError
+from jschon.exceptions import CatalogError, JSONSchemaError, URIError, VocabularyError
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, Result
 from jschon.uri import URI
-from jschon.vocabulary import Keyword, Metaschema, ObjectOfSubschemas
+from jschon.vocabulary import Keyword, Metaschema, ObjectOfSubschemas, Vocabulary
 
 __all__ = [
     'SchemaKeyword',
@@ -55,9 +55,9 @@ class VocabularyKeyword(Keyword):
                 raise JSONSchemaError from e
 
             try:
-                vocabulary = parentschema.catalog.get_vocabulary(vocab_uri)
+                vocabulary = Vocabulary.get(vocab_uri)
                 parentschema.kwclasses.update(vocabulary.kwclasses)
-            except CatalogError:
+            except VocabularyError:
                 if vocab_required:
                     raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
 

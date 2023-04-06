@@ -17,7 +17,8 @@ from jschon import (
     LocalSource,
     RemoteSource,
 )
-from jschon.vocabulary import Metaschema, Keyword
+from jschon.exceptions import VocabularyError
+from jschon.vocabulary import Metaschema, Keyword, Vocabulary
 from tests import example_schema, metaschema_uri_2020_12, core_vocab_uri_2020_12
 
 json_example = {"foo": "bar"}
@@ -46,7 +47,6 @@ def new_catalog() -> Catalog:
 
 def test_new_catalog(new_catalog):
     assert not new_catalog._uri_sources
-    assert not new_catalog._vocabularies
     assert not new_catalog._schema_cache
     assert not new_catalog._enabled_formats
 
@@ -137,11 +137,11 @@ def test_load_json_invalid_uri(uri, new_catalog):
 ])
 def test_get_vocabulary(uri, is_known, catalog):
     if is_known:
-        vocabulary = catalog.get_vocabulary(URI(uri))
+        vocabulary = Vocabulary.get(URI(uri))
         assert vocabulary.uri == uri
     else:
-        with pytest.raises(CatalogError):
-            catalog.get_vocabulary(URI(uri))
+        with pytest.raises(VocabularyError):
+            Vocabulary.get(URI(uri))
 
 
 def test_create_vocabulary(catalog):
@@ -149,10 +149,10 @@ def test_create_vocabulary(catalog):
         key = 'custom'
 
     custom_uri = URI('https://example.com/custom')
-    custom_vocab = catalog.create_vocabulary(custom_uri, CustomKeyword)
+    custom_vocab = Vocabulary.create(custom_uri, CustomKeyword)
     assert custom_vocab.uri is custom_uri
     assert custom_vocab.kwclasses == {CustomKeyword.key: CustomKeyword}
-    assert catalog.get_vocabulary(custom_uri) is custom_vocab
+    assert Vocabulary.get(custom_uri) is custom_vocab
 
 
 @pytest.fixture
@@ -213,7 +213,7 @@ def test_metaschema_isolation():
 
 def test_get_metaschema_detect_core(local_catalog):
     uri = URI('https://example.com/meta_with_core')
-    core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
+    core_vocab = Vocabulary.get(core_vocab_uri_2020_12)
 
     m = local_catalog.get_metaschema(uri)
     assert isinstance(m, Metaschema)
@@ -246,12 +246,12 @@ def test_create_metaschema_no_vocabs(local_catalog):
         key = 'extra'
 
     uri = URI('https://example.com/meta_no_vocabs')
-    core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
-    applicator_vocab = local_catalog.get_vocabulary(
+    core_vocab = Vocabulary.get(core_vocab_uri_2020_12)
+    applicator_vocab = Vocabulary.get(
         URI('https://json-schema.org/draft/2020-12/vocab/applicator')
     )
 
-    extra_vocab = local_catalog.create_vocabulary(
+    extra_vocab = Vocabulary.create(
         URI('https://example.com/vocab/whatever'),
         ExtraKeyword,
     )

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import re
 import inspect
+import re
 from typing import Any, Dict, Mapping, Optional, Sequence, TYPE_CHECKING, Tuple, Type
 
+from jschon.exceptions import JSONSchemaError, VocabularyError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Result
-from jschon.exceptions import JSONSchemaError
 from jschon.uri import URI
 
 if TYPE_CHECKING:
@@ -69,7 +69,7 @@ class Metaschema(JSONSchema):
                 vocabularies,
             ))
             if len(possible_cores) == 1:
-                self.core_vocabulary = catalog.get_vocabulary(URI(possible_cores[0]))
+                self.core_vocabulary = Vocabulary.get(URI(possible_cores[0]))
             else:
                 raise JSONSchemaError(
                     'Cannot determine unique known core vocabulary from '
@@ -113,7 +113,14 @@ class Vocabulary:
     evaluation of JSON documents, and provides a runtime implementation
     (in the form of a :class:`Keyword` class) for each of those keywords."""
 
-    def __init__(self, uri: URI, *kwclasses: KeywordClass):
+    _vocabulary_registry: Dict[URI, Vocabulary] = {}
+
+    def __init__(self, uri: URI, *kwclasses: KeywordClass) -> None:
+        """Initialize a :class:`Vocabulary`.
+
+        :param uri: vocabulary identifier
+        :param kwclasses: keyword implementations
+        """
         self.uri: URI = uri
         self.kwclasses: Dict[str, KeywordClass] = {
             kwclass.key: kwclass for kwclass in kwclasses
@@ -122,6 +129,26 @@ class Vocabulary:
     def __repr__(self) -> str:
         """Return `repr(self)`."""
         return f'{self.__class__.__name__}({self.uri!r})'
+
+    @classmethod
+    def create(cls, uri: URI, *kwclasses: KeywordClass) -> Vocabulary:
+        """Create a :class:`Vocabulary` and register it as the
+        implementation of the vocabulary identified by `uri`.
+
+        :param uri: vocabulary identifier
+        :param kwclasses: keyword implementations
+        """
+        vocab = Vocabulary(uri, *kwclasses)
+        cls._vocabulary_registry[uri] = vocab
+        return vocab
+
+    @classmethod
+    def get(cls, uri: URI) -> Vocabulary:
+        """Get the :class:`Vocabulary` registered for `uri`."""
+        try:
+            return cls._vocabulary_registry[uri]
+        except KeyError as e:
+            raise VocabularyError(f'Vocabulary not found for {uri}') from e
 
 
 class Keyword:

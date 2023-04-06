@@ -1,11 +1,12 @@
 import pytest
 
 from jschon import JSONSchemaError, URI, create_catalog
-from jschon.vocabulary import Metaschema
+from jschon.vocabulary import Metaschema, Vocabulary
 from tests import (
     metaschema_uri_2020_12,
-    core_vocab_uri_2019_09, core_vocab_uri_2020_12, core_vocab_uri_next,
+    core_vocab_uri_2020_12, core_vocab_uri_next,
 )
+
 
 @pytest.mark.parametrize('vocab_data', [
     None,
@@ -28,10 +29,11 @@ def test_metaschema_no_core(vocab_data):
     if vocab_data:
         metaschema_data['$vocabulary'] = vocab_data
         for vocab in vocab_data:
-            catalog.create_vocabulary(URI(vocab))
+            Vocabulary.create(URI(vocab))
 
     with pytest.raises(JSONSchemaError):
         Metaschema(catalog, metaschema_data, uri=URI(metaschema_id))
+
 
 def test_detect_core(catalog):
     metaschema_id = 'https://example.com/meta'
@@ -51,6 +53,7 @@ def test_detect_core(catalog):
     assert m1 is m
     assert m2 is m
 
+
 def test_default_core(catalog):
     metaschema_id = 'https://example.com/meta'
     metaschema_uri = URI(metaschema_id)
@@ -58,7 +61,7 @@ def test_default_core(catalog):
         '$schema': str(metaschema_uri_2020_12),
         '$id': metaschema_id,
     }
-    core = catalog.get_vocabulary(core_vocab_uri_2020_12)
+    core = Vocabulary.get(core_vocab_uri_2020_12)
     m = Metaschema(
         catalog,
         metaschema_data,

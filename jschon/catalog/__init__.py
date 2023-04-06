@@ -82,7 +82,6 @@ class Catalog:
         """The unique name of this :class:`Catalog` instance."""
 
         self._uri_sources: Dict[URI, Source] = {}
-        self._vocabularies: Dict[URI, Vocabulary] = {}
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
         self._enabled_formats: Set[str] = set()
 
@@ -141,31 +140,6 @@ class Catalog:
 
         raise CatalogError(f'A source is not available for "{uri}"')
 
-    def create_vocabulary(self, uri: URI, *kwclasses: KeywordClass) -> Vocabulary:
-        """Create a :class:`~jschon.vocabulary.Vocabulary` object, which
-        may be used by a :class:`~jschon.vocabulary.Metaschema` to provide
-        keyword classes used in schema construction.
-
-        :param uri: the URI identifying the vocabulary
-        :param kwclasses: the :class:`~jschon.vocabulary.Keyword` classes
-            constituting the vocabulary
-
-        :returns: the newly created :class:`~jschon.vocabulary.Vocabulary` instance
-        """
-        self._vocabularies[uri] = Vocabulary(uri, *kwclasses)
-        return self._vocabularies[uri]
-
-    def get_vocabulary(self, uri: URI) -> Vocabulary:
-        """Get a :class:`~jschon.vocabulary.Vocabulary` by its `uri`.
-
-        :param uri: the URI identifying the vocabulary
-        :raise CatalogError: if `uri` is not a recognized vocabulary URI
-        """
-        try:
-            return self._vocabularies[uri]
-        except KeyError:
-            raise CatalogError(f"Unrecognized vocabulary URI '{uri}'")
-
     def create_metaschema(
             self,
             uri: URI,
@@ -192,12 +166,12 @@ class Catalog:
         """
         metaschema_doc = self.load_json(uri)
         default_core_vocabulary = (
-            self.get_vocabulary(default_core_vocabulary_uri)
+            Vocabulary.get(default_core_vocabulary_uri)
             if default_core_vocabulary_uri
             else None
         )
         default_vocabularies = [
-            self.get_vocabulary(vocab_uri)
+            Vocabulary.get(vocab_uri)
             for vocab_uri in default_vocabulary_uris
         ]
         metaschema = Metaschema(

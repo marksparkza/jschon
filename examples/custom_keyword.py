@@ -1,9 +1,9 @@
 import pathlib
 import pprint
 
-from jschon import create_catalog, URI, JSON, JSONSchema, JSONSchemaError, LocalSource
+from jschon import JSON, JSONSchema, JSONSchemaError, LocalSource, URI, create_catalog
 from jschon.jsonschema import Result
-from jschon.vocabulary import Keyword
+from jschon.vocabulary import Keyword, Vocabulary
 
 data_dir = pathlib.Path(__file__).parent / 'data'
 
@@ -57,7 +57,7 @@ catalog.add_uri_source(
 )
 
 # implement the enumRef vocabulary using the EnumRefKeyword class
-catalog.create_vocabulary(
+Vocabulary.create(
     URI("https://example.com/enumRef"),
     EnumRefKeyword,
 )

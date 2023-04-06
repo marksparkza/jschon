@@ -2,6 +2,7 @@ import pathlib
 
 from jschon.catalog import Catalog, LocalSource
 from jschon.uri import URI
+from jschon.vocabulary import Vocabulary
 from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
 from jschon.vocabulary.core import *
@@ -15,7 +16,7 @@ def initialize(catalog: Catalog):
         LocalSource(pathlib.Path(__file__).parent / 'json-schema-next', suffix='.json'),
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
@@ -28,7 +29,7 @@ def initialize(catalog: Catalog):
         CommentKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
@@ -47,13 +48,13 @@ def initialize(catalog: Catalog):
         PropertyNamesKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/unevaluated"),
         UnevaluatedItemsKeyword,
         UnevaluatedPropertiesKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
@@ -77,12 +78,12 @@ def initialize(catalog: Catalog):
         DependentRequiredKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/format-annotation"),
         FormatKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
@@ -93,7 +94,7 @@ def initialize(catalog: Catalog):
         ExamplesKeyword,
     )
 
-    catalog.create_vocabulary(
+    Vocabulary.create(
         URI("https://json-schema.org/draft/next/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
