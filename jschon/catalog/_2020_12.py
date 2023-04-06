@@ -12,7 +12,7 @@ from jschon.vocabulary.validation import *
 def initialize(catalog: Catalog):
     catalog.add_uri_source(
         URI('https://json-schema.org/draft/2020-12/'),
-        LocalSource(pathlib.Path(__file__).parent / 'json-schema-spec-2020-12', suffix='.json'),
+        LocalSource(pathlib.Path(__file__).parent / 'json-schema-2020-12', suffix='.json'),
     )
 
     catalog.create_vocabulary(

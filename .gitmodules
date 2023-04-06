@@ -2,12 +2,12 @@
 	path = tests/JSON-Schema-Test-Suite
 	url = https://github.com/json-schema-org/JSON-Schema-Test-Suite
 	branch = main
-[submodule "json-schema-spec-2019-09"]
-	path = jschon/catalog/json-schema-spec-2019-09
+[submodule "json-schema-2019-09"]
+	path = jschon/catalog/json-schema-2019-09
 	url = https://github.com/json-schema-org/json-schema-spec
 	branch = 2019-09
-[submodule "json-schema-spec-2020-12"]
-	path = jschon/catalog/json-schema-spec-2020-12
+[submodule "json-schema-2020-12"]
+	path = jschon/catalog/json-schema-2020-12
 	url = https://github.com/json-schema-org/json-schema-spec
 	branch = 2020-12
 [submodule "json-schema-next"]
