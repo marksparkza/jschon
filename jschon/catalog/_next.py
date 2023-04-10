@@ -7,6 +7,7 @@ from jschon.vocabulary.applicator import *
 from jschon.vocabulary.core import *
 from jschon.vocabulary.format import *
 from jschon.vocabulary.validation import *
+from jschon.vocabulary.future import *
 
 
 def initialize(catalog: Catalog):
@@ -19,7 +20,7 @@ def initialize(catalog: Catalog):
         URI("https://json-schema.org/draft/next/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
-        IdKeyword,
+        IdKeyword_Next,
         RefKeyword,
         AnchorKeyword,
         DynamicRefKeyword,

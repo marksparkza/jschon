@@ -3,6 +3,15 @@ Changelog
 
 v0.10.2 (in development)
 ------------------------
+Experimental:
+
+* "$id" no longer allows empty fragments in draft-next
+
+Bug Fixes:
+
+* "$id" allows non-normalized URI references
+* "$id" allows empty fragments in 2019-09 and 2020-12
+
 Miscellaneous:
 
 * Set default (2019-09, 2020-12) for ``--testsuite-version`` pytest option

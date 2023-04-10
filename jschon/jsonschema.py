@@ -125,9 +125,9 @@ class JSONSchema(JSON):
             raise TypeError(f"{value=} is not JSONSchema-compatible")
 
     def _bootstrap(self, value: Mapping[str, JSONCompatible]) -> None:
-        from jschon.vocabulary.core import IdKeyword, SchemaKeyword, VocabularyKeyword
+        from jschon.vocabulary.core import SchemaKeyword, VocabularyKeyword
+
         boostrap_kwclasses = {
-            "$id": IdKeyword,
             "$schema": SchemaKeyword,
             "$vocabulary": VocabularyKeyword,
         }
@@ -136,6 +136,19 @@ class JSONSchema(JSON):
                 kw = kwclass(self, value[key])
                 self.keywords[key] = kw
                 self.data[key] = kw.json
+
+        if "$id" in value:
+            if str(self.metaschema.core_vocabulary.uri) in (
+                "https://json-schema.org/draft/2019-09/vocab/core",
+                "https://json-schema.org/draft/2020-12/vocab/core",
+            ):
+                from jschon.vocabulary.core import IdKeyword
+            else:
+                from jschon.vocabulary.future import IdKeyword_Next as IdKeyword
+
+            id_kw = IdKeyword(self, value["$id"])
+            self.keywords["$id"] = id_kw
+            self.data["$id"] = id_kw.json
 
     def _resolve_references(self) -> None:
         for kw in self.keywords.values():
