@@ -19,6 +19,7 @@ from jschon import (
     LocalSource,
     RemoteSource,
 )
+from jschon.catalog import Source
 from jschon.vocabulary import Metaschema, Keyword
 from tests import example_schema, metaschema_uri_2020_12, core_vocab_uri_2020_12
 
@@ -26,19 +27,23 @@ json_example = {"foo": "bar"}
 
 
 @pytest.fixture
-def local_catalog():
-    catalog = create_catalog(
+def empty_catalog():
+    return create_catalog(
         '2019-09', '2020-12', 'next',
         name='local'
     )
-    catalog.add_uri_source(
+
+
+@pytest.fixture
+def local_catalog(empty_catalog):
+    empty_catalog.add_uri_source(
         URI('https://example.com/'),
         LocalSource(
             pathlib.Path(__file__).parent / 'data',
             suffix='.json',
         ),
     )
-    return catalog
+    return empty_catalog
 
 
 @pytest.fixture
@@ -106,6 +111,22 @@ def test_local_source_ioerror_no_file(local_catalog):
         m.side_effect = IOError
         with pytest.raises(CatalogError, match=r'^$'):
             local_catalog.get_schema(URI('https://example.com/does-not-matter'))
+
+
+def test_default_source(empty_catalog):
+    class FullURISource(Source):
+        def __call__(self, relative_path):
+            URI(relative_path).validate(require_scheme=True)
+            return {
+                "$schema": str(metaschema_uri_2020_12),
+                "$id": relative_path,
+            }
+
+    id_str = 'tag:jschon.dev,2023-03:schema'
+
+    empty_catalog.add_uri_source(None, FullURISource())
+    schema = empty_catalog.get_schema(URI(id_str))
+    assert schema['$id'].data == id_str
 
 
 @pytest.mark.parametrize('base_uri', [
