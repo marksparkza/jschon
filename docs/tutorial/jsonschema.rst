@@ -23,6 +23,11 @@ For the examples shown on the remainder of this page, we'll use the following:
 >>> from jschon import create_catalog
 >>> catalog = create_catalog('2020-12')
 
+This creates a :class:`~jschon.catalog.Catalog` that automatically loads the
+the standard draft 2020-12 metaschema.  Since we did not pass a ``name`` parameter,
+this will be our default catalog that will be used automatically wherever a catalog
+is needed, unless we provide a different :class:`~jschon.catalog.Catalog` instance.
+
 Creating a schema
 -----------------
 There are several different ways to instantiate a :class:`~jschon.jsonschema.JSONSchema`:
@@ -144,6 +149,11 @@ Retrieving a schema from the catalog
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Finally, a :class:`~jschon.jsonschema.JSONSchema` object may be instantiated implicitly,
 when retrieving it by URI from the :class:`~jschon.catalog.Catalog`. If the schema is not
-already cached, it is loaded from disk and compiled on the fly. This approach requires
-the catalog to be configured with an appropriate base URI-to-directory mapping. For
-more information, see :ref:`catalog-reference-loading`.
+already cached, it is loaded from disk (or other configured sources) and compiled on the fly.
+
+This approach requires the catalog to be configured with an appropriate base
+URI-to-source mapping. Configuring a catalog in this way allows schema documents that
+reference each other to be created.  Otherwise, the :class:`~jschon.jsonschema.JSONSchema`
+constructor expects all referenced schemas to already be known to the catalog.
+
+For more information, see :ref:`catalog-reference-loading`.
