@@ -51,6 +51,12 @@ def test_new_catalog(new_catalog):
     assert not new_catalog._enabled_formats
 
 
+def test_missing_catalog():
+    name='some-name'
+    with pytest.raises(CatalogError, match=f'"{name}" not found'):
+        Catalog.get_catalog(name)
+
+
 @pytest.fixture
 def setup_tmpdir():
     """Create a temp dir hierarchy containing a JSON file.
@@ -195,6 +201,43 @@ def test_cache_independence(catalog):
     assert catalog.get_schema(uri, cacheid='default')["const"] == 0
     assert catalog.get_schema(uri, cacheid='one')["const"] == 1
     assert catalog.get_schema(uri, cacheid='two')["const"] == 2
+
+
+def test_enable_formats(catalog):
+    assert catalog.is_format_enabled('date') is False
+    assert catalog.is_format_enabled('time') is False
+
+    catalog.enable_formats('date', 'time')
+
+    assert catalog.is_format_enabled('date') is True
+    assert catalog.is_format_enabled('time') is True
+
+
+def test_context_manager_with_id(catalog):
+    new_id = 'new'
+    with catalog.cache(new_id) as cache_id:
+        assert cache_id is new_id
+
+
+def test_context_manager_id_in_use(catalog):
+    # Ensure the 'default' cache has at least one schema in it.
+    JSONSchema({'$schema': 'https://json-schema.org/draft/2020-12/schema'})
+
+    with pytest.raises(CatalogError, match='already in use'):
+        with catalog.cache('default'):
+            pass
+
+
+def test_context_manager_no_id(catalog):
+    with catalog.cache() as cache_id:
+        assert isinstance(cache_id, uuid.UUID)
+
+
+def test_del_schema_nonexistent_cache(catalog):
+    dne = 'doesnotexist'
+    assert dne not in catalog._schema_cache
+    assert catalog.del_schema(URI('irrelevant'), cacheid=dne) is None
+    assert dne not in catalog._schema_cache
 
 
 def test_metaschema_isolation():
