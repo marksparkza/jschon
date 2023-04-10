@@ -29,6 +29,9 @@ def pytest_generate_tests(metafunc):
     test_files = metafunc.config.getoption("testsuite_file")
     test_descriptions = metafunc.config.getoption("testsuite_description")
 
+    if not test_versions:
+        test_versions = ['2019-09', '2020-12']
+
     base_dir = testsuite_dir / 'tests'
     version_dirs = {
         '2019-09': (metaschema_uri_2019_09, base_dir / 'draft2019-09'),
