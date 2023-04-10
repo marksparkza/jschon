@@ -50,7 +50,7 @@ class LocalSource(Source):
                 # the exception args, which is what the Catalog
                 # puts in the CatalogError.  So it needs to be
                 # added separately for filesystem errors.
-                raise CatalogError(f'{e.strerror}: "{e.filename}"')
+                raise CatalogError(f'{e.strerror}: {e.filename!r}')
             raise
 
 
