@@ -29,7 +29,7 @@ __all__ = [
     'create_catalog',
 ]
 
-__version__ = '0.10.1'
+__version__ = '0.10.2'
 
 
 def create_catalog(*versions: str, name: str = 'catalog') -> Catalog:
