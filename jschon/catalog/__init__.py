@@ -42,7 +42,16 @@ class LocalSource(Source):
             filepath = str(filepath)
             filepath += self.suffix
 
-        return json_loadf(filepath)
+        try:
+            return json_loadf(filepath)
+        except OSError as e:
+            if e.filename is not None:
+                # The filename for OSError is not included in
+                # the exception args, which is what the Catalog
+                # puts in the CatalogError.  So it needs to be
+                # added separately for filesystem errors.
+                raise CatalogError(f'{e.strerror}: {e.filename!r}')
+            raise
 
 
 class RemoteSource(Source):
@@ -136,6 +145,8 @@ class Catalog:
             relative_path = uristr[len(base_uristr):]
             try:
                 return source(relative_path)
+            except CatalogError:
+                raise
             except Exception as e:
                 raise CatalogError(*e.args) from e
 

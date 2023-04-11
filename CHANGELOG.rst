@@ -8,6 +8,7 @@ Miscellaneous:
 * Rename submodules `json-schema-spec-2019-09` and `json-schema-spec-2020-12` to
   `json-schema-2019-09` and `json-schema-2020-12`, respectively
   (run ``git submodule init`` to update local git config)
+* LocalSource now includes the filename in the CatalogError when the file is not found
 
 
 v0.10.0 (2023-04-01)
