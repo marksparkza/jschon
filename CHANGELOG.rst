@@ -1,8 +1,8 @@
 Changelog
 =========
 
-v0.10.1 (in development)
-------------------------
+v0.10.1 (2023-04-11)
+--------------------
 Miscellaneous:
 
 * Rename submodules `json-schema-spec-2019-09` and `json-schema-spec-2020-12` to
