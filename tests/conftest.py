@@ -18,28 +18,30 @@ def pytest_addoption(parser):
         "--testsuite-version",
         action="append",
         choices=["2019-09", "2020-12", "next"],
-        help="JSON Schema version to test. The option may be repeated to test multiple versions. By default, all supported versions are tested.",
+        help="JSON Schema version to test. The option may be repeated to test multiple versions. "
+             "(default: {2019-09,2020-12})",
     )
     testsuite.addoption(
         "--testsuite-optionals",
         action="store_true",
-        help="Include optional tests",
+        help="Include optional tests.",
     )
     testsuite.addoption(
         "--testsuite-formats",
         action="store_true",
-        help="Include format tests",
+        help="Include format tests.",
     )
     testsuite.addoption(
         "--testsuite-file",
         action="append",
-        help="Run only this file from the JSON Schema test suite. The option may be repeated to run multiple files. Using this option causes --testsuite-optionals and --testsuite-formats to be ignored"
+        help="Run only this file from the JSON Schema test suite. The option may be repeated to run multiple files. "
+             "Using this option causes --testsuite-optionals and --testsuite-formats to be ignored."
     )
     testsuite.addoption(
         "--testsuite-description",
         action="append",
         help="Run only test groups and tests whose descriptions contain the given substring. "
-             "Matching is case insensitive. The option may be repeated.",
+             "Matching is case insensitive. The option may be repeated to match alternative substrings.",
     )
 
 

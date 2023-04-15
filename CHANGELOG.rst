@@ -3,6 +3,9 @@ Changelog
 
 v0.10.2 (in development)
 ------------------------
+Miscellaneous:
+
+* Set default (2019-09, 2020-12) for ``--testsuite-version`` pytest option
 
 
 v0.10.1 (2023-04-11)
