@@ -19,6 +19,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install .[test]
       - name: Run tests
-        run: tox -e py
+        run: tox -e py -- --testsuite-version=2019-09 --testsuite-version=2020-12 --testsuite-version=next
       - name: Upload coverage
         uses: codecov/codecov-action@v3
