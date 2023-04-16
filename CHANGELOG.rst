@@ -1,14 +1,22 @@
 Changelog
 =========
 
-v0.10.1 (in development)
+v0.10.2 (in development)
 ------------------------
+Miscellaneous:
+
+* Set default (2019-09, 2020-12) for ``--testsuite-version`` pytest option
+* ``integer`` is no longer considered a type for keyword evaluation restriction purposes
+
+
+v0.10.1 (2023-04-11)
+--------------------
 Miscellaneous:
 
 * Rename submodules `json-schema-spec-2019-09` and `json-schema-spec-2020-12` to
   `json-schema-2019-09` and `json-schema-2020-12`, respectively
   (run ``git submodule init`` to update local git config)
-* ``integer`` is no longer considered a type for keyword evaluation restriction purposes
+* LocalSource now includes the filename in the CatalogError when the file is not found
 
 
 v0.10.0 (2023-04-01)
