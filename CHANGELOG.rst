@@ -3,6 +3,11 @@ Changelog
 
 v0.10.2 (in development)
 ------------------------
+Experimental:
+
+* draft-next ``contains``, ``minContains``, ``maxContains``, and
+  related``unevaluatedProperties``  support
+
 Miscellaneous:
 
 * Set default (2019-09, 2020-12) for ``--testsuite-version`` pytest option
