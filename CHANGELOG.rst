@@ -7,6 +7,7 @@ Miscellaneous:
 
 * Set default (2019-09, 2020-12) for ``--testsuite-version`` pytest option
 * ``integer`` is no longer considered a type for keyword evaluation restriction purposes
+* Drop ``Keyword.can_evaluate()`` method
 
 
 v0.10.1 (2023-04-11)

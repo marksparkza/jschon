@@ -126,6 +126,7 @@ class Vocabulary:
 
 class Keyword:
     key: str = ...
+    """The keyword name as it appears in a schema object."""
 
     instance_types: Tuple[str, ...] = "null", "boolean", "number", "string", "array", "object",
     """The types of instance that the keyword can evaluate."""
@@ -134,6 +135,8 @@ class Keyword:
     """Keywords that must be evaluated before this keyword can be evaluated."""
 
     static: bool = False
+    """`static = True` (equivalent to `instance_types = ()`) indicates that the keyword
+    does not ever evaluate any instance."""
 
     def __init__(self, parentschema: JSONSchema, value: JSONCompatible):
         for base_cls in inspect.getmro(self.__class__):
@@ -145,9 +148,6 @@ class Keyword:
 
         self.json: JSON = kwjson
         self.parentschema: JSONSchema = parentschema
-
-    def can_evaluate(self, instance: JSON) -> bool:
-        return instance.type in self.instance_types
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         pass
