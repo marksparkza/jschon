@@ -11,3 +11,4 @@ exclude_lines =
     # @overload function body:
     ^\s+\.\.\.$
     assert False
+    if TYPE_CHECKING
