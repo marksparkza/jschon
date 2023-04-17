@@ -69,7 +69,7 @@ class IdKeyword(Keyword):
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
 
-        (uri := URI(value)).validate(require_normalized=True, allow_fragment=False)
+        (uri := URI(value)).validate(allow_non_empty_fragment=False)
         if not uri.is_absolute():
             if (base_uri := parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
