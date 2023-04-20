@@ -1,8 +1,8 @@
 Changelog
 =========
 
-v0.10.2 (in development)
-------------------------
+v0.10.2 (2023-04-20)
+--------------------
 Experimental:
 
 * "$id" no longer allows empty fragments in draft-next
