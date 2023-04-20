@@ -6,8 +6,8 @@ from jschon.vocabulary.annotation import *
 from jschon.vocabulary.applicator import *
 from jschon.vocabulary.core import *
 from jschon.vocabulary.format import *
-from jschon.vocabulary.validation import *
 from jschon.vocabulary.future import *
+from jschon.vocabulary.validation import *
 
 
 def initialize(catalog: Catalog):
@@ -99,4 +99,15 @@ def initialize(catalog: Catalog):
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
         ContentSchemaKeyword,
+    )
+
+    catalog.create_metaschema(
+        URI("https://json-schema.org/draft/next/schema"),
+        URI("https://json-schema.org/draft/next/vocab/core"),
+        URI("https://json-schema.org/draft/next/vocab/applicator"),
+        URI("https://json-schema.org/draft/next/vocab/unevaluated"),
+        URI("https://json-schema.org/draft/next/vocab/validation"),
+        URI("https://json-schema.org/draft/next/vocab/format-annotation"),
+        URI("https://json-schema.org/draft/next/vocab/meta-data"),
+        URI("https://json-schema.org/draft/next/vocab/content"),
     )
