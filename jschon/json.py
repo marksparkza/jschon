@@ -135,20 +135,26 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         elif isinstance(value, Sequence):
             self.type = "array"
-            self.data = [
-                self.itemclass(v, parent=self, key=str(i), **self.itemkwargs)
-                for i, v in enumerate(value)
-            ]
+            self.data = self.instantiate_sequence(value)
 
         elif isinstance(value, Mapping):
             self.type = "object"
-            self.data = {
-                k: self.itemclass(v, parent=self, key=k, **self.itemkwargs)
-                for k, v in value.items()
-            }
+            self.data = self.instantiate_mapping(value)
 
         else:
             raise TypeError(f"{value=} is not JSON-compatible")
+
+    def instantiate_sequence(self, value):
+        return [
+            self.itemclass(v, parent=self, key=str(i), **self.itemkwargs)
+            for i, v in enumerate(value)
+        ]
+
+    def instantiate_mapping(self, value):
+        return {
+            k: self.itemclass(v, parent=self, key=k, **self.itemkwargs)
+            for k, v in value.items()
+        }
 
     @cached_property
     def path(self) -> JSONPointer:
