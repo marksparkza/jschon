@@ -161,7 +161,7 @@ KeywordClass = Type[Keyword]
 
 class _UnknownKeyword(Keyword):
     def evaluate(self, instance: JSON, result: Result) -> None:
-        result.annotate(self.json.data)
+        result.annotate(self.json.value)
         result.noassert()
 
 

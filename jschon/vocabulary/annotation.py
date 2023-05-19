@@ -19,7 +19,7 @@ __all__ = [
 class _AnnotationKeyword(Keyword):
 
     def evaluate(self, instance: JSON, result: Result) -> None:
-        result.annotate(self.json.data)
+        result.annotate(self.json.value)
         result.noassert()
 
 

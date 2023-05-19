@@ -1,6 +1,29 @@
 import pytest
 
-from jschon import URIError, JSONSchema
+from jschon import URIError, JSONSchema, JSON
+
+
+def test_unknown_keyword_json_unwrapping():
+    value = {
+        'need': 'to',
+        'test': ['nested', 'structures'],
+    }
+    schema_data = {
+        '$schema': f'https://json-schema.org/draft/2020-12/schema',
+        'foo': value,
+    }
+    schema = JSONSchema(schema_data)
+    basic = schema.evaluate(JSON({})).output('basic')
+    actual = basic['annotations'][0]['annotation']
+
+    assert actual == value
+    assert not isinstance(actual, JSON)
+    for v in actual.values():
+        assert not isinstance(v, JSON)
+        if isinstance(v, list):
+            for item in v:
+                assert not isinstance(item, JSON)
+
 
 @pytest.mark.parametrize('draft', ('2019-09', '2020-12', 'next'))
 def test_non_normalized_id_allowed(draft):
