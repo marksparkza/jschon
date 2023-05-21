@@ -74,7 +74,6 @@ Documentation:
 
 * Rename `User Guide` to `Tutorial`
 * Restructure the API docs index page
-* Blog!
 
 Miscellaneous:
 

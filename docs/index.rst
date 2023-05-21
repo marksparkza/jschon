@@ -9,4 +9,3 @@
     testing
     contributing
     changelog
-    blog
