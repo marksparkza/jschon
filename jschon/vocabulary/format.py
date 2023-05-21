@@ -22,7 +22,7 @@ class FormatKeyword(Keyword):
             self.validator = None
 
     def evaluate(self, instance: JSON, result: Result) -> None:
-        result.annotate(self.json.data)
+        result.annotate(self.json.value)
         if self.validator and instance.type in self.validates_types:
             try:
                 self.validator(instance.data)

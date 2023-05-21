@@ -30,7 +30,7 @@ class EnumRefKeyword(Keyword):
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         # get the keyword's value as it appears in the JSON schema
-        enum_id = self.json.data
+        enum_id = self.json.value
         try:
             # retrieve the enumeration from the remote enumeration cache
             enum = remote_enum_cache[enum_id]
