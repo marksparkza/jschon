@@ -7,6 +7,11 @@ Bug Fixes:
 
 * Non-scalar annotation values are now fully unwrapped from the JSON class
 
+Documentation:
+
+* Spell 'meta-schema' consistently in tutorials and examples
+
+
 v0.10.2 (2023-04-20)
 --------------------
 Experimental:

@@ -51,7 +51,7 @@ For boolean schemas and empty schemas, it's as simple as:
 >>> empty_schema = JSONSchema({})
 
 Creating a :class:`~jschon.jsonschema.JSONSchema` object from any non-empty
-:class:`Mapping`, however, requires that we specify a metaschema. Here's a
+:class:`Mapping`, however, requires that we specify a meta-schema. Here's a
 very basic example of a schema that simply ensures that a JSON value represents
 an integer:
 
@@ -62,7 +62,7 @@ an integer:
 The `metaschema_uri` parameter resolves to a :class:`~jschon.vocabulary.Metaschema`
 object, which provides the new :class:`~jschon.jsonschema.JSONSchema` instance
 with :class:`~jschon.vocabulary.Keyword` classes for each of its keywords. The
-metaschema URI may be parameterized, as above, or it may be provided using the
+meta-schema URI may be parameterized, as above, or it may be provided using the
 ``"$schema"`` keyword:
 
 >>> int_schema = JSONSchema({
@@ -133,7 +133,7 @@ any :class:`PathLike` object; for example:
 
 Both :meth:`~jschon.json.JSON.loads` and :meth:`~jschon.json.JSON.loadf` accept
 keyword arguments that are passed through to the :class:`~jschon.jsonschema.JSONSchema`
-constructor, in case we need to parameterize the metaschema URI, the schema URI, or
+constructor, in case we need to parameterize the meta-schema URI, the schema URI, or
 any other :class:`~jschon.jsonschema.JSONSchema` constructor argument:
 
 >>> num_schema = JSONSchema.loads(schema_text, metaschema_uri=URI("https://json-schema.org/draft/2020-12/schema"))

@@ -70,7 +70,7 @@ schema = JSONSchema({
     "enumRef": "https://example.com/remote-enum-colours",
 })
 
-# validate the schema against its metaschema
+# validate the schema against its meta-schema
 schema_validity = schema.validate()
 print(f'Schema validity check: {schema_validity.valid}')
 
