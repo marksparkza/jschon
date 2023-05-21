@@ -22,7 +22,12 @@ def test_annotate(key, value):
     assert result.children[key, instpath].valid is True
     assert result.children[key, instpath]._assert is False
     try:
-        assert result.children[key, instpath].annotation == value
+        ann = result.children[key, instpath].annotation
+        assert ann == value
+        assert not isinstance(ann, JSON)
+        if isinstance(ann, list):
+            for item in ann:
+                assert not isinstance(item, JSON)
     except KeyError:
         assert value is None
 
