@@ -1,8 +1,8 @@
 Changelog
 =========
 
-v0.10.3 (in development)
-------------------------
+v0.10.3 (2023-05-21)
+--------------------
 Bug Fixes:
 
 * Non-scalar annotation values are now fully unwrapped from the JSON class
