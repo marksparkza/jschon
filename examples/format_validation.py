@@ -6,17 +6,15 @@ from jschon.vocabulary.format import format_validator
 
 
 # register an 'ipv4' format validator
-@format_validator('ipv4')
+@format_validator('ipv4', instance_types=('string',))
 def validate_ipv4(value: str) -> None:
-    if isinstance(value, str):
-        ipaddress.IPv4Address(value)  # raises ValueError for an invalid IPv4 address
+    ipaddress.IPv4Address(value)  # raises ValueError for an invalid IPv4 address
 
 
 # register an 'ipv6' format validator
-@format_validator('ipv6')
+@format_validator('ipv6', instance_types=('string',))
 def validate_ipv6(value: str) -> None:
-    if isinstance(value, str):
-        ipaddress.IPv6Address(value)  # raises ValueError for an invalid IPv6 address
+    ipaddress.IPv6Address(value)  # raises ValueError for an invalid IPv6 address
 
 
 # initialize the catalog, with JSON Schema 2020-12 vocabulary support

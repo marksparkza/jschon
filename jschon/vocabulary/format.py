@@ -19,7 +19,7 @@ class FormatKeyword(Keyword):
         if parentschema.catalog.is_format_enabled(value):
             self.validator, self.validates_types = _format_validators[value]
         else:
-            self.validator = None
+            self.validator, self.validates_types = None, set()
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         result.annotate(self.json.value)
@@ -47,7 +47,9 @@ _format_validators: Dict[str, Tuple[FormatValidator, Tuple[str, ...]]] = {}
 def format_validator(
         format_attr: str,
         *,
-        instance_types: Tuple[str, ...] = ('string',)
+        instance_types: Tuple[str, ...] = (
+            "null", "boolean", "number", "string", "array", "object",
+        )
 ):
     """A decorator for a format validation function.
 
