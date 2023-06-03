@@ -28,22 +28,24 @@ class EnumRefKeyword(Keyword):
     # ignore non-string instances
     instance_types = "string",
 
-    def evaluate(self, instance: JSON, result: Result) -> None:
-        # get the keyword's value as it appears in the JSON schema
-        enum_id = self.json.value
-        try:
-            # retrieve the enumeration from the remote enumeration cache
-            enum = remote_enum_cache[enum_id]
-        except KeyError:
-            raise JSONSchemaError(f"Unknown remote enumeration {enum_id}")
+    def __init__(self, parentschema: JSONSchema, value: str):
+        super().__init__(parentschema, value)
 
-        # test the value of the current JSON instance node against the enumeration
-        if instance.data in enum:
+        # raise an exception during schema construction if a reference is invalid
+        if value not in remote_enum_cache:
+            raise JSONSchemaError(f"Unknown remote enumeration {value}")
+
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        # the keyword's value is a reference to a remote enumeration
+        enum_ref = self.json.value
+
+        # evaluate the current JSON instance node against the enumeration
+        if instance.data in remote_enum_cache.get(enum_ref):
             # (optionally) on success, annotate the result
-            result.annotate(enum_id)
+            result.annotate(enum_ref)
         else:
             # on failure, mark the result as failed, with an (optional) error message
-            result.fail(f"The instance is not a member of the {enum_id} enumeration")
+            result.fail(f"The instance is not a member of the {enum_ref} enumeration")
 
 
 # initialize the catalog, with JSON Schema 2020-12 vocabulary support

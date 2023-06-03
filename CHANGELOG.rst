@@ -1,6 +1,31 @@
 Changelog
 =========
 
+v0.11.0 (2023-06-03)
+--------------------
+Breaking changes:
+
+* ``RelativeJSONPointerError`` superseded by ``RelativeJSONPointerMalformedError``
+  and ``RelativeJSONPointerReferenceError``
+
+Deprecations:
+
+* Exception classes dropped from the top-level package API
+* ``jschon.exceptions`` module renamed to ``jschon.exc``
+
+Documentation:
+
+* Exception classes documented
+* Custom keyword example refactored to raise exception in constructor
+
+Miscellaneous:
+
+* ``JschonError`` base exception class introduced
+* ``JSONPointerError`` partitioned into ``JSONPointerMalformedError``,
+  ``JSONPointerReferenceError``, ``RelativeJSONPointerMalformedError``
+  and ``RelativeJSONPointerReferenceError``
+
+
 v0.10.3 (2023-05-21)
 --------------------
 Bug Fixes:

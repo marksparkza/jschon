@@ -6,7 +6,8 @@ from typing import Dict, List, Union
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon import JSON, JSONCompatible, JSONPointer, JSONPointerError, RelativeJSONPointer, RelativeJSONPointerError
+from jschon import JSON, JSONCompatible, JSONPointer, RelativeJSONPointer
+from jschon.exc import JSONPointerReferenceError, RelativeJSONPointerReferenceError
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonpointer, jsonpointer_key, relative_jsonpointer, relative_jsonpointer_regex
 
@@ -85,18 +86,18 @@ def test_evaluate_jsonpointer(value, testkey):
         assert JSONPointer(pointer).evaluate(JSON(value)) == target
 
     if isinstance(value, list):
-        with pytest.raises(JSONPointerError):
+        with pytest.raises(JSONPointerReferenceError):
             JSONPointer(f'/{len(value)}').evaluate(value)
-        with pytest.raises(JSONPointerError):
+        with pytest.raises(JSONPointerReferenceError):
             JSONPointer('/-').evaluate(value)
-        with pytest.raises(JSONPointerError):
+        with pytest.raises(JSONPointerReferenceError):
             JSONPointer('/').evaluate(value)
     elif isinstance(value, dict):
         if testkey not in value:
-            with pytest.raises(JSONPointerError):
+            with pytest.raises(JSONPointerReferenceError):
                 JSONPointer(f'/{jsonpointer_escape(testkey)}').evaluate(value)
     else:
-        with pytest.raises(JSONPointerError):
+        with pytest.raises(JSONPointerReferenceError):
             JSONPointer(f'/{value}').evaluate(value)
 
 
@@ -180,7 +181,7 @@ def test_evaluate_relative_jsonpointer(data, start, ref, result):
     if result == '<data>':
         result = data
     elif result == '<fail>':
-        with pytest.raises(RelativeJSONPointerError):
+        with pytest.raises(RelativeJSONPointerReferenceError):
             ref.evaluate(node)
         return
 

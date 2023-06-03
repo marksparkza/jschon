@@ -1,5 +1,5 @@
 from .catalog import Catalog, LocalSource, RemoteSource
-from .exceptions import CatalogError, JSONError, JSONPatchError, JSONPointerError, JSONSchemaError, RelativeJSONPointerError, URIError
+from .exceptions import CatalogError, JSONError, JSONPatchError, JSONPointerError, JSONSchemaError, URIError
 from .json import JSON, JSONCompatible
 from .jsonpatch import JSONPatch, JSONPatchOperation
 from .jsonpointer import JSONPointer, RelativeJSONPointer
@@ -8,28 +8,21 @@ from .uri import URI
 
 __all__ = [
     'Catalog',
-    'CatalogError',
     'JSON',
     'JSONCompatible',
-    'JSONError',
     'JSONPatch',
-    'JSONPatchError',
     'JSONPatchOperation',
     'JSONPointer',
-    'JSONPointerError',
     'JSONSchema',
-    'JSONSchemaError',
     'LocalSource',
     'RelativeJSONPointer',
-    'RelativeJSONPointerError',
     'RemoteSource',
     'Result',
     'URI',
-    'URIError',
     'create_catalog',
 ]
 
-__version__ = '0.10.3'
+__version__ = '0.11.0'
 
 
 def create_catalog(*versions: str, name: str = 'catalog') -> Catalog:
