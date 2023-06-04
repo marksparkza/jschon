@@ -1,8 +1,10 @@
+from datetime import datetime
+
 import jschon
 
 project = 'jschon'
 author = 'Mark Jacobson'
-copyright = '2021, Mark Jacobson'
+copyright = f'{datetime.now().year}, {author}'
 release = jschon.__version__
 
 extensions = [
