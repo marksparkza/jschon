@@ -4,7 +4,7 @@ from copy import copy
 from typing import Dict, List, Union
 
 import pytest
-from hypothesis import given, strategies as hs
+from hypothesis import example, given, strategies as hs
 
 from jschon import JSON, JSONCompatible, JSONPointer, RelativeJSONPointer
 from jschon.exc import (
@@ -127,6 +127,7 @@ def test_uri_fragment_safe_characters():
 
 @pytest.mark.parametrize('jp_cls', (JSONPointer, JPtr))
 @given(json, jsonpointer_key)
+@example('~', '')
 def test_evaluate_jsonpointer(jp_cls, value, testkey):
     assert jp_cls().evaluate(value) == value
     assert jp_cls().evaluate(JSON(value)) == value
@@ -153,7 +154,7 @@ def test_evaluate_jsonpointer(jp_cls, value, testkey):
             assert exc_info.type == jp_cls.reference_exc
     else:
         with pytest.raises(jp_cls.reference_exc) as exc_info:
-            jp_cls(f'/{value}').evaluate(value)
+            jp_cls('/foo').evaluate(value)
         assert exc_info.type == jp_cls.reference_exc
 
 
