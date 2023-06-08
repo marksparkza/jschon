@@ -3,7 +3,9 @@ from __future__ import annotations
 import collections
 import re
 import urllib.parse
-from typing import Any, Iterable, Literal, Mapping, Sequence, TYPE_CHECKING, Union, overload
+from typing import (
+    Any, Iterable, Literal, Mapping, Sequence, Type, TYPE_CHECKING, Union, overload,
+)
 
 from jschon.exc import (
     JSONPointerMalformedError,
@@ -70,6 +72,12 @@ class JSONPointer(Sequence[str]):
        and referred to as *keys* in the JSONPointer class.
     """
 
+    malformed_exc: Type[JSONPointerMalformedError] = JSONPointerMalformedError
+    """Exception raised when the input is not a valid JSON Pointer."""
+
+    reference_exc: Type[JSONPointerReferenceError] = JSONPointerReferenceError
+    """Exception raised when the JSON Pointer cannot be resolved against a document."""
+
     _json_pointer_re = re.compile(JSON_POINTER_RE)
     _array_index_re = re.compile(JSON_INDEX_RE)
 
@@ -88,7 +96,7 @@ class JSONPointer(Sequence[str]):
         for value in values:
             if isinstance(value, str):
                 if not JSONPointer._json_pointer_re.fullmatch(value):
-                    raise JSONPointerMalformedError(f"'{value}' is not a valid JSON pointer")
+                    raise cls.malformed_exc(f"'{value}' is not a valid JSON pointer")
                 self._keys.extend(self.unescape(token) for token in value.split('/')[1:])
 
             elif isinstance(value, JSONPointer):
@@ -208,7 +216,7 @@ class JSONPointer(Sequence[str]):
             except (KeyError, IndexError):
                 pass
 
-            raise JSONPointerReferenceError(f"Path '{self}' not found in document")
+            raise self.reference_exc(f"Path '{self}' not found in document")
 
         return resolve(document, collections.deque(self._keys))
 
@@ -266,6 +274,15 @@ class JSONPointer(Sequence[str]):
 
 
 class RelativeJSONPointer:
+    malformed_exc: Type[
+        RelativeJSONPointerMalformedError
+    ] = RelativeJSONPointerMalformedError
+    """Exception raised when the input is not a valid Relative JSON Pointer."""
+    reference_exc: Type[
+        RelativeJSONPointerReferenceError
+    ] = RelativeJSONPointerReferenceError
+    """Exception raised when the Relative JSON Pointer cannot be resolved against a document."""
+
     _regex = re.compile(RELATIVE_JSON_POINTER_RE)
 
     def __new__(
@@ -294,7 +311,7 @@ class RelativeJSONPointer:
 
         if value is not None:
             if not (match := RelativeJSONPointer._regex.fullmatch(value)):
-                raise RelativeJSONPointerMalformedError(f"'{value}' is not a valid relative JSON pointer")
+                raise cls.malformed_exc(f"'{value}' is not a valid relative JSON pointer")
 
             up, over, ref = match.group('up', 'over', 'ref')
             self.up = int(up)
@@ -339,28 +356,37 @@ class RelativeJSONPointer:
         return f'RelativeJSONPointer({str(self)!r})'
 
     def evaluate(self, document: JSON) -> Union[int, str, JSON]:
+        """Return the value within `document` at the location referenced by `self`.
+
+        `document` must be an instance of :class:`JSON`, as evaluation relies
+        on parent and sibling links provided by that class.
+
+        :param document: a :class:`JSON` instance representing the document
+        :raise RelativeJSONPointerReferenceError: if `self` references a non-existent
+            location in `document`
+        """
         node = document
         for _ in range(self.up):
             if node.parent is None:
-                raise RelativeJSONPointerReferenceError('Up too many levels')
+                raise self.reference_exc('Up too many levels')
             node = node.parent
 
         if self.over:
             if node.parent is None:
-                raise RelativeJSONPointerReferenceError('No containing node for index adjustment')
+                raise self.reference_exc('No containing node for index adjustment')
             if node.parent.type != "array":
-                raise RelativeJSONPointerReferenceError(f'Index adjustment not valid for type {node.parent.type}')
+                raise self.reference_exc(f'Index adjustment not valid for type {node.parent.type}')
             adjusted = int(node.key) + self.over
             if adjusted < 0 or adjusted >= len(node.parent):
-                raise RelativeJSONPointerReferenceError(f'Index adjustment out of range')
+                raise self.reference_exc(f'Index adjustment out of range')
             node = node.parent[adjusted]
 
         if self.index:
             if node.parent is None:
-                raise RelativeJSONPointerReferenceError('No containing node')
+                raise self.reference_exc('No containing node')
             return int(node.key) if node.parent.type == "array" else node.key
 
         try:
             return self.path.evaluate(node)
         except JSONPointerReferenceError as e:
-            raise RelativeJSONPointerReferenceError from e
+            raise self.reference_exc from e
