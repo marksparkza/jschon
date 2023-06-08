@@ -3,7 +3,9 @@ from __future__ import annotations
 import collections
 import re
 import urllib.parse
-from typing import Any, Iterable, Literal, Mapping, Sequence, TYPE_CHECKING, Union, overload
+from typing import (
+    Any, Iterable, Literal, Mapping, Sequence, Type, TYPE_CHECKING, Union, overload,
+)
 
 from jschon.exc import (
     JSONPointerMalformedError,
@@ -71,10 +73,10 @@ class JSONPointer(Sequence[str]):
     """
 
     malformed_exc: Type[JSONPointerMalformedError] = JSONPointerMalformedError
-    """The exception to raise if the input is not a valid JSON Pointer"""
+    """Exception raised when the input is not a valid JSON Pointer."""
 
     reference_exc: Type[JSONPointerReferenceError] = JSONPointerReferenceError
-    """The exception to raise if the JSON Pointer cannot be resolved against a document"""
+    """Exception raised when the JSON Pointer cannot be resolved against a document."""
 
     _json_pointer_re = re.compile(JSON_POINTER_RE)
     _array_index_re = re.compile(JSON_INDEX_RE)
@@ -85,7 +87,7 @@ class JSONPointer(Sequence[str]):
 
         :param values: each value may either be an RFC 6901 string, or an iterable
             of unescaped keys
-        :raise cls.malformed_exc: if a string argument does not conform to
+        :raise JSONPointerMalformedError: if a string argument does not conform to
             the RFC 6901 syntax
         """
         self = object.__new__(cls)
@@ -190,7 +192,7 @@ class JSONPointer(Sequence[str]):
         will always fail.
 
         :param document: any Python object
-        :raise self.reference_exc: if `self` references a non-existent
+        :raise JSONPointerReferenceError: if `self` references a non-existent
             location in `document`
         """
 
@@ -275,11 +277,11 @@ class RelativeJSONPointer:
     malformed_exc: Type[
         RelativeJSONPointerMalformedError
     ] = RelativeJSONPointerMalformedError
-    """The exception to raise if the input is not a valid Relative JSON Pointer"""
+    """Exception raised when the input is not a valid Relative JSON Pointer."""
     reference_exc: Type[
         RelativeJSONPointerReferenceError
     ] = RelativeJSONPointerReferenceError
-    """The exception to raise if the Relative JSON Pointer cannot be resolved against a document"""
+    """Exception raised when the Relative JSON Pointer cannot be resolved against a document."""
 
     _regex = re.compile(RELATIVE_JSON_POINTER_RE)
 
@@ -303,7 +305,7 @@ class RelativeJSONPointer:
             a value of 0, which is not allowed by the grammar, is treated as if
             there is no adjustment.
         :param ref: a :class:`JSONPointer` instance, or the literal ``'#'``
-        :raise cls.malformed_exc: for any invalid arguments
+        :raise RelativeJSONPointerMalformedError: for any invalid arguments
         """
         self = object.__new__(cls)
 
@@ -360,7 +362,7 @@ class RelativeJSONPointer:
         on parent and sibling links provided by that class.
 
         :param document: a :class:`JSON` instance representing the document
-        :raise self.reference_exc: if `self` references a non-existent
+        :raise RelativeJSONPointerReferenceError: if `self` references a non-existent
             location in `document`
         """
         node = document

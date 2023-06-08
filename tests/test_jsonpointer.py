@@ -139,13 +139,13 @@ def test_evaluate_jsonpointer(jp_cls, value, testkey):
     if isinstance(value, list):
         with pytest.raises(jp_cls.reference_exc) as exc_info:
             jp_cls(f'/{len(value)}').evaluate(value)
-            assert exc_info.type == jp_cls.reference_exc
+        assert exc_info.type == jp_cls.reference_exc
         with pytest.raises(jp_cls.reference_exc) as exc_info:
             jp_cls('/-').evaluate(value)
-            assert exc_info.type == jp_cls.reference_exc
+        assert exc_info.type == jp_cls.reference_exc
         with pytest.raises(jp_cls.reference_exc) as exc_info:
             jp_cls('/').evaluate(value)
-            assert exc_info.type == jp_cls.reference_exc
+        assert exc_info.type == jp_cls.reference_exc
     elif isinstance(value, dict):
         if testkey not in value:
             with pytest.raises(jp_cls.reference_exc) as exc_info:
