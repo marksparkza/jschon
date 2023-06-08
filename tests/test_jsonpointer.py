@@ -7,9 +7,46 @@ import pytest
 from hypothesis import given, strategies as hs
 
 from jschon import JSON, JSONCompatible, JSONPointer, RelativeJSONPointer
-from jschon.exc import JSONPointerReferenceError, RelativeJSONPointerReferenceError
+from jschon.exc import (
+    JSONPointerMalformedError, JSONPointerReferenceError,
+    RelativeJSONPointerMalformedError, RelativeJSONPointerReferenceError,
+)
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonpointer, jsonpointer_key, relative_jsonpointer, relative_jsonpointer_regex
+
+
+##############################################################
+# These subclasses exist to test the ability to override the #
+# exception classes used in [Relative]JSONPointer subclasses #
+##############################################################
+
+class JPMalError(JSONPointerMalformedError):
+    pass
+
+
+class JPRefError(JSONPointerReferenceError):
+    pass
+
+
+class JPtr(JSONPointer):
+    malformed_exc = JPMalError
+    reference_exc = JPRefError
+
+
+class RJPMalError(RelativeJSONPointerMalformedError):
+    pass
+
+
+class RJPRefError(RelativeJSONPointerReferenceError):
+    pass
+
+
+class RJPtr(RelativeJSONPointer):
+    malformed_exc = RJPMalError
+    reference_exc = RJPRefError
+
+
+##################### End subclasses #########################
 
 
 def generate_jsonpointers(
@@ -59,6 +96,13 @@ def test_create_jsonpointer(values: List[Union[str, List[str]]]):
     assert eval(repr(ptr0)) == ptr0
 
 
+@pytest.mark.parametrize('jp_cls', (JSONPointer, JPtr))
+def test_malformed_jsonpointer(jp_cls):
+    with pytest.raises(jp_cls.malformed_exc) as exc_info:
+        jp_cls('0/foo')
+    assert exc_info.type == jp_cls.malformed_exc
+
+
 @given(jsonpointer, jsonpointer_key)
 def test_extend_jsonpointer_one_key(value, newkey):
     pointer = JSONPointer(value) / newkey
@@ -75,30 +119,42 @@ def test_extend_jsonpointer_multi_keys(value, newkeys):
     assert str(pointer) == value + ''.join(f'/{jsonpointer_escape(key)}' for key in newkeys)
 
 
+def test_uri_fragment_safe_characters():
+    pointer_str = "/!$&'()*+,;="
+    pointer = JSONPointer(pointer_str)
+    assert pointer.uri_fragment() == pointer_str
+
+
+@pytest.mark.parametrize('jp_cls', (JSONPointer, JPtr))
 @given(json, jsonpointer_key)
-def test_evaluate_jsonpointer(value, testkey):
-    assert JSONPointer().evaluate(value) == value
-    assert JSONPointer().evaluate(JSON(value)) == value
+def test_evaluate_jsonpointer(jp_cls, value, testkey):
+    assert jp_cls().evaluate(value) == value
+    assert jp_cls().evaluate(JSON(value)) == value
 
     generate_jsonpointers(resolved_pointers := {}, value)
     for pointer, target in resolved_pointers.items():
-        assert JSONPointer(pointer).evaluate(value) == target
-        assert JSONPointer(pointer).evaluate(JSON(value)) == target
+        assert jp_cls(pointer).evaluate(value) == target
+        assert jp_cls(pointer).evaluate(JSON(value)) == target
 
     if isinstance(value, list):
-        with pytest.raises(JSONPointerReferenceError):
-            JSONPointer(f'/{len(value)}').evaluate(value)
-        with pytest.raises(JSONPointerReferenceError):
-            JSONPointer('/-').evaluate(value)
-        with pytest.raises(JSONPointerReferenceError):
-            JSONPointer('/').evaluate(value)
+        with pytest.raises(jp_cls.reference_exc) as exc_info:
+            jp_cls(f'/{len(value)}').evaluate(value)
+            assert exc_info.type == jp_cls.reference_exc
+        with pytest.raises(jp_cls.reference_exc) as exc_info:
+            jp_cls('/-').evaluate(value)
+            assert exc_info.type == jp_cls.reference_exc
+        with pytest.raises(jp_cls.reference_exc) as exc_info:
+            jp_cls('/').evaluate(value)
+            assert exc_info.type == jp_cls.reference_exc
     elif isinstance(value, dict):
         if testkey not in value:
-            with pytest.raises(JSONPointerReferenceError):
-                JSONPointer(f'/{jsonpointer_escape(testkey)}').evaluate(value)
+            with pytest.raises(jp_cls.reference_exc) as exc_info:
+                jp_cls(f'/{jsonpointer_escape(testkey)}').evaluate(value)
+            assert exc_info.type == jp_cls.reference_exc
     else:
-        with pytest.raises(JSONPointerReferenceError):
-            JSONPointer(f'/{value}').evaluate(value)
+        with pytest.raises(jp_cls.reference_exc) as exc_info:
+            jp_cls(f'/{value}').evaluate(value)
+        assert exc_info.type == jp_cls.reference_exc
 
 
 @given(jsonpointer, jsonpointer)
@@ -149,6 +205,13 @@ def test_create_relative_jsonpointer(value):
         assert r1 == RelativeJSONPointer(**kwargs)
 
 
+@pytest.mark.parametrize('rjp_cls', (RelativeJSONPointer, RJPtr))
+def test_malformed_relative_jsonpointer(rjp_cls):
+    with pytest.raises(rjp_cls.malformed_exc) as exc_info:
+        rjp_cls('/bar')
+    assert exc_info.type == rjp_cls.malformed_exc
+
+
 # Examples from:
 # https://datatracker.ietf.org/doc/html/draft-handrews-relative-json-pointer-01#section-5.1
 # https://gist.github.com/geraintluff/5911303
@@ -158,31 +221,38 @@ example_file = pathlib.Path(__file__).parent / 'data' / 'relative_jsonpointer.js
 
 def pytest_generate_tests(metafunc):
     if metafunc.definition.name == 'test_evaluate_relative_jsonpointer':
-        argnames = ('data', 'start', 'ref', 'result')
+        argnames = ('jp_cls', 'rjp_cls', 'data', 'start', 'ref', 'result')
         argvalues = []
         examples = json_loadf(example_file)
-        for example in examples:
-            for test in example['tests']:
-                argvalues += [pytest.param(
-                    example['data'],
-                    test['start'],
-                    test['ref'],
-                    test['result'],
-                )]
+        for jp_cls, rjp_cls in (
+            (JSONPointer, RelativeJSONPointer),
+            (JPtr, RJPtr),
+        ):
+            for example in examples:
+                for test in example['tests']:
+                    argvalues += [pytest.param(
+                        jp_cls,
+                        rjp_cls,
+                        example['data'],
+                        test['start'],
+                        test['ref'],
+                        test['result'],
+                    )]
         metafunc.parametrize(argnames, argvalues)
 
 
-def test_evaluate_relative_jsonpointer(data, start, ref, result):
+def test_evaluate_relative_jsonpointer(jp_cls, rjp_cls, data, start, ref, result):
     data = JSON(data)
-    start = JSONPointer(start)
-    ref = RelativeJSONPointer(ref)
+    start = jp_cls(start)
+    ref = rjp_cls(ref)
     node = start.evaluate(data)
 
     if result == '<data>':
         result = data
     elif result == '<fail>':
-        with pytest.raises(RelativeJSONPointerReferenceError):
+        with pytest.raises(rjp_cls.reference_exc) as exc_info:
             ref.evaluate(node)
+        assert exc_info.type == rjp_cls.reference_exc
         return
 
     value = ref.evaluate(node)

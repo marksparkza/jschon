@@ -3,6 +3,10 @@ Changelog
 
 v0.11.1 (in development)
 ------------------------
+Features:
+
+* ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
+  the exceptions that they use, which can be overidden in subclasses
 
 
 v0.11.0 (2023-06-03)
