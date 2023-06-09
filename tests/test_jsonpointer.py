@@ -154,7 +154,7 @@ def test_evaluate_jsonpointer(jp_cls, value, testkey):
             assert exc_info.type == jp_cls.reference_exc
     else:
         with pytest.raises(jp_cls.reference_exc) as exc_info:
-            jp_cls('/foo').evaluate(value)
+            jp_cls(f'/{jsonpointer_escape(str(value))}').evaluate(value)
         assert exc_info.type == jp_cls.reference_exc
 
 
