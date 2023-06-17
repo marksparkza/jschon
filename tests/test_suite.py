@@ -1,10 +1,8 @@
+import json
 import pathlib
 import warnings
-import json
-from collections import defaultdict, namedtuple
 
 import pytest
-from pytest import mark as pytest_mark
 
 from jschon import JSON, JSONSchema, LocalSource, URI
 from jschon.utils import json_loadf
@@ -160,15 +158,14 @@ def pytest_generate_tests(metafunc):
                     params = [metaschema_uri, testcase['schema'], test['data'], test['valid'], test_id]
                     if status and not gen_status_data:
                         status_mark = {
-                            'xfail': pytest_mark.xfail,
-                            'skip': pytest_mark.skip,
+                            'xfail': pytest.mark.xfail,
+                            'skip': pytest.mark.skip,
                         }[status['status']].with_args(reason=status['reason'])
                         argvalues.append(pytest.param(*params, marks=status_mark))
                     else:
                         argvalues.append(pytest.param(*params))
 
                     testids.append(f"{version} -> {relpath} -> {case_desc} -> {test_desc}")
-
 
     metafunc.parametrize(argnames, argvalues, ids=testids)
 
