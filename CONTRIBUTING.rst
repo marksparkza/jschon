@@ -5,8 +5,10 @@ Contributing
 Feature requests, questions, suggestions and bug reports are all welcome as
 `issues <https://github.com/marksparkza/jschon/issues/new/choose>`_.
 
-If you would like to contribute to the development of jschon, please create an
-issue to discuss any change before creating a pull request.
+If you wish to contribute code or help to improve the jschon documentation,
+feel free to create a pull request; an issue is not required. If the proposed
+change is complex, however, consider either creating a draft pull request
+initially or an issue to discuss the change further.
 
 Development setup
 -----------------
