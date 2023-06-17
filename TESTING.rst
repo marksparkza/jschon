@@ -17,5 +17,4 @@ the location), and type ``tox``.
 Note that a complete test run requires all of the supported Python versions
 (3.8, 3.9, 3.10, 3.11) to be installed on your system.
 
-For more information on testing options, as well as how to see what optional and
-format tests are supported, see the `contributing <contributing.html>`_ section.
+See :doc:`contributing` for detailed information on testing options.
