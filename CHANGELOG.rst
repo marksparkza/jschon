@@ -6,8 +6,11 @@ v0.11.1 (in development)
 Features:
 
 * Allow adding a source with a base URI of ``None`` to match full URIs as the ``relative_path``
-* ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
-  the exceptions that they use, which can be overidden in subclasses
+* ``JSONPointer``, ``RelativeJSONPointer`` and their related exceptions can
+  now be subclassed together; the base classes will instantiate subclasses
+  where appropriate, and class attributes can be set to ensure that subclasses
+  will use subclassed exceptions, and a subclassed ``RelativeJSONPointer`` will
+  use its companion subclass of ``JSONPointer``
 * Cached properties for accessing document and resource root schemas from subschemas
 
 
