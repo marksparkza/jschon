@@ -81,7 +81,7 @@ class JSONPointer(Sequence[str]):
     _json_pointer_re = re.compile(JSON_POINTER_RE)
     _array_index_re = re.compile(JSON_INDEX_RE)
 
-    def __new__(cls, *values: Union[str, Iterable[str]]) -> JSONPointer:
+    def __new__(cls, *values: Union[str, Iterable[str]]) -> Type[JSONPointer]:
         """Create and return a new :class:`JSONPointer` instance, constructed by
         the concatenation of the given `values`.
 
@@ -115,7 +115,7 @@ class JSONPointer(Sequence[str]):
         ...
 
     @overload
-    def __getitem__(self, index: slice) -> JSONPointer:
+    def __getitem__(self, index: slice) -> Type[JSONPointer]:
         ...
 
     def __getitem__(self, index):
@@ -123,7 +123,7 @@ class JSONPointer(Sequence[str]):
         if isinstance(index, int):
             return self._keys[index]
         if isinstance(index, slice):
-            return JSONPointer(self._keys[index])
+            return self.__class__(self._keys[index])
         raise TypeError("Expecting int or slice")
 
     def __len__(self) -> int:
@@ -131,28 +131,28 @@ class JSONPointer(Sequence[str]):
         return len(self._keys)
 
     @overload
-    def __truediv__(self, suffix: str) -> JSONPointer:
+    def __truediv__(self, suffix: str) -> Type[JSONPointer]:
         ...
 
     @overload
-    def __truediv__(self, suffix: Iterable[str]) -> JSONPointer:
+    def __truediv__(self, suffix: Iterable[str]) -> Type[JSONPointer]:
         ...
 
-    def __truediv__(self, suffix) -> JSONPointer:
+    def __truediv__(self, suffix) -> Type[JSONPointer]:
         """Return `self / suffix`."""
         if isinstance(suffix, str):
-            return JSONPointer(self, (suffix,))
+            return self.__class__(self, (suffix,))
         if isinstance(suffix, Iterable):
-            return JSONPointer(self, suffix)
+            return self.__class__(self, suffix)
         return NotImplemented
 
-    def __eq__(self, other: JSONPointer) -> bool:
+    def __eq__(self, other: Type[JSONPointer]) -> bool:
         """Return `self == other`."""
         if isinstance(other, JSONPointer):
             return self._keys == other._keys
         return NotImplemented
 
-    def __le__(self, other: JSONPointer) -> bool:
+    def __le__(self, other: Type[JSONPointer]) -> bool:
         """Return `self <= other`.
 
         Test whether self is a prefix of other, that is,
@@ -162,7 +162,7 @@ class JSONPointer(Sequence[str]):
             return self._keys == other._keys[:len(self._keys)]
         return NotImplemented
 
-    def __lt__(self, other: JSONPointer) -> bool:
+    def __lt__(self, other: Type[JSONPointer]) -> bool:
         """Return `self < other`.
 
         Test whether self is a proper prefix of other, that is,
@@ -182,7 +182,7 @@ class JSONPointer(Sequence[str]):
 
     def __repr__(self) -> str:
         """Return `repr(self)`."""
-        return f"JSONPointer({str(self)!r})"
+        return f"{self.__class__.__name__}({str(self)!r})"
 
     def evaluate(self, document: Any) -> Any:
         """Return the value within `document` at the location referenced by `self`.
@@ -210,7 +210,7 @@ class JSONPointer(Sequence[str]):
                 if isjson and value.type == "array" or \
                         not isjson and isinstance(value, Sequence) and \
                         not isinstance(value, str) and \
-                        JSONPointer._array_index_re.fullmatch(key):
+                        self._array_index_re.fullmatch(key):
                     return resolve(value[int(key)], keys)
 
             except (KeyError, IndexError):
@@ -221,7 +221,7 @@ class JSONPointer(Sequence[str]):
         return resolve(document, collections.deque(self._keys))
 
     @classmethod
-    def parse_uri_fragment(cls, value: str) -> JSONPointer:
+    def parse_uri_fragment(cls, value: str) -> Type[JSONPointer]:
         """Return a new :class:`JSONPointer` constructed from the :rfc:`6901`
         string obtained by decoding `value`.
 
@@ -230,7 +230,7 @@ class JSONPointer(Sequence[str]):
 
         :param value: a percent-encoded URI fragment
         """
-        return JSONPointer(urllib.parse.unquote(value))
+        return cls(urllib.parse.unquote(value))
 
     def uri_fragment(self) -> str:
         """Return a percent-encoded URI fragment representation of `self`.
@@ -283,6 +283,9 @@ class RelativeJSONPointer:
     ] = RelativeJSONPointerReferenceError
     """Exception raised when the Relative JSON Pointer cannot be resolved against a document."""
 
+    json_pointer_class: Type[JSONPointer] = JSONPointer
+    """JSONPointer subclass used to implement the ``ref`` portion of the relative pointer."""
+
     _regex = re.compile(RELATIVE_JSON_POINTER_RE)
 
     def __new__(
@@ -292,8 +295,8 @@ class RelativeJSONPointer:
             *,
             up: int = 0,
             over: int = 0,
-            ref: Union[JSONPointer, Literal['#']] = JSONPointer(),
-    ) -> RelativeJSONPointer:
+            ref: Union[Type[JSONPointer], Literal['#'], Literal['']] = '',
+    ) -> Type[RelativeJSONPointer]:
         """Create and return a new :class:`RelativeJSONPointer` instance.
 
         :param value: a relative JSON pointer-conformant string; if `value` is
@@ -310,18 +313,25 @@ class RelativeJSONPointer:
         self = object.__new__(cls)
 
         if value is not None:
-            if not (match := RelativeJSONPointer._regex.fullmatch(value)):
+            if not (match := cls._regex.fullmatch(value)):
                 raise cls.malformed_exc(f"'{value}' is not a valid relative JSON pointer")
 
             up, over, ref = match.group('up', 'over', 'ref')
             self.up = int(up)
             self.over = int(over) if over else 0
-            self.path = JSONPointer(ref) if ref != '#' else None
+            self.path = cls.json_pointer_class(ref) if ref != '#' else None
 
         else:
             self.up = up
             self.over = over
-            self.path = ref if isinstance(ref, JSONPointer) else None
+            if isinstance(ref, cls.json_pointer_class):
+                self.path = ref
+            elif ref == '':
+                self.path = cls.json_pointer_class()
+            elif isinstance(ref, JSONPointer):
+                self.path = cls.json_pointer_class(str(ref))
+            else:
+                self.path = None
 
         self.index = ref == '#'
 
@@ -332,7 +342,7 @@ class RelativeJSONPointer:
 
         return self
 
-    def __eq__(self, other: RelativeJSONPointer) -> bool:
+    def __eq__(self, other: Type[RelativeJSONPointer]) -> bool:
         """Return `self == other`."""
         if isinstance(other, RelativeJSONPointer):
             return (self.up == other.up and
@@ -353,7 +363,7 @@ class RelativeJSONPointer:
 
     def __repr__(self) -> str:
         """Return `repr(self)`."""
-        return f'RelativeJSONPointer({str(self)!r})'
+        return f'{self.__class__.__name__}({str(self)!r})'
 
     def evaluate(self, document: JSON) -> Union[int, str, JSON]:
         """Return the value within `document` at the location referenced by `self`.

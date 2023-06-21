@@ -1,7 +1,7 @@
 Changelog
 =========
 
-v0.11.1 (in development)
+v0.12.0 (in development)
 ------------------------
 Features:
 
@@ -9,6 +9,13 @@ Features:
 * ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
   the exceptions that they use, which can be overidden in subclasses
 * Cached properties for accessing document and resource root schemas from subschemas
+
+Experimental:
+
+* Most classes now have class attributes indicating what related classes and exceptions
+  to instantiate, and use ``type(self)()`` or ``cls()`` to instantiate instances of
+  the same type as themselves.  This allows coordinated subclasses to work together.
+  The exact mechanism of supporting this (class attributes) is subject to change.
 
 
 v0.11.0 (2023-06-03)
