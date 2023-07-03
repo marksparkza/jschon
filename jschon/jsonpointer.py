@@ -81,7 +81,7 @@ class JSONPointer(Sequence[str]):
     _json_pointer_re = re.compile(JSON_POINTER_RE)
     _array_index_re = re.compile(JSON_INDEX_RE)
 
-    def __new__(cls, *values: Union[str, Iterable[str]]) -> Type[JSONPointer]:
+    def __new__(cls, *values: Union[str, Iterable[str]]) -> JSONPointer:
         """Create and return a new :class:`JSONPointer` instance, constructed by
         the concatenation of the given `values`.
 
@@ -115,7 +115,7 @@ class JSONPointer(Sequence[str]):
         ...
 
     @overload
-    def __getitem__(self, index: slice) -> Type[JSONPointer]:
+    def __getitem__(self, index: slice) -> JSONPointer:
         ...
 
     def __getitem__(self, index):
@@ -131,14 +131,14 @@ class JSONPointer(Sequence[str]):
         return len(self._keys)
 
     @overload
-    def __truediv__(self, suffix: str) -> Type[JSONPointer]:
+    def __truediv__(self, suffix: str) -> JSONPointer:
         ...
 
     @overload
-    def __truediv__(self, suffix: Iterable[str]) -> Type[JSONPointer]:
+    def __truediv__(self, suffix: Iterable[str]) -> JSONPointer:
         ...
 
-    def __truediv__(self, suffix) -> Type[JSONPointer]:
+    def __truediv__(self, suffix) -> JSONPointer:
         """Return `self / suffix`."""
         if isinstance(suffix, str):
             return self.__class__(self, (suffix,))
@@ -146,13 +146,13 @@ class JSONPointer(Sequence[str]):
             return self.__class__(self, suffix)
         return NotImplemented
 
-    def __eq__(self, other: Type[JSONPointer]) -> bool:
+    def __eq__(self, other: JSONPointer) -> bool:
         """Return `self == other`."""
         if isinstance(other, JSONPointer):
             return self._keys == other._keys
         return NotImplemented
 
-    def __le__(self, other: Type[JSONPointer]) -> bool:
+    def __le__(self, other: JSONPointer) -> bool:
         """Return `self <= other`.
 
         Test whether self is a prefix of other, that is,
@@ -162,7 +162,7 @@ class JSONPointer(Sequence[str]):
             return self._keys == other._keys[:len(self._keys)]
         return NotImplemented
 
-    def __lt__(self, other: Type[JSONPointer]) -> bool:
+    def __lt__(self, other: JSONPointer) -> bool:
         """Return `self < other`.
 
         Test whether self is a proper prefix of other, that is,
@@ -221,7 +221,7 @@ class JSONPointer(Sequence[str]):
         return resolve(document, collections.deque(self._keys))
 
     @classmethod
-    def parse_uri_fragment(cls, value: str) -> Type[JSONPointer]:
+    def parse_uri_fragment(cls, value: str) -> JSONPointer:
         """Return a new :class:`JSONPointer` constructed from the :rfc:`6901`
         string obtained by decoding `value`.
 
@@ -295,8 +295,8 @@ class RelativeJSONPointer:
             *,
             up: int = 0,
             over: int = 0,
-            ref: Union[Type[JSONPointer], Literal['#'], Literal['']] = '',
-    ) -> Type[RelativeJSONPointer]:
+            ref: Union[JSONPointer, Literal['#'], Literal['']] = '',
+    ) -> RelativeJSONPointer:
         """Create and return a new :class:`RelativeJSONPointer` instance.
 
         :param value: a relative JSON pointer-conformant string; if `value` is
@@ -342,7 +342,7 @@ class RelativeJSONPointer:
 
         return self
 
-    def __eq__(self, other: Type[RelativeJSONPointer]) -> bool:
+    def __eq__(self, other: RelativeJSONPointer) -> bool:
         """Return `self == other`."""
         if isinstance(other, RelativeJSONPointer):
             return (self.up == other.up and
