@@ -232,6 +232,35 @@ class JSONSchema(JSON):
             parent = parent.parent
 
     @cached_property
+    def resource_rootschema(self) -> JSONSchema:
+        """The :class:`JSONSchema` at the root of the containing resource.
+
+        This is the nearest ancestor (including `self`) containing ``"$id"``,
+        or if none exist, it is the same as `self.document_rootschema`.
+        """
+        if '$id' in self.keywords:
+            return self
+        ancestor = self
+        while ancestor.parentschema:
+            ancestor = ancestor.parentschema
+            if '$id' in ancestor.keywords:
+                return ancestor
+        return ancestor
+
+    @cached_property
+    def document_rootschema(self) -> JSONSchema:
+        """The :class:`JSONSchema` at the root of the entire document.
+
+        If no ancestor schemas contain ``"$id"``, this is the same as
+        `self.resource_rootschema`.  If this schema has no `self.parentschema`,
+        this method returns `self`.
+        """
+        ancestor = self
+        while ancestor.parentschema:
+            ancestor = ancestor.parentschema
+        return ancestor
+
+    @cached_property
     def metaschema(self) -> Metaschema:
         """The schema's :class:`~jschon.vocabulary.Metaschema`."""
         if (uri := self.metaschema_uri) is None:

@@ -45,6 +45,51 @@ def test_invalid_schema(example):
     assert schema.validate().valid is False
 
 
+@pytest.fixture
+def weird_parent_schema(catalog):
+    return JSON(
+        {
+            "foo": {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$defs": {
+                    "a": {
+                        "$id": "https://example.com/whatever",
+                        "$defs": {
+                            "b": {
+                                "properties": {
+                                    "c": {},
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        itemclass=JSONSchema,
+        catalog=catalog,
+    )
+
+
+def test_document_rootschema(weird_parent_schema):
+    wps = weird_parent_schema
+    assert wps['foo'].document_rootschema is wps['foo']
+    assert wps['foo']['$defs']['a'].document_rootschema is wps['foo']
+    assert wps['foo']['$defs']['a']['$defs']['b'] \
+        .document_rootschema is wps['foo']
+    assert wps['foo']['$defs']['a']['$defs']['b']['properties']['c'] \
+        .document_rootschema is wps['foo']
+
+
+def test_resource_rootschema(weird_parent_schema):
+    wps = weird_parent_schema
+    assert wps['foo'].resource_rootschema is wps['foo']
+    assert wps['foo']['$defs']['a'].resource_rootschema is wps['foo']['$defs']['a']
+    assert wps['foo']['$defs']['a']['$defs']['b'] \
+        .resource_rootschema is wps['foo']['$defs']['a']
+    assert wps['foo']['$defs']['a']['$defs']['b']['properties']['c'] \
+        .resource_rootschema is wps['foo']['$defs']['a']
+
+
 def assert_keyword_order(keyword_list, keyword_pairs):
     for (dependency, dependent) in keyword_pairs:
         try:
