@@ -208,6 +208,19 @@ def test_remote_source(
         new_catalog.load_json(URI(f'{base_uri}baz/quuz'))
 
 
+def test_rewriting_source_map_frozen():
+    rewrite_map = {'a': 1, 'b': 2}
+    source = RewritingLocalSource(
+        pathlib.Path('.').resolve(),
+        rewrite_map=rewrite_map,
+    )
+    original_map = rewrite_map.copy()
+    del rewrite_map['a']
+
+    assert source._rewrite_map != rewrite_map
+    assert source._rewrite_map == original_map
+
+
 @pytest.mark.parametrize('base_uri', [
     '//example.com/foo/bar/',  # no scheme
     'http://Example.com/foo/bar/',  # not normalized

@@ -104,7 +104,8 @@ class RewritingSourceMixin(Source):
             callables used in this way should return the original
             value if they do not understand how to rewrite it
         """
-        self._rewrite_map = rewrite_map or {}
+        # Make a copy to avoid unexpected changes
+        self._rewrite_map = dict(rewrite_map) if rewrite_map else {}
         self._rewrite_call = rewrite_call
         super().__init__(*args, **kwargs)
 
