@@ -472,3 +472,16 @@ def test_json_literals():
         "bar": True,
         "baz": False
     })
+
+
+def test_document_root():
+    root = JSON({
+        'a': [42, True, None],
+        'b': 'c',
+    })
+    assert root.document_root is root
+    assert root['a'].document_root is root
+    assert root['a'][0].document_root is root
+    assert root['a'][1].document_root is root
+    assert root['a'][2].document_root is root
+    assert root['b'].document_root is root
