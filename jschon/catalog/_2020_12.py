@@ -11,12 +11,12 @@ from jschon.vocabulary.validation import *
 
 def initialize(catalog: Catalog):
     catalog.add_uri_source(
-        URI('https://json-schema.org/draft/2020-12/'),
+        catalog._json_schema_cls._uri_cls('https://json-schema.org/draft/2020-12/'),
         LocalSource(pathlib.Path(__file__).parent / 'json-schema-2020-12', suffix='.json'),
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/core"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
         IdKeyword,
@@ -29,7 +29,7 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/applicator"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
         OneOfKeyword,
@@ -48,13 +48,13 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
         UnevaluatedItemsKeyword,
         UnevaluatedPropertiesKeyword,
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/validation"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
         ConstKeyword,
@@ -78,12 +78,12 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
         FormatKeyword,
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/meta-data"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
         DefaultKeyword,
@@ -94,19 +94,19 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2020-12/vocab/content"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
         ContentSchemaKeyword,
     )
 
     catalog.create_metaschema(
-        URI("https://json-schema.org/draft/2020-12/schema"),
-        URI("https://json-schema.org/draft/2020-12/vocab/core"),
-        URI("https://json-schema.org/draft/2020-12/vocab/applicator"),
-        URI("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
-        URI("https://json-schema.org/draft/2020-12/vocab/validation"),
-        URI("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
-        URI("https://json-schema.org/draft/2020-12/vocab/meta-data"),
-        URI("https://json-schema.org/draft/2020-12/vocab/content"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/schema"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/core"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/applicator"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/unevaluated"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/validation"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/format-annotation"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/meta-data"),
+        catalog._json_schema_cls._uri_cls("https://json-schema.org/draft/2020-12/vocab/content"),
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import deque
 from contextlib import contextmanager
 from functools import cached_property
-from typing import Any, ContextManager, Dict, Hashable, Iterator, Mapping, Optional, TYPE_CHECKING, Tuple, Type, Union
+from typing import Any, ClassVar, ContextManager, Dict, Hashable, Iterator, Mapping, Optional, TYPE_CHECKING, Tuple, Type, Union
 from uuid import uuid4
 
 from jschon.exceptions import JSONSchemaError
@@ -23,6 +23,25 @@ __all__ = [
 
 class JSONSchema(JSON):
     """JSON schema document model."""
+
+    # Note that _json_pointer_cls is set in the JSON base class
+    _json_schema_exc: ClassVar[Type[JSONSchemaError]] = JSONSchemaError
+    """Associated :class:`JSONSchemaError` subclass for general exceptions."""
+
+    _uri_cls: ClassVar[Type[URI]] = URI
+    """Associated :class:`URI` subclass for identification and loading.
+
+    This class is used for schema and vocabulary lookups in the
+    :class:`jschon.catalog.Catalog` and in keyword implementations.
+    """
+
+    _catalog_cls: ClassVar[Type[Catalog]]
+    """Associated :class:`Catalog` subclass for registering and loading."""
+
+    @classmethod
+    def _set_catalog_cls(cls):
+        from jschon.catalog import Catalog
+        cls._catalog_cls = Catalog
 
     def __init__(
             self,
@@ -50,10 +69,12 @@ class JSONSchema(JSON):
         :param key: the index of the schema within its parent; used internally
             when creating a subschema
         """
-        from jschon.catalog import Catalog
+        cls = type(self)
+        if not hasattr(cls, '_catalog_cls'):
+            self._set_catalog_cls()
 
-        if not isinstance(catalog, Catalog):
-            catalog = Catalog.get_catalog(catalog)
+        if not isinstance(catalog, self._catalog_cls):
+            catalog = self._catalog_cls.get_catalog(catalog)
 
         self.catalog: Catalog = catalog
         """The catalog in which the schema is cached."""
@@ -103,7 +124,7 @@ class JSONSchema(JSON):
             self.data = {}
 
             if self.parent is None and self.uri is None:
-                self.uri = URI(f'urn:uuid:{uuid4()}')
+                self.uri = self._uri_cls(f'urn:uuid:{uuid4()}')
 
             self._bootstrap(value)
 
@@ -264,7 +285,9 @@ class JSONSchema(JSON):
     def metaschema(self) -> Metaschema:
         """The schema's :class:`~jschon.vocabulary.Metaschema`."""
         if (uri := self.metaschema_uri) is None:
-            raise JSONSchemaError("The schema's metaschema URI has not been set")
+            raise self._json_schema_exc(
+                "The schema's metaschema URI has not been set",
+            )
 
         return self.catalog.get_metaschema(uri)
 
@@ -333,9 +356,11 @@ class JSONSchema(JSON):
 
             if isinstance(node, JSONSchema) and node._uri is not None:
                 if fragment := node._uri.fragment:
-                    relpath = JSONPointer.parse_uri_fragment(fragment) / keys
+                    relpath = self._json_pointer_cls.parse_uri_fragment(
+                        fragment,
+                    ) / keys
                 else:
-                    relpath = JSONPointer(keys)
+                    relpath = self._json_pointer_cls(keys)
 
                 return node._uri.copy(fragment=relpath.uri_fragment())
 
@@ -389,12 +414,15 @@ class Result:
         self._refschema: Optional[JSONSchema] = None
 
         if parent is None:
-            self.path = JSONPointer()
-            self.relpath = JSONPointer()
+            self.path = self.schema._json_pointer_cls()
+            self.relpath = self.schema._json_pointer_cls()
             self._globals = {}
         else:
             self.path = parent.path / key
-            self.relpath = parent.relpath / key if schema is parent.schema else JSONPointer((key,))
+            self.relpath = (
+                parent.relpath / key if schema is parent.schema
+                else self.schema._json_pointer_cls((key,))
+            )
             self._globals = None
 
     @contextmanager
@@ -507,7 +535,9 @@ class Result:
 
         if (schema_uri := self.schema.canonical_uri) is not None:
             if fragment := schema_uri.fragment:
-                relpath = JSONPointer.parse_uri_fragment(fragment) / self.relpath
+                relpath = self.schema._json_pointer_cls.parse_uri_fragment(
+                    fragment,
+                ) / self.relpath
             else:
                 relpath = self.relpath
             return schema_uri.copy(fragment=relpath.uri_fragment())

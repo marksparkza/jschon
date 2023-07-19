@@ -29,8 +29,8 @@ class JPRefError(JSONPointerReferenceError):
 
 
 class JPtr(JSONPointer):
-    malformed_exc = JPMalError
-    reference_exc = JPRefError
+    _malformed_exc = JPMalError
+    _reference_exc = JPRefError
 
 
 class RJPMalError(RelativeJSONPointerMalformedError):
@@ -42,9 +42,9 @@ class RJPRefError(RelativeJSONPointerReferenceError):
 
 
 class RJPtr(RelativeJSONPointer):
-    malformed_exc = RJPMalError
-    reference_exc = RJPRefError
-    json_pointer_class = JPtr
+    _malformed_exc = RJPMalError
+    _reference_exc = RJPRefError
+    _json_pointer_cls = JPtr
 
 
 ##################### End subclasses #########################
@@ -100,9 +100,9 @@ def test_create_jsonpointer(jp_cls: Type[JSONPointer], values: List[Union[str, L
 
 @pytest.mark.parametrize('jp_cls', (JSONPointer, JPtr))
 def test_malformed_jsonpointer(jp_cls):
-    with pytest.raises(jp_cls.malformed_exc) as exc_info:
+    with pytest.raises(jp_cls._malformed_exc) as exc_info:
         jp_cls('0/foo')
-    assert exc_info.type == jp_cls.malformed_exc
+    assert exc_info.type == jp_cls._malformed_exc
 
 
 @pytest.mark.parametrize('jp_cls', (JSONPointer, JPtr))
@@ -144,24 +144,24 @@ def test_evaluate_jsonpointer(jp_cls, value, testkey):
         assert jp_cls(pointer).evaluate(JSON(value)) == target
 
     if isinstance(value, list):
-        with pytest.raises(jp_cls.reference_exc) as exc_info:
+        with pytest.raises(jp_cls._reference_exc) as exc_info:
             jp_cls(f'/{len(value)}').evaluate(value)
-        assert exc_info.type == jp_cls.reference_exc
-        with pytest.raises(jp_cls.reference_exc) as exc_info:
+        assert exc_info.type == jp_cls._reference_exc
+        with pytest.raises(jp_cls._reference_exc) as exc_info:
             jp_cls('/-').evaluate(value)
-        assert exc_info.type == jp_cls.reference_exc
-        with pytest.raises(jp_cls.reference_exc) as exc_info:
+        assert exc_info.type == jp_cls._reference_exc
+        with pytest.raises(jp_cls._reference_exc) as exc_info:
             jp_cls('/').evaluate(value)
-        assert exc_info.type == jp_cls.reference_exc
+        assert exc_info.type == jp_cls._reference_exc
     elif isinstance(value, dict):
         if testkey not in value:
-            with pytest.raises(jp_cls.reference_exc) as exc_info:
+            with pytest.raises(jp_cls._reference_exc) as exc_info:
                 jp_cls(f'/{jsonpointer_escape(testkey)}').evaluate(value)
-            assert exc_info.type == jp_cls.reference_exc
+            assert exc_info.type == jp_cls._reference_exc
     else:
-        with pytest.raises(jp_cls.reference_exc) as exc_info:
+        with pytest.raises(jp_cls._reference_exc) as exc_info:
             jp_cls(f'/{jsonpointer_escape(str(value))}').evaluate(value)
-        assert exc_info.type == jp_cls.reference_exc
+        assert exc_info.type == jp_cls._reference_exc
 
 
 @given(jsonpointer, jsonpointer)
@@ -202,8 +202,8 @@ def test_create_relative_jsonpointer(rjp_cls, value):
     assert str(r1) == value
     assert eval(repr(r1)) == r1
     if type(kwargs['ref']) == JSONPointer:
-        assert type(r1.path) == rjp_cls.json_pointer_class
-        assert type(r2.path) == rjp_cls.json_pointer_class
+        assert type(r1.path) == rjp_cls._json_pointer_cls
+        assert type(r2.path) == rjp_cls._json_pointer_cls
 
     oldkwargs = copy(kwargs)
     if up == '0':
@@ -218,9 +218,9 @@ def test_create_relative_jsonpointer(rjp_cls, value):
 
 @pytest.mark.parametrize('rjp_cls', (RelativeJSONPointer, RJPtr))
 def test_malformed_relative_jsonpointer(rjp_cls):
-    with pytest.raises(rjp_cls.malformed_exc) as exc_info:
+    with pytest.raises(rjp_cls._malformed_exc) as exc_info:
         rjp_cls('/bar')
-    assert exc_info.type == rjp_cls.malformed_exc
+    assert exc_info.type == rjp_cls._malformed_exc
 
 
 # Examples from:
@@ -261,9 +261,9 @@ def test_evaluate_relative_jsonpointer(jp_cls, rjp_cls, data, start, ref, result
     if result == '<data>':
         result = data
     elif result == '<fail>':
-        with pytest.raises(rjp_cls.reference_exc) as exc_info:
+        with pytest.raises(rjp_cls._reference_exc) as exc_info:
             ref.evaluate(node)
-        assert exc_info.type == rjp_cls.reference_exc
+        assert exc_info.type == rjp_cls._reference_exc
         return
 
     value = ref.evaluate(node)

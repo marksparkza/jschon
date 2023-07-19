@@ -27,9 +27,12 @@ class SchemaKeyword(Keyword):
         super().__init__(parentschema, value)
 
         try:
-            (uri := URI(value)).validate(require_scheme=True, require_normalized=True)
+            (uri := parentschema._uri_cls(value)).validate(
+                require_scheme=True,
+                require_normalized=True,
+            )
         except URIError as e:
-            raise JSONSchemaError from e
+            raise parentschema._json_schema_exc from e
 
         parentschema.metaschema_uri = uri
 
@@ -44,22 +47,25 @@ class VocabularyKeyword(Keyword):
         if not isinstance(parentschema, Metaschema):
             return
 
-        if (core_vocab_uri := str(parentschema.core_vocabulary.uri)) not in value or \
-                value[core_vocab_uri] is not True:
-            raise JSONSchemaError(f'The "$vocabulary" keyword must list the core vocabulary with a value of true')
+        if (
+            core_vocab_uri := str(parentschema.core_vocabulary.uri)
+        ) not in value or (
+            value[core_vocab_uri] is not True
+        ):
+            raise parentschema._json_schema_exc(f'The "$vocabulary" keyword must list the core vocabulary with a value of true')
 
         for vocab_uri, vocab_required in value.items():
             try:
-                (vocab_uri := URI(vocab_uri)).validate(require_scheme=True, require_normalized=True)
+                (vocab_uri := parentschema._uri_cls(vocab_uri)).validate(require_scheme=True, require_normalized=True)
             except URIError as e:
-                raise JSONSchemaError from e
+                raise parentschema._json_schema_exc from e
 
             try:
                 vocabulary = parentschema.catalog.get_vocabulary(vocab_uri)
                 parentschema.kwclasses.update(vocabulary.kwclasses)
             except CatalogError:
                 if vocab_required:
-                    raise JSONSchemaError(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
+                    raise parentschema._json_schema_exc(f"The metaschema requires an unrecognized vocabulary '{vocab_uri}'")
 
 
 class IdKeyword(Keyword):
@@ -69,12 +75,14 @@ class IdKeyword(Keyword):
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
 
-        (uri := URI(value)).validate(allow_non_empty_fragment=False)
+        (uri := parentschema._uri_cls(value)).validate(
+            allow_non_empty_fragment=False,
+        )
         if not uri.is_absolute():
             if (base_uri := parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
-                raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
+                raise parentschema._json_schema_exc(f'No base URI against which to resolve the "$id" value "{value}"')
 
         parentschema.uri = uri
 
@@ -87,12 +95,12 @@ class RefKeyword(Keyword):
         self.refschema = None
 
     def resolve(self) -> None:
-        uri = URI(self.json.data)
+        uri = self.parentschema._uri_cls(self.json.data)
         if not uri.has_absolute_base():
             if (base_uri := self.parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
-                raise JSONSchemaError(f'No base URI against which to resolve the "$ref" value "{uri}"')
+                raise self.parentschema._json_schema_exc(f'No base URI against which to resolve the "$ref" value "{uri}"')
 
         self.refschema = self.parentschema.catalog.get_schema(
             uri, metaschema_uri=self.parentschema.metaschema_uri, cacheid=self.parentschema.cacheid
@@ -111,9 +119,9 @@ class AnchorKeyword(Keyword):
         super().__init__(parentschema, value)
 
         if (base_uri := parentschema.base_uri) is not None:
-            uri = URI(f'{base_uri}#{value}')
+            uri = parentschema._uri_cls(f'{base_uri}#{value}')
         else:
-            raise JSONSchemaError(f'No base URI for "$anchor" value "{value}"')
+            raise parentschema._json_schema_exc(f'No base URI for "$anchor" value "{value}"')
 
         parentschema.catalog.add_schema(uri, parentschema, cacheid=parentschema.cacheid)
 
@@ -124,17 +132,17 @@ class DynamicRefKeyword(Keyword):
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
 
-        self.fragment = URI(value).fragment
+        self.fragment = parentschema._uri_cls(value).fragment
         self.refschema = None
         self.dynamic = False
 
     def resolve(self) -> None:
-        uri = URI(self.json.data)
+        uri = self.parentschema._uri_cls(self.json.data)
         if not uri.has_absolute_base():
             if (base_uri := self.parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
-                raise JSONSchemaError(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
+                raise self.parentschema._json_schema_exc(f'No base URI against which to resolve the "$dynamicRef" value "{uri}"')
 
         self.refschema = self.parentschema.catalog.get_schema(
             uri, metaschema_uri=self.parentschema.metaschema_uri, cacheid=self.parentschema.cacheid
@@ -152,7 +160,7 @@ class DynamicRefKeyword(Keyword):
             while target is not None:
                 if (base_uri := target.schema.base_uri) is not None and base_uri not in checked_uris:
                     checked_uris |= {base_uri}
-                    target_uri = URI(f"#{self.fragment}").resolve(base_uri)
+                    target_uri = self.parentschema._uri_cls(f"#{self.fragment}").resolve(base_uri)
                     try:
                         found_schema = self.parentschema.catalog.get_schema(
                             target_uri, cacheid=self.parentschema.cacheid
@@ -177,9 +185,9 @@ class DynamicAnchorKeyword(Keyword):
         super().__init__(parentschema, value)
 
         if (base_uri := parentschema.base_uri) is not None:
-            uri = URI(f'{base_uri}#{value}')
+            uri = parentschema._uri_cls(f'{base_uri}#{value}')
         else:
-            raise JSONSchemaError(f'No base URI for "$dynamicAnchor" value "{value}"')
+            raise parentschema._json_schema_exc(f'No base URI for "$dynamicAnchor" value "{value}"')
 
         parentschema.catalog.add_schema(uri, parentschema, cacheid=parentschema.cacheid)
 

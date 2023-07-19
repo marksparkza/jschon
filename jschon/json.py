@@ -4,7 +4,7 @@ import json
 from collections import deque
 from functools import cached_property
 from os import PathLike
-from typing import Any, Dict, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Type, Union
+from typing import Any, ClassVar, Dict, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Type, Union
 
 from jschon.exceptions import JSONError, JSONPointerError
 from jschon.jsonpointer import JSONPointer
@@ -33,6 +33,12 @@ false = False
 
 class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
     """An implementation of the JSON data model."""
+
+    _json_pointer_cls: ClassVar[Type[JSONPointer]] = JSONPointer
+    """Associated :class:`JSONPointer` subclass for :attr:`path` """
+
+    _json_exc: ClassVar[Type[JSONError]] = JSONError
+    """Associated :class:`JSONError` subclass for general exception usage."""
 
     @classmethod
     def loadf(cls, path: Union[str, PathLike], **kwargs: Any) -> JSON:
@@ -158,7 +164,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         while node.parent is not None:
             keys.appendleft(node.key)
             node = node.parent
-        return JSONPointer(keys)
+        return self._json_pointer_cls(keys)
 
     @cached_property
     def value(self) -> JSONCompatible:
@@ -345,14 +351,14 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             self._invalidate_value()
             return
 
-        if not isinstance(path, JSONPointer):
-            path = JSONPointer(path)
+        if not isinstance(path, self._json_pointer_cls):
+            path = self._json_pointer_cls(path)
 
         try:
             target_parent: JSON = path[:-1].evaluate(self)
             target_key = path[-1]
         except JSONPointerError as e:
-            raise JSONError(f"Parent node must exist at '{path[:-1]}'") from e
+            raise self._json_exc(f"Parent node must exist at '{path[:-1]}'") from e
 
         if target_parent.type == 'array':
             try:
@@ -363,7 +369,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
                 else:
                     raise ValueError
             except ValueError:
-                raise JSONError(f'Invalid array index {target_key}')
+                raise self._json_exc(f'Invalid array index {target_key}')
 
             target_parent.insert(target_index, obj)
 
@@ -371,7 +377,7 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             target_parent[target_key] = obj
 
         else:
-            raise JSONError(f"Expecting an array or object at '{target_parent.path}'")
+            raise self._json_exc(f"Expecting an array or object at '{target_parent.path}'")
 
     def remove(self, path: Union[str, JSONPointer]) -> None:
         """Remove the instance at `path` relative to `self`.
@@ -394,13 +400,13 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             self._invalidate_value()
             return
 
-        if not isinstance(path, JSONPointer):
-            path = JSONPointer(path)
+        if not isinstance(path, self._json_pointer_cls):
+            path = self._json_pointer_cls(path)
 
         try:
             target: JSON = path.evaluate(self)
         except JSONPointerError as e:
-            raise JSONError(f"Target must exist at '{path}'") from e
+            raise self._json_exc(f"Target must exist at '{path}'") from e
 
         if target.parent.type == 'array':
             del target.parent[int(target.key)]
@@ -429,13 +435,13 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             self._invalidate_value()
             return
 
-        if not isinstance(path, JSONPointer):
-            path = JSONPointer(path)
+        if not isinstance(path, self._json_pointer_cls):
+            path = self._json_pointer_cls(path)
 
         try:
             target: JSON = path.evaluate(self)
         except JSONPointerError as e:
-            raise JSONError(f"Target must exist at '{path}'") from e
+            raise self._json_exc(f"Target must exist at '{path}'") from e
 
         if target.parent.type == 'array':
             target.parent[int(target.key)] = obj

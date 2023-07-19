@@ -4,7 +4,7 @@ import collections
 import re
 import urllib.parse
 from typing import (
-    Any, Iterable, Literal, Mapping, Sequence, Type, TYPE_CHECKING, Union, overload,
+    Any, ClassVar, Iterable, Literal, Mapping, Sequence, Type, TYPE_CHECKING, Union, overload,
 )
 
 from jschon.exc import (
@@ -72,10 +72,14 @@ class JSONPointer(Sequence[str]):
        and referred to as *keys* in the JSONPointer class.
     """
 
-    malformed_exc: Type[JSONPointerMalformedError] = JSONPointerMalformedError
+    _malformed_exc: ClassVar[Type[
+        JSONPointerMalformedError
+    ]] = JSONPointerMalformedError
     """Exception raised when the input is not a valid JSON Pointer."""
 
-    reference_exc: Type[JSONPointerReferenceError] = JSONPointerReferenceError
+    _reference_exc: ClassVar[Type[
+        JSONPointerReferenceError
+    ]] = JSONPointerReferenceError
     """Exception raised when the JSON Pointer cannot be resolved against a document."""
 
     _json_pointer_re = re.compile(JSON_POINTER_RE)
@@ -96,7 +100,7 @@ class JSONPointer(Sequence[str]):
         for value in values:
             if isinstance(value, str):
                 if not JSONPointer._json_pointer_re.fullmatch(value):
-                    raise cls.malformed_exc(f"'{value}' is not a valid JSON pointer")
+                    raise cls._malformed_exc(f"'{value}' is not a valid JSON pointer")
                 self._keys.extend(self.unescape(token) for token in value.split('/')[1:])
 
             elif isinstance(value, JSONPointer):
@@ -216,7 +220,7 @@ class JSONPointer(Sequence[str]):
             except (KeyError, IndexError):
                 pass
 
-            raise self.reference_exc(f"Path '{self}' not found in document")
+            raise self._reference_exc(f"Path '{self}' not found in document")
 
         return resolve(document, collections.deque(self._keys))
 
@@ -274,16 +278,16 @@ class JSONPointer(Sequence[str]):
 
 
 class RelativeJSONPointer:
-    malformed_exc: Type[
+    _malformed_exc: ClassVar[Type[
         RelativeJSONPointerMalformedError
-    ] = RelativeJSONPointerMalformedError
+    ]] = RelativeJSONPointerMalformedError
     """Exception raised when the input is not a valid Relative JSON Pointer."""
-    reference_exc: Type[
+    _reference_exc: ClassVar[Type[
         RelativeJSONPointerReferenceError
-    ] = RelativeJSONPointerReferenceError
+    ]] = RelativeJSONPointerReferenceError
     """Exception raised when the Relative JSON Pointer cannot be resolved against a document."""
 
-    json_pointer_class: Type[JSONPointer] = JSONPointer
+    _json_pointer_cls: ClassVar[Type[JSONPointer]] = JSONPointer
     """JSONPointer subclass used to implement the ``ref`` portion of the relative pointer."""
 
     _regex = re.compile(RELATIVE_JSON_POINTER_RE)
@@ -314,22 +318,22 @@ class RelativeJSONPointer:
 
         if value is not None:
             if not (match := cls._regex.fullmatch(value)):
-                raise cls.malformed_exc(f"'{value}' is not a valid relative JSON pointer")
+                raise cls._malformed_exc(f"'{value}' is not a valid relative JSON pointer")
 
             up, over, ref = match.group('up', 'over', 'ref')
             self.up = int(up)
             self.over = int(over) if over else 0
-            self.path = cls.json_pointer_class(ref) if ref != '#' else None
+            self.path = cls._json_pointer_cls(ref) if ref != '#' else None
 
         else:
             self.up = up
             self.over = over
-            if isinstance(ref, cls.json_pointer_class):
+            if isinstance(ref, cls._json_pointer_cls):
                 self.path = ref
             elif ref == '':
-                self.path = cls.json_pointer_class()
+                self.path = cls._json_pointer_cls()
             elif isinstance(ref, JSONPointer):
-                self.path = cls.json_pointer_class(str(ref))
+                self.path = cls._json_pointer_cls(str(ref))
             else:
                 self.path = None
 
@@ -378,25 +382,25 @@ class RelativeJSONPointer:
         node = document
         for _ in range(self.up):
             if node.parent is None:
-                raise self.reference_exc('Up too many levels')
+                raise self._reference_exc('Up too many levels')
             node = node.parent
 
         if self.over:
             if node.parent is None:
-                raise self.reference_exc('No containing node for index adjustment')
+                raise self._reference_exc('No containing node for index adjustment')
             if node.parent.type != "array":
-                raise self.reference_exc(f'Index adjustment not valid for type {node.parent.type}')
+                raise self._reference_exc(f'Index adjustment not valid for type {node.parent.type}')
             adjusted = int(node.key) + self.over
             if adjusted < 0 or adjusted >= len(node.parent):
-                raise self.reference_exc(f'Index adjustment out of range')
+                raise self._reference_exc(f'Index adjustment out of range')
             node = node.parent[adjusted]
 
         if self.index:
             if node.parent is None:
-                raise self.reference_exc('No containing node')
+                raise self._reference_exc('No containing node')
             return int(node.key) if node.parent.type == "array" else node.key
 
         try:
             return self.path.evaluate(node)
         except JSONPointerReferenceError as e:
-            raise self.reference_exc from e
+            raise self._reference_exc from e

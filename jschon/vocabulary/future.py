@@ -17,11 +17,11 @@ class IdKeyword_Next(Keyword):
     def __init__(self, parentschema: JSONSchema, value: str):
         super().__init__(parentschema, value)
 
-        (uri := URI(value)).validate(allow_fragment=False)
+        (uri := parentschema._uri_cls(value)).validate(allow_fragment=False)
         if not uri.is_absolute():
             if (base_uri := parentschema.base_uri) is not None:
                 uri = uri.resolve(base_uri)
             else:
-                raise JSONSchemaError(f'No base URI against which to resolve the "$id" value "{value}"')
+                raise parentschema._json_schema_exc(f'No base URI against which to resolve the "$id" value "{value}"')
 
         parentschema.uri = uri

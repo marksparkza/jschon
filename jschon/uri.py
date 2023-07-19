@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar, Type
+
 import rfc3986
 import rfc3986.exceptions
 import rfc3986.misc
@@ -13,6 +15,9 @@ __all__ = [
 
 
 class URI:
+    _uri_exc: ClassVar[Type[URIError]] = URIError
+    """Associated exception class."""
+
     def __init__(self, value: str) -> None:
         self._uriref = rfc3986.uri_reference(value)
 
@@ -20,7 +25,7 @@ class URI:
         return self._uriref.unsplit()
 
     def __repr__(self) -> str:
-        return f"URI({str(self)!r})"
+        return f"{self.__class__.__name__}({str(self)!r})"
 
     def __len__(self) -> int:
         return len(str(self))
@@ -63,7 +68,7 @@ class URI:
 
     def resolve(self, base_uri: URI) -> URI:
         """Produce a new URI by resolving self against the given base URI."""
-        uri = object.__new__(URI)
+        uri = object.__new__(type(self))
         uri._uriref = self._uriref.resolve_with(base_uri._uriref)
         return uri
 
@@ -81,7 +86,7 @@ class URI:
         - False/None => remove
         - Otherwise => replace
         """
-        uri = object.__new__(URI)
+        uri = object.__new__(type(self))
         uri._uriref = self._uriref.copy_with(
             scheme=rfc3986.misc.UseExisting if scheme is True else None if scheme is False else scheme,
             authority=rfc3986.misc.UseExisting if authority is True else None if authority is False else authority,
@@ -111,13 +116,13 @@ class URI:
             msg = f"'{self}' is not a valid URI"
             if require_scheme:
                 msg += " or does not contain a scheme"
-            raise URIError(msg) from e
+            raise self._uri_exc(msg) from e
 
         if require_normalized and self._uriref != self._uriref.normalize():
-            raise URIError(f"'{self}' is not normalized")
+            raise self._uri_exc(f"'{self}' is not normalized")
 
         if not allow_fragment and self._uriref.fragment is not None:
-            raise URIError(f"'{self}' has a fragment")
+            raise self._uri_exc(f"'{self}' has a fragment")
 
         if not allow_non_empty_fragment and self._uriref.fragment:
-            raise URIError(f"'{self}' has a non-empty fragment")
+            raise self._uri_exc(f"'{self}' has a non-empty fragment")
