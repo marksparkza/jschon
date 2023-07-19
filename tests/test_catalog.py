@@ -19,6 +19,7 @@ from jschon import (
     LocalSource,
     RemoteSource,
 )
+from jschon.catalog import Source
 from jschon.vocabulary import Metaschema, Keyword
 from tests import example_schema, metaschema_uri_2020_12, core_vocab_uri_2020_12
 
@@ -106,6 +107,22 @@ def test_local_source_ioerror_no_file(local_catalog):
         m.side_effect = IOError
         with pytest.raises(CatalogError, match=r'^$'):
             local_catalog.get_schema(URI('https://example.com/does-not-matter'))
+
+
+def test_default_source(local_catalog):
+    class FullURISource(Source):
+        def __call__(self, relative_path):
+            URI(relative_path).validate(require_scheme=True)
+            return {
+                "$schema": str(metaschema_uri_2020_12),
+                "$id": relative_path,
+            }
+
+    id_str = 'tag:jschon.dev,2023-03:schema'
+
+    local_catalog.add_uri_source(None, FullURISource())
+    schema = local_catalog.get_schema(URI(id_str))
+    assert schema['$id'].data == id_str
 
 
 @pytest.mark.parametrize('base_uri', [

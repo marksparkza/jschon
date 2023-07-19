@@ -90,7 +90,7 @@ class Catalog:
         self.name: str = name
         """The unique name of this :class:`Catalog` instance."""
 
-        self._uri_sources: Dict[URI, Source] = {}
+        self._uri_sources: Dict[str, Source] = {}
         self._vocabularies: Dict[URI, Vocabulary] = {}
         self._schema_cache: Dict[Hashable, Dict[URI, JSONSchema]] = {}
         self._enabled_formats: Set[str] = set()
@@ -99,23 +99,34 @@ class Catalog:
         """Return `repr(self)`."""
         return f'{self.__class__.__name__}({self.name!r})'
 
-    def add_uri_source(self, base_uri: URI, source: Source) -> None:
+    def add_uri_source(self, base_uri: Union[URI, None], source: Source) -> None:
         """Register a source for loading URI-identified JSON resources.
 
+        A base URI of ``None`` registers a default source that handles any
+        URI that does not match any registered base URI string.
+
         :param base_uri: a normalized, absolute URI - including scheme, without
-            a fragment, and ending with ``'/'``
+            a fragment, and ending with ``'/'`` or None to match complete URIs
         :param source: a :class:`Source` object
         :raise CatalogError: if `base_uri` is invalid
         """
-        try:
-            base_uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
-        except URIError as e:
-            raise CatalogError from e
+        if base_uri is None:
+            prefix = ''
+        else:
+            try:
+                base_uri.validate(
+                    require_scheme=True,
+                    require_normalized=True,
+                    allow_fragment=False,
+                )
+            except URIError as e:
+                raise CatalogError from e
 
-        if not base_uri.path or not base_uri.path.endswith('/'):
-            raise CatalogError('base_uri must end with "/"')
+            if not base_uri.path or not base_uri.path.endswith('/'):
+                raise CatalogError('base_uri must end with "/"')
+            prefix = str(base_uri)
 
-        self._uri_sources[base_uri] = source
+        self._uri_sources[prefix] = source
 
     def load_json(self, uri: URI) -> JSONCompatible:
         """Load a JSON-compatible object from the source for `uri`.
@@ -135,14 +146,14 @@ class Catalog:
 
         uristr = str(uri)
         candidates = [
-            (base_uristr, source)
-            for base_uri, source in self._uri_sources.items()
-            if uristr.startswith(base_uristr := str(base_uri))
+            (prefix, source)
+            for prefix, source in self._uri_sources.items()
+            if uristr.startswith(prefix)
         ]
         if candidates:
             candidates.sort(key=lambda c: len(c[0]), reverse=True)
-            base_uristr, source = candidates[0]
-            relative_path = uristr[len(base_uristr):]
+            prefix, source = candidates[0]
+            relative_path = uristr[len(prefix):]
             try:
                 return source(relative_path)
             except CatalogError:
