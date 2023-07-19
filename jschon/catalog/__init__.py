@@ -102,8 +102,11 @@ class Catalog:
     def add_uri_source(self, base_uri: Union[URI, None], source: Source) -> None:
         """Register a source for loading URI-identified JSON resources.
 
+        A base URI of ``None`` registers a default source that handles any
+        URI that does not match any registered base URI string.
+
         :param base_uri: a normalized, absolute URI - including scheme, without
-            a fragment, and ending with ``'/'`` or None to match all complete URIs
+            a fragment, and ending with ``'/'`` or None to match complete URIs
         :param source: a :class:`Source` object
         :raise CatalogError: if `base_uri` is invalid
         """
@@ -111,7 +114,11 @@ class Catalog:
             prefix = ''
         else:
             try:
-                base_uri.validate(require_scheme=True, require_normalized=True, allow_fragment=False)
+                base_uri.validate(
+                    require_scheme=True,
+                    require_normalized=True,
+                    allow_fragment=False,
+                )
             except URIError as e:
                 raise CatalogError from e
 
