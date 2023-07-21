@@ -1,6 +1,13 @@
 Changelog
 =========
 
+v0.12.0 (in development)
+------------------------
+Features:
+
+* "format" applies to all types
+
+
 v0.11.1 (in development)
 ------------------------
 Features:
