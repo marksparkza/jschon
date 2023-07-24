@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import ClassVar, Optional, Type
+
 import rfc3986
 import rfc3986.exceptions
 import rfc3986.misc
@@ -13,6 +15,29 @@ __all__ = [
 
 
 class URI:
+    _uri_factory: ClassVar[Optional[Type[URI]]] = None
+
+    @classmethod
+    def get(cls, value: str) -> URI:
+        """Instantiate the configured URI subclass.
+
+        See also :meth:`set_uri_factory`.
+        """
+        return cls._uri_factory(value) if cls._uri_factory else URI(value)
+
+    @classmethod
+    def set_uri_factory(cls, factory: Callable[[str], URI]) -> None:
+        """Configure how URIs are modeled.
+
+        **WARNING:** Changing the URI factory after URIs have already
+        been created can lead to unpredictable behavior, including URIs
+        failing to be detected as equal or having the same hash.
+
+        This allows configuring any callable that produces a :class:`URI`
+        subclass, including sublcasses using a different underlying library.
+        """
+        cls._uri_factory = factory
+
     def __init__(self, value: str) -> None:
         self._uriref = rfc3986.uri_reference(value)
 
@@ -20,7 +45,7 @@ class URI:
         return self._uriref.unsplit()
 
     def __repr__(self) -> str:
-        return f"URI({str(self)!r})"
+        return f"{self.__class__.__name__}({str(self)!r})"
 
     def __len__(self) -> int:
         return len(str(self))

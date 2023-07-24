@@ -12,12 +12,12 @@ from jschon.vocabulary.validation import *
 
 def initialize(catalog: Catalog):
     catalog.add_uri_source(
-        URI('https://json-schema.org/draft/2019-09/'),
+        URI.get('https://json-schema.org/draft/2019-09/'),
         LocalSource(pathlib.Path(__file__).parent / 'json-schema-2019-09', suffix='.json'),
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2019-09/vocab/core"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/core"),
         SchemaKeyword,
         VocabularyKeyword,
         IdKeyword,
@@ -30,7 +30,7 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2019-09/vocab/applicator"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/applicator"),
         AllOfKeyword,
         AnyOfKeyword,
         OneOfKeyword,
@@ -51,7 +51,7 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2019-09/vocab/validation"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/validation"),
         TypeKeyword,
         EnumKeyword,
         ConstKeyword,
@@ -75,12 +75,12 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2019-09/vocab/format"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/format"),
         FormatKeyword,
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/meta-data"),
         TitleKeyword,
         DescriptionKeyword,
         DefaultKeyword,
@@ -91,18 +91,18 @@ def initialize(catalog: Catalog):
     )
 
     catalog.create_vocabulary(
-        URI("https://json-schema.org/draft/2019-09/vocab/content"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/content"),
         ContentMediaTypeKeyword,
         ContentEncodingKeyword,
         ContentSchemaKeyword,
     )
 
     catalog.create_metaschema(
-        URI("https://json-schema.org/draft/2019-09/schema"),
-        URI("https://json-schema.org/draft/2019-09/vocab/core"),
-        URI("https://json-schema.org/draft/2019-09/vocab/applicator"),
-        URI("https://json-schema.org/draft/2019-09/vocab/validation"),
-        URI("https://json-schema.org/draft/2019-09/vocab/format"),
-        URI("https://json-schema.org/draft/2019-09/vocab/meta-data"),
-        URI("https://json-schema.org/draft/2019-09/vocab/content"),
+        URI.get("https://json-schema.org/draft/2019-09/schema"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/core"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/applicator"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/validation"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/format"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/meta-data"),
+        URI.get("https://json-schema.org/draft/2019-09/vocab/content"),
     )

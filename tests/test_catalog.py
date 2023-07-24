@@ -33,7 +33,7 @@ def local_catalog():
         name='local'
     )
     catalog.add_uri_source(
-        URI('https://example.com/'),
+        URI.get('https://example.com/'),
         LocalSource(
             pathlib.Path(__file__).parent / 'data',
             suffix='.json',
@@ -82,22 +82,22 @@ def setup_tmpdir():
 ])
 def test_local_source(base_uri, setup_tmpdir, new_catalog):
     tmpdir_path, subdir_name, jsonfile_name = setup_tmpdir
-    new_catalog.add_uri_source(URI(base_uri), LocalSource(pathlib.Path(tmpdir_path)))
-    json_doc = new_catalog.load_json(URI(f'{base_uri}{subdir_name}/{jsonfile_name}'))
+    new_catalog.add_uri_source(URI.get(base_uri), LocalSource(pathlib.Path(tmpdir_path)))
+    json_doc = new_catalog.load_json(URI.get(f'{base_uri}{subdir_name}/{jsonfile_name}'))
     assert json_doc == json_example
     # incorrect base URI
     with pytest.raises(CatalogError):
-        new_catalog.load_json(URI(f'http://example.net/{subdir_name}/{jsonfile_name}'))
+        new_catalog.load_json(URI.get(f'http://example.net/{subdir_name}/{jsonfile_name}'))
     # incorrect file name
     with pytest.raises(CatalogError):
-        new_catalog.load_json(URI(f'{base_uri}{subdir_name}/baz'))
+        new_catalog.load_json(URI.get(f'{base_uri}{subdir_name}/baz'))
 
 
 def test_local_source_file_not_found(local_catalog):
     stem = 'not-there'
     fullname = str(pathlib.Path(__file__).parent / 'data' / f'{stem}.json')
     with pytest.raises(CatalogError, match=f"'{re.escape(fullname)}'$"):
-        local_catalog.get_schema(URI(f'https://example.com/{stem}'))
+        local_catalog.get_schema(URI.get(f'https://example.com/{stem}'))
 
 
 def test_local_source_ioerror_no_file(local_catalog):
@@ -106,13 +106,13 @@ def test_local_source_ioerror_no_file(local_catalog):
         # without a filename that triggers different exception handling.
         m.side_effect = IOError
         with pytest.raises(CatalogError, match=r'^$'):
-            local_catalog.get_schema(URI('https://example.com/does-not-matter'))
+            local_catalog.get_schema(URI.get('https://example.com/does-not-matter'))
 
 
 def test_default_source(local_catalog):
     class FullURISource(Source):
         def __call__(self, relative_path):
-            URI(relative_path).validate(require_scheme=True)
+            URI.get(relative_path).validate(require_scheme=True)
             return {
                 "$schema": str(metaschema_uri_2020_12),
                 "$id": relative_path,
@@ -121,7 +121,7 @@ def test_default_source(local_catalog):
     id_str = 'tag:jschon.dev,2023-03:schema'
 
     local_catalog.add_uri_source(None, FullURISource())
-    schema = local_catalog.get_schema(URI(id_str))
+    schema = local_catalog.get_schema(URI.get(id_str))
     assert schema['$id'].data == id_str
 
 
@@ -131,16 +131,16 @@ def test_default_source(local_catalog):
     'http://example.com/foo/bar/',
 ])
 def test_remote_source(base_uri, httpserver, new_catalog):
-    new_catalog.add_uri_source(URI(base_uri), RemoteSource(URI(httpserver.url_for(''))))
+    new_catalog.add_uri_source(URI.get(base_uri), RemoteSource(URI.get(httpserver.url_for(''))))
     httpserver.expect_request('/baz/quux').respond_with_json(json_example)
-    json_doc = new_catalog.load_json(URI(f'{base_uri}baz/quux'))
+    json_doc = new_catalog.load_json(URI.get(f'{base_uri}baz/quux'))
     assert json_doc == json_example
     # incorrect base URI
     with pytest.raises(CatalogError):
-        new_catalog.load_json(URI('http://example.net/baz/quux'))
+        new_catalog.load_json(URI.get('http://example.net/baz/quux'))
     # incorrect path
     with pytest.raises(CatalogError):
-        new_catalog.load_json(URI(f'{base_uri}baz/quuz'))
+        new_catalog.load_json(URI.get(f'{base_uri}baz/quuz'))
 
 
 @pytest.mark.parametrize('base_uri', [
@@ -152,7 +152,7 @@ def test_remote_source(base_uri, httpserver, new_catalog):
 ])
 def test_uri_source_invalid_uri(base_uri, new_catalog):
     with pytest.raises(CatalogError):
-        new_catalog.add_uri_source(URI(base_uri), LocalSource('/'))
+        new_catalog.add_uri_source(URI.get(base_uri), LocalSource('/'))
 
 
 @pytest.mark.parametrize('uri', [
@@ -163,7 +163,7 @@ def test_uri_source_invalid_uri(base_uri, new_catalog):
 ])
 def test_load_json_invalid_uri(uri, new_catalog):
     with pytest.raises(CatalogError):
-        new_catalog.load_json(URI(uri))
+        new_catalog.load_json(URI.get(uri))
 
 
 @pytest.mark.parametrize('uri, is_known', [
@@ -178,18 +178,18 @@ def test_load_json_invalid_uri(uri, new_catalog):
 ])
 def test_get_vocabulary(uri, is_known, catalog):
     if is_known:
-        vocabulary = catalog.get_vocabulary(URI(uri))
+        vocabulary = catalog.get_vocabulary(URI.get(uri))
         assert vocabulary.uri == uri
     else:
         with pytest.raises(CatalogError):
-            catalog.get_vocabulary(URI(uri))
+            catalog.get_vocabulary(URI.get(uri))
 
 
 def test_create_vocabulary(catalog):
     class CustomKeyword(Keyword):
         key = 'custom'
 
-    custom_uri = URI('https://example.com/custom')
+    custom_uri = URI.get('https://example.com/custom')
     custom_vocab = catalog.create_vocabulary(custom_uri, CustomKeyword)
     assert custom_vocab.uri is custom_uri
     assert custom_vocab.kwclasses == {CustomKeyword.key: CustomKeyword}
@@ -228,7 +228,7 @@ def cached_schema(uri, schema, cacheid):
 
 
 def test_cache_independence(catalog):
-    uri = URI("http://example.com")
+    uri = URI.get("http://example.com")
     cached_schema(uri, {"const": 0}, None)  # 'default' cache
     cached_schema(uri, {"const": 1}, 'one')
     cached_schema(uri, {"const": 2}, 'two')
@@ -271,14 +271,14 @@ def test_context_manager_no_id(catalog):
 def test_del_schema_nonexistent_cache(catalog):
     dne = 'doesnotexist'
     assert dne not in catalog._schema_cache
-    assert catalog.del_schema(URI('irrelevant'), cacheid=dne) is None
+    assert catalog.del_schema(URI.get('irrelevant'), cacheid=dne) is None
     assert dne not in catalog._schema_cache
 
 
 def test_metaschema_isolation():
     # mask the metaschema with a boolean false schema, in the fubar cache
     cached_schema(metaschema_uri_2020_12, False, 'fubar')
-    uri = URI("http://example.com")
+    uri = URI.get("http://example.com")
     fubar_schema = cached_schema(uri, {"$ref": str(metaschema_uri_2020_12)}, 'fubar')
     assert fubar_schema.evaluate(JSON(True)).valid is False
 
@@ -290,7 +290,7 @@ def test_metaschema_isolation():
 
 
 def test_get_metaschema_detect_core(local_catalog):
-    uri = URI('https://example.com/meta_with_core')
+    uri = URI.get('https://example.com/meta_with_core')
     core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
 
     m = local_catalog.get_metaschema(uri)
@@ -306,7 +306,7 @@ def test_get_metaschema_detect_core(local_catalog):
 
 
 def test_get_metaschema_wrong_type(local_catalog):
-    uri = URI('https://example.com/meta_with_core')
+    uri = URI.get('https://example.com/meta_with_core')
     non_meta = local_catalog.get_schema(uri)
     local_catalog.add_schema(uri, non_meta, cacheid='__meta__')
     with pytest.raises(CatalogError, match='not a metaschema'):
@@ -314,7 +314,7 @@ def test_get_metaschema_wrong_type(local_catalog):
 
 
 def test_get_metaschema_invalid(local_catalog):
-    uri = URI('https://example.com/meta_invalid')
+    uri = URI.get('https://example.com/meta_invalid')
     with pytest.raises(CatalogError, match='metaschema is invalid'):
         local_catalog.create_metaschema(uri)
 
@@ -323,14 +323,14 @@ def test_create_metaschema_no_vocabs(local_catalog):
     class ExtraKeyword(Keyword):
         key = 'extra'
 
-    uri = URI('https://example.com/meta_no_vocabs')
+    uri = URI.get('https://example.com/meta_no_vocabs')
     core_vocab = local_catalog.get_vocabulary(core_vocab_uri_2020_12)
     applicator_vocab = local_catalog.get_vocabulary(
-        URI('https://json-schema.org/draft/2020-12/vocab/applicator')
+        URI.get('https://json-schema.org/draft/2020-12/vocab/applicator')
     )
 
     extra_vocab = local_catalog.create_vocabulary(
-        URI('https://example.com/vocab/whatever'),
+        URI.get('https://example.com/vocab/whatever'),
         ExtraKeyword,
     )
 

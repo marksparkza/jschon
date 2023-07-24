@@ -84,7 +84,7 @@ def status_data():
 @pytest.fixture(autouse=True)
 def setup_remotes(catalog):
     catalog.add_uri_source(
-        URI('http://localhost:1234/'),
+        URI.get('http://localhost:1234/'),
         LocalSource(testsuite_dir / 'remotes'),
     )
 

@@ -54,13 +54,13 @@ catalog = create_catalog('2020-12')
 # add a local source for loading the enumRef meta-schema and vocabulary
 # definition files
 catalog.add_uri_source(
-    URI("https://example.com/enumRef/"),
+    URI.get("https://example.com/enumRef/"),
     LocalSource(data_dir, suffix='.json'),
 )
 
 # implement the enumRef vocabulary using the EnumRefKeyword class
 catalog.create_vocabulary(
-    URI("https://example.com/enumRef"),
+    URI.get("https://example.com/enumRef"),
     EnumRefKeyword,
 )
 

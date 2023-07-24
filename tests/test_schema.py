@@ -216,7 +216,7 @@ id_example = {
 def test_base_uri(ptr: str, base_uri: str):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
-    assert schema.base_uri == URI(base_uri)
+    assert schema.base_uri == URI.get(base_uri)
 
 
 @pytest.mark.parametrize('ptr, uri, canonical', [
@@ -239,7 +239,7 @@ def test_base_uri(ptr: str, base_uri: str):
 def test_uri(ptr: str, uri: str, canonical: bool, catalog):
     rootschema = JSONSchema(id_example, metaschema_uri=metaschema_uri_2020_12)
     schema: JSONSchema = JSONPointer.parse_uri_fragment(ptr[1:]).evaluate(rootschema)
-    assert schema == catalog.get_schema(uri := URI(uri))
+    assert schema == catalog.get_schema(uri := URI.get(uri))
     if canonical:
         # 'canonical' is as per the JSON Schema spec; however, we skip testing of
         # anchored URIs since we have only one way to calculate a schema's canonical URI

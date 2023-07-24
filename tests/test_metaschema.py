@@ -28,14 +28,14 @@ def test_metaschema_no_core(vocab_data):
     if vocab_data:
         metaschema_data['$vocabulary'] = vocab_data
         for vocab in vocab_data:
-            catalog.create_vocabulary(URI(vocab))
+            catalog.create_vocabulary(URI.get(vocab))
 
     with pytest.raises(JSONSchemaError):
-        Metaschema(catalog, metaschema_data, uri=URI(metaschema_id))
+        Metaschema(catalog, metaschema_data, uri=URI.get(metaschema_id))
 
 def test_detect_core(catalog):
     metaschema_id = 'https://example.com/meta'
-    metaschema_uri = URI(metaschema_id)
+    metaschema_uri = URI.get(metaschema_id)
     metaschema_data = {
         '$schema': str(metaschema_uri_2020_12),
         '$id': metaschema_id,
@@ -53,7 +53,7 @@ def test_detect_core(catalog):
 
 def test_default_core(catalog):
     metaschema_id = 'https://example.com/meta'
-    metaschema_uri = URI(metaschema_id)
+    metaschema_uri = URI.get(metaschema_id)
     metaschema_data = {
         '$schema': str(metaschema_uri_2020_12),
         '$id': metaschema_id,

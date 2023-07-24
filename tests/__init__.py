@@ -1,12 +1,12 @@
 from jschon import URI
 
-metaschema_uri_2019_09 = URI("https://json-schema.org/draft/2019-09/schema")
-metaschema_uri_2020_12 = URI("https://json-schema.org/draft/2020-12/schema")
-metaschema_uri_next = URI("https://json-schema.org/draft/next/schema")
+metaschema_uri_2019_09 = URI.get("https://json-schema.org/draft/2019-09/schema")
+metaschema_uri_2020_12 = URI.get("https://json-schema.org/draft/2020-12/schema")
+metaschema_uri_next = URI.get("https://json-schema.org/draft/next/schema")
 
-core_vocab_uri_2019_09 = URI("https://json-schema.org/draft/2019-09/vocab/core")
-core_vocab_uri_2020_12 = URI("https://json-schema.org/draft/2020-12/vocab/core")
-core_vocab_uri_next = URI("https://json-schema.org/draft/next/vocab/core")
+core_vocab_uri_2019_09 = URI.get("https://json-schema.org/draft/2019-09/vocab/core")
+core_vocab_uri_2020_12 = URI.get("https://json-schema.org/draft/2020-12/vocab/core")
+core_vocab_uri_next = URI.get("https://json-schema.org/draft/next/vocab/core")
 
 example_schema = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",

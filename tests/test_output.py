@@ -433,7 +433,7 @@ def test_hierarchical_output(input, valid, catalog):
     output = schema.evaluate(JSON(input)).output('hierarchical')
     assert output['valid'] is valid
 
-    output_schema = catalog.get_schema(URI('https://json-schema.org/draft/next/output/schema'))
+    output_schema = catalog.get_schema(URI.get('https://json-schema.org/draft/next/output/schema'))
     output_validity = output_schema.evaluate(JSON(output))
     assert output_validity.valid is True
 

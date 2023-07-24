@@ -8,7 +8,7 @@ from jschon import URI
 
 @given(hp.urls())
 def test_create_uri(value):
-    uri = URI(value)
+    uri = URI.get(value)
     assert urllib.parse.unquote(str(uri)) == urllib.parse.unquote(value)
     assert eval(repr(uri)) == uri
 
@@ -17,7 +17,8 @@ example = 'http://example.com/foo?bar#baz'
 
 
 def test_uri_parts():
-    uri = URI(example)
+    uri = URI.get(example)
+    assert type(uri) is URI
     assert uri.scheme == 'http'
     assert uri.authority == 'example.com'
     assert uri.path == '/foo'
@@ -38,4 +39,20 @@ def test_uri_parts():
     (dict(authority='elpmaxe.com', path='', query=''), 'http://elpmaxe.com?#baz'),
 ])
 def test_copy_uri(kwargs, result):
-    assert URI(example).copy(**kwargs) == URI(result)
+    assert URI.get(example).copy(**kwargs) == URI.get(result)
+
+
+def test_uri_factory():
+    class URI2(URI):
+        pass
+
+    try:
+        URI.set_uri_factory(URI2)
+        uri2 = URI.get(example)
+        assert type(uri2) is URI2
+    finally:
+        # Test setting to None and also ensure that later tests in this module
+        # get the original URI class and behavior
+        URI.set_uri_factory(None)
+        original_uri = URI.get(example)
+        assert type(original_uri) is URI

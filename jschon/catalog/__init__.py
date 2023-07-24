@@ -60,7 +60,7 @@ class RemoteSource(Source):
         self.base_url = base_url
 
     def __call__(self, relative_path: str) -> JSONCompatible:
-        url = str(URI(relative_path).resolve(self.base_url))
+        url = str(URI.get(relative_path).resolve(self.base_url))
         if self.suffix:
             url += self.suffix
 
