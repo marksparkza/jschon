@@ -75,7 +75,13 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
 
         The `parent`, `key`, `itemclass` and `itemkwargs` parameters should
         typically only be used in the construction of compound :class:`JSON`
-        documents by :class:`JSON` subclasses.
+        documents by :class:`JSON` subclasses.  The use of these parameters
+        can be customized in subclasses by overriding
+        :meth:`instantiate_sequence` and :meth:`instantiate_mapping`, for
+        example if some child elemnts need to be instances of a different
+        class than others.  Child elements instantiated in this way should
+        still be instances of `itemclass` through inheritance, and
+        `itemkwargs` should be respected if at all possible.
 
         :param value: a JSON-compatible Python object
         :param parent: the parent node of the instance
@@ -148,6 +154,11 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         self,
         value: Sequence[JSONCompatible],
     ) -> Sequence[JSON]:
+        """Recursively instantiate JSON arrays.
+
+        By default, instantiate elements as :attr:`itemclass` instances,
+        passing :attr:`itemkwargs` in addition to the parent and key.
+        """
         return [
             self.itemclass(v, parent=self, key=str(i), **self.itemkwargs)
             for i, v in enumerate(value)
@@ -157,6 +168,11 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         self,
         value: Mapping[JSONCompatible],
     ) -> Mapping[JSON]:
+        """Recursively instantiate JSON objects.
+
+        By default, instantiate elements as :attr:`itemclass` instances,
+        passing :attr:`itemkwargs` in addition to the parent and key.
+        """
         return {
             k: self.itemclass(v, parent=self, key=k, **self.itemkwargs)
             for k, v in value.items()
