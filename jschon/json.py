@@ -144,13 +144,19 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
         else:
             raise TypeError(f"{value=} is not JSON-compatible")
 
-    def instantiate_sequence(self, value):
+    def instantiate_sequence(
+        self,
+        value: Sequence[JSONCompatible],
+    ) -> Sequence[JSON]:
         return [
             self.itemclass(v, parent=self, key=str(i), **self.itemkwargs)
             for i, v in enumerate(value)
         ]
 
-    def instantiate_mapping(self, value):
+    def instantiate_mapping(
+        self,
+        value: Mapping[JSONCompatible],
+    ) -> Mapping[JSON]:
         return {
             k: self.itemclass(v, parent=self, key=k, **self.itemkwargs)
             for k, v in value.items()
