@@ -69,7 +69,7 @@ class Metaschema(JSONSchema):
                 vocabularies,
             ))
             if len(possible_cores) == 1:
-                self.core_vocabulary = catalog.get_vocabulary(self._uri_cls(possible_cores[0]))
+                self.core_vocabulary = catalog.get_vocabulary(URI(possible_cores[0]))
             else:
                 raise self._json_schema_exc(
                     'Cannot determine unique known core vocabulary from '

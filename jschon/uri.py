@@ -15,9 +15,6 @@ __all__ = [
 
 
 class URI:
-    _uri_exc: ClassVar[Type[URIError]] = URIError
-    """Associated exception class."""
-
     def __init__(self, value: str) -> None:
         self._uriref = rfc3986.uri_reference(value)
 
@@ -116,13 +113,13 @@ class URI:
             msg = f"'{self}' is not a valid URI"
             if require_scheme:
                 msg += " or does not contain a scheme"
-            raise self._uri_exc(msg) from e
+            raise URIError(msg) from e
 
         if require_normalized and self._uriref != self._uriref.normalize():
-            raise self._uri_exc(f"'{self}' is not normalized")
+            raise URIError(f"'{self}' is not normalized")
 
         if not allow_fragment and self._uriref.fragment is not None:
-            raise self._uri_exc(f"'{self}' has a fragment")
+            raise URIError(f"'{self}' has a fragment")
 
         if not allow_non_empty_fragment and self._uriref.fragment:
-            raise self._uri_exc(f"'{self}' has a non-empty fragment")
+            raise URIError(f"'{self}' has a non-empty fragment")
