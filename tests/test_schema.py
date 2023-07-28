@@ -184,6 +184,8 @@ def test_keyword_dependency_resolution_2020_12(value: list):
 
 
 # https://json-schema.org/draft/2020-12/json-schema-core.html#idExamples
+# "X" has been changed to non-URI-fragment-safe ":X:" to avoid hiding
+# a bug related to URI quoting.
 id_example = {
     "$id": "https://example.com/root.json",
     "$defs": {
@@ -191,7 +193,7 @@ id_example = {
         "B": {
             "$id": "other.json",
             "$defs": {
-                "X": {"$anchor": "bar"},
+                ":X:": {"$anchor": "bar"},
                 "Y": {
                     "$id": "t/inner.json",
                     "$anchor": "bar"
@@ -209,7 +211,7 @@ id_example = {
     ('#', 'https://example.com/root.json'),
     ('#/$defs/A', 'https://example.com/root.json'),
     ('#/$defs/B', 'https://example.com/other.json'),
-    ('#/$defs/B/$defs/X', 'https://example.com/other.json'),
+    ('#/$defs/B/$defs/:X:', 'https://example.com/other.json'),
     ('#/$defs/B/$defs/Y', 'https://example.com/t/inner.json'),
     ('#/$defs/C', 'urn:uuid:ee564b8a-7a87-4125-8c96-e9f123d6766f'),
 ])
@@ -226,9 +228,9 @@ def test_base_uri(ptr: str, base_uri: str):
     ('#/$defs/A', 'https://example.com/root.json#/$defs/A', True),
     ('#/$defs/B', 'https://example.com/other.json#', True),
     ('#/$defs/B', 'https://example.com/root.json#/$defs/B', False),
-    ('#/$defs/B/$defs/X', 'https://example.com/other.json#bar', True),
-    ('#/$defs/B/$defs/X', 'https://example.com/other.json#/$defs/X', True),
-    ('#/$defs/B/$defs/X', 'https://example.com/root.json#/$defs/B/$defs/X', False),
+    ('#/$defs/B/$defs/:X:', 'https://example.com/other.json#bar', True),
+    ('#/$defs/B/$defs/:X:', 'https://example.com/other.json#/$defs/%3AX%3A', True),
+    ('#/$defs/B/$defs/:X:', 'https://example.com/root.json#/$defs/B/$defs/%3AX%3A', False),
     ('#/$defs/B/$defs/Y', 'https://example.com/t/inner.json#bar', True),
     ('#/$defs/B/$defs/Y', 'https://example.com/t/inner.json#', True),
     ('#/$defs/B/$defs/Y', 'https://example.com/other.json#/$defs/Y', False),
@@ -247,10 +249,7 @@ def test_uri(ptr: str, uri: str, canonical: bool, catalog):
             return
 
         if fragment:
-            # allow chars in the RFC3986 'sub-delims' set in the 'safe' arg,
-            # since these are allowed by the 'fragment' definition; in particular,
-            # this means we don't percent encode '$'
-            uri = uri.copy(fragment=urllib.parse.quote(fragment, safe="/!$&'()*+,;="))
+            uri = uri.copy(fragment=fragment)
         else:
             # remove empty fragment
             uri = uri.copy(fragment=False)
