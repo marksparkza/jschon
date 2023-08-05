@@ -10,6 +10,8 @@ Catalog
 * :class:`~jschon.catalog.Catalog`
 * :class:`~jschon.catalog.LocalSource`
 * :class:`~jschon.catalog.RemoteSource`
+* :class:`~jschon.catalog.RewritingLocalSource`
+* :class:`~jschon.catalog.RewritingRemoteSource`
 
 JSON
 ^^^^

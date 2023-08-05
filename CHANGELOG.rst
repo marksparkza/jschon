@@ -9,6 +9,7 @@ Features:
 * ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
   the exceptions that they use, which can be overidden in subclasses
 * Cached properties for accessing document and resource root schemas from subschemas
+* Added ``RewritingLocalSource`` and ``RewritingRemoteSource`` for complex reference mapping
 
 
 v0.11.0 (2023-06-03)

@@ -1,4 +1,4 @@
-from .catalog import Catalog, LocalSource, RemoteSource
+from .catalog import Catalog, LocalSource, RemoteSource, RewritingLocalSource, RewritingRemoteSource
 from .exceptions import CatalogError, JSONError, JSONPatchError, JSONPointerError, JSONSchemaError, URIError
 from .json import JSON, JSONCompatible
 from .jsonpatch import JSONPatch, JSONPatchOperation
@@ -18,6 +18,8 @@ __all__ = [
     'RelativeJSONPointer',
     'RemoteSource',
     'Result',
+    'RewritingLocalSource',
+    'RewritingRemoteSource',
     'URI',
     'create_catalog',
 ]
