@@ -21,7 +21,14 @@ from jschon import (
 )
 from jschon.catalog import Source
 from jschon.vocabulary import Metaschema, Keyword
-from tests import example_schema, metaschema_uri_2020_12, core_vocab_uri_2020_12
+
+from tests import (
+    example_schema,
+    metaschema_uri_2020_12,
+    core_vocab_uri_2020_12,
+    schema_bundle1,
+    schema_bundle2,
+)
 
 json_example = {"foo": "bar"}
 
@@ -218,6 +225,82 @@ def test_get_schema(example_schema_uri, ptr, is_schema, catalog):
     else:
         with pytest.raises(CatalogError):
             catalog.get_schema(uri)
+
+
+@pytest.fixture
+def dict_source():
+    class DictSource(Source):
+        schemas =  {
+            'bundle1': schema_bundle1,
+            'bundle2': schema_bundle2,
+            'control': {
+                '$schema': 'https://json-schema.org/draft/2020-12/schema',
+                '$ref': 'control-target',
+            },
+        }
+        def __call__(self, relative_path):
+            return self.schemas[relative_path]
+
+    return DictSource
+
+
+@pytest.fixture
+def deferred_catalog(dict_source):
+    deferred_catalog = create_catalog(
+        '2019-09',
+        '2020-12',
+        name='deferred',
+        resolve_references=False,
+    )
+    deferred_catalog.add_uri_source(URI('https://example.com/'), dict_source())
+
+    return deferred_catalog
+
+
+@pytest.fixture
+def bundle(deferred_catalog):
+    bundle1 = deferred_catalog.get_schema(URI('https://example.com/bundle1'), cacheid='test')
+    bundle2 = deferred_catalog.get_schema(URI('https://example.com/bundle2'), cacheid='test')
+    control = deferred_catalog.get_schema(URI('https://example.com/control'))
+
+    return deferred_catalog, bundle1, bundle2, control
+
+
+def test_deferred_ref_resolution(bundle):
+    deferred_catalog, bundle1, bundle2, control = bundle
+    assert bundle1.references_resolved is False
+    assert bundle2.references_resolved is False
+    assert control.references_resolved is False
+
+    deferred_catalog.resolve_references(cacheid='test')
+
+    assert bundle1.references_resolved is True
+    assert bundle2.references_resolved is True
+    assert control.references_resolved is False
+
+    with pytest.raises(CatalogError, match=control['$ref'].data):
+        deferred_catalog.resolve_references()
+
+
+def test_resolution_that_loads_unresolved(deferred_catalog, dict_source):
+    control = deferred_catalog.get_schema(URI('https://example.com/control'))
+    assert control.references_resolved is False
+
+    # Allow resolution of the unresolved reference in control
+    target_uri = URI('https://example.com/control-target')
+    dict_source.schemas['control-target'] = {
+        '$schema': 'https://json-schema.org/draft/2020-12/schema',
+        '$id': str(target_uri),
+    }
+    assert target_uri not in deferred_catalog._schema_cache['default']
+
+    deferred_catalog.resolve_references()
+
+    assert control.references_resolved is True
+
+    assert target_uri in deferred_catalog._schema_cache['default']
+    target = deferred_catalog.get_schema(target_uri)
+    assert target.references_resolved is True
 
 
 def cached_schema(uri, schema, cacheid):

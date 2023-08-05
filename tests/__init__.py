@@ -42,3 +42,45 @@ example_schema = {
 }
 example_valid = {"alpha": 1.1}
 example_invalid = {"november": 1.1}
+
+
+schema_bundle1 = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.com/bundle1",
+    "$defs": {
+        "a": {
+            "$id": "https://example.com/source1/a",
+            "$ref": "../source2/b#/$defs/inner",
+        },
+        "b": {
+            "$id": "https://example.com/source1/b",
+            "$dynamicAnchor": "here",
+            "type": "object",
+            "$defs": {
+                "inner": {
+                    "$dynamicRef": "#here",
+                },
+            },
+        },
+    },
+}
+schema_bundle2 = {
+    "$schema": "https://json-schema.org/draft/2019-09/schema",
+    "$id": "https://example.com/bundle2",
+    "$defs": {
+        "a": {
+            "$id": "https://example.com/source2/a",
+            "$ref": "../source1/b#/$defs/inner",
+        },
+        "b": {
+            "$id": "https://example.com/source2/b",
+            "$recursiveAnchor": True,
+            "type": "array",
+            "$defs": {
+                "inner": {
+                    "$recursiveRef": "#"
+                }
+            }
+        },
+    },
+}
