@@ -14,7 +14,7 @@ VERSION = eval(re.search(
 setup(
     name='jschon',
     version=VERSION,
-    description='A pythonic, extensible JSON Schema implementation.',
+    description='A JSON toolkit for Python developers.',
     long_description=README,
     long_description_content_type='text/x-rst',
     url='https://github.com/marksparkza/jschon',

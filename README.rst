@@ -1,14 +1,14 @@
-Welcome to jschon!
-==================
+jschon
+======
 
-|tests| |codecov| |pypi| |python| |docs| |license|
+|python| |pypi| |docs| |tests| |codecov| |license| |downloads|
 
-jschon is a pythonic and extensible implementation of the
-`JSON Schema <https://json-schema.org/>`_ specification.
+A JSON toolkit for Python developers.
 
 Features
 --------
-* JSON Schema validator implementation (drafts 2019-09, 2020-12)
+* JSON Schema validator implementation
+  (`drafts 2019-09, 2020-12 <https://json-schema.org/>`_)
 
   * Schema compilation and indexing
   * $ref loading from local and remote sources
@@ -18,7 +18,7 @@ Features
 * JSON class implementing the JSON data model
 * JSON Pointer (`RFC 6901 <https://tools.ietf.org/html/rfc6901.html>`_)
 * JSON Patch (`RFC 6902 <https://tools.ietf.org/html/rfc6902.html>`_)
-* Relative JSON Pointer (`draft <https://json-schema.org/draft/2020-12/relative-json-pointer.html>`_)
+* Relative JSON Pointer (`draft <https://datatracker.ietf.org/doc/html/draft-bhutton-relative-json-pointer-00>`_)
 
 Installation
 ------------
@@ -30,8 +30,8 @@ For remote $ref support, the requests library is required. It may be installed w
 
     pip install jschon[requests]
 
-Usage
------
+Basic usage
+-----------
 Create a JSON schema:
 
 .. code-block:: python
@@ -95,31 +95,34 @@ Generate JSON Schema-conformant output:
 
 Links
 -----
-* Documentation: https://jschon.readthedocs.io
-* GitHub repository: https://github.com/marksparkza/jschon
-* PyPI package: https://pypi.org/project/jschon
-* Online validator: https://jschon.dev
+* `Documentation <https://jschon.readthedocs.io>`_
+* `Package info <https://pypi.org/project/jschon>`_
+* `Source code <https://github.com/marksparkza/jschon>`_
 
 .. |tests| image:: https://github.com/marksparkza/jschon/actions/workflows/tests.yml/badge.svg
     :target: https://github.com/marksparkza/jschon/actions/workflows/tests.yml
-    :alt: Test Status
+    :alt: Test status
 
 .. |codecov| image:: https://codecov.io/gh/marksparkza/jschon/branch/main/graph/badge.svg
     :target: https://codecov.io/gh/marksparkza/jschon
-    :alt: Code Coverage
+    :alt: Code coverage
 
 .. |pypi| image:: https://img.shields.io/pypi/v/jschon
     :target: https://pypi.org/project/jschon
-    :alt: PyPI Package Version
+    :alt: PyPI package version
 
 .. |python| image:: https://img.shields.io/pypi/pyversions/jschon
-    :target: https://pypi.org/project/jschon
-    :alt: Python Versions
+    :target: https://www.python.org/downloads/
+    :alt: Supported Python versions
 
 .. |docs| image:: https://readthedocs.org/projects/jschon/badge/?version=latest
     :target: https://jschon.readthedocs.io/en/latest/?badge=latest
-    :alt: Documentation Status
+    :alt: Documentation status
 
 .. |license| image:: https://img.shields.io/github/license/marksparkza/jschon
     :target: https://github.com/marksparkza/jschon/blob/main/LICENSE
-    :alt: License
+    :alt: MIT license
+
+.. |downloads| image:: https://static.pepy.tech/badge/jschon
+    :target: https://pepy.tech/project/jschon
+    :alt: Total downloads

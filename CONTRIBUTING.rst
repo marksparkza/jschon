@@ -2,16 +2,24 @@
 
 Contributing
 ============
-Feature requests, questions, suggestions and bug reports are all welcome as
-`issues <https://github.com/marksparkza/jschon/issues/new/choose>`_.
+Please create an `issue <https://github.com/marksparkza/jschon/issues/new/choose>`_
+for any feature request, question, suggestion or bug report.
 
-If you wish to contribute code or help to improve the jschon documentation,
-feel free to create a pull request; an issue is not required. If the proposed
-change is complex, however, consider either creating a draft pull request
-initially or an issue to discuss the change further.
+PRs are welcome for minor fixes, doc typos and clarifications, added test coverage,
+and to address updates or omissions from supported specifications.
 
-Development setup
------------------
+PRs involving complex changes to jschon modules are unlikely to be merged
+while the development status of the library is alpha (v0.x). There are currently
+no plans for a v1.0 release. For advanced use cases, and in the spirit of open
+source software development, you are encouraged to fork and republish the
+library under any name of your choosing.
+
+jschon was originally created to solve a JSON translation problem using
+JSON Schema and Python. It is intended to provide a starting point for
+building JSON-related tools, extensions and applications.
+
+Development
+-----------
 The project uses git submodules to incorporate the
 `JSON Schema Test Suite <https://github.com/json-schema-org/JSON-Schema-Test-Suite>`_,
 as well as supported branches of the
@@ -71,6 +79,11 @@ of the test suite, jschon provides the following pytest command line options::
                         NOTE: the tests/suite_status.json is updated IN PLACE,
                         overwriting the current contents.
 
+The above options are printed under the section *JSON Schema Test Suite*
+in the output of::
+
+    pytest --help
+
 Expected failures and skipped tests
 +++++++++++++++++++++++++++++++++++
 
@@ -105,3 +118,17 @@ arguments::
 
     tox -e py310 -- --capture=tee-sys --testsuite-version=next
 
+Documentation
+-------------
+The jschon documentation is written in
+`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_.
+
+To build the docs locally, install sphinx and co::
+
+    pip install -e .[doc]
+
+In the ``docs`` directory, type::
+
+    make html
+
+The HTML pages are written to ``docs/_build/html/``.

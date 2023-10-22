@@ -1,14 +1,23 @@
 Changelog
 =========
 
-v0.11.1 (in development)
-------------------------
+v0.11.1 (2023-10-22)
+--------------------
 Features:
 
 * Allow adding a source with a base URI of ``None`` to match full URIs as the ``relative_path``
 * ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
   the exceptions that they use, which can be overidden in subclasses
 * Cached properties for accessing document and resource root schemas from subschemas
+
+Documentation:
+
+* Update project description and contributing guidelines
+
+Miscellaneous:
+
+* Test infrastructure for maintaining a detailed status report of the pass/skip/fail
+  status of all tests in the JSON Schema Test Suite
 
 
 v0.11.0 (2023-06-03)
