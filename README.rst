@@ -30,8 +30,8 @@ For remote $ref support, the requests library is required. It may be installed w
 
     pip install jschon[requests]
 
-Basic usage
------------
+Example
+-------
 Create a JSON schema:
 
 .. code-block:: python
