@@ -7,7 +7,7 @@ from importlib import import_module
 from os import PathLike
 from typing import Any, ContextManager, Dict, Hashable, Set, Union
 
-from jschon.exceptions import CatalogError, JSONPointerError, URIError
+from jschon.exc import CatalogError, JSONPointerError, URIError
 from jschon.json import JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.jsonschema import JSONSchema

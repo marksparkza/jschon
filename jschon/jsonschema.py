@@ -6,7 +6,7 @@ from functools import cached_property
 from typing import Any, ContextManager, Dict, Hashable, Iterator, Mapping, Optional, TYPE_CHECKING, Tuple, Type, Union
 from uuid import uuid4
 
-from jschon.exceptions import JSONSchemaError
+from jschon.exc import JSONSchemaError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpointer import JSONPointer
 from jschon.uri import URI

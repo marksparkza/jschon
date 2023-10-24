@@ -1,14 +1,14 @@
 import json as jsonlib
 import pathlib
+import pytest
 import tempfile
 from copy import deepcopy
-from random import randint
-
-import pytest
 from hypothesis import assume, given, strategies as hs
 from pytest_httpserver import HTTPServer
+from random import randint
 
-from jschon import JSON, JSONCompatible, JSONError, JSONPatch, JSONPointer
+from jschon import JSON, JSONCompatible, JSONPatch, JSONPointer
+from jschon.exc import JSONError
 from jschon.json import false, null, true
 from jschon.utils import json_loadf
 from tests.strategies import json, jsonflatarray, jsonflatobject, jsonleaf, jsonnumber, jsonstring

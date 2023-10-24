@@ -4,7 +4,7 @@ from copy import deepcopy
 from enum import Enum
 from typing import Dict, Iterable, List, Mapping, MutableSequence, Optional, Sequence, Union, overload
 
-from jschon.exceptions import JSONPatchError, JSONPointerError
+from jschon.exc import JSONPatchError, JSONPointerError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonpointer import JSONPointer
 

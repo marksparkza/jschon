@@ -1,6 +1,7 @@
 import pytest
 
-from jschon import URIError, JSONSchema, JSON
+from jschon import JSON, JSONSchema
+from jschon.exc import URIError
 
 
 def test_unknown_keyword_json_unwrapping():

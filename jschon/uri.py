@@ -5,7 +5,7 @@ import rfc3986.exceptions
 import rfc3986.misc
 import rfc3986.validators
 
-from jschon.exceptions import URIError
+from jschon.exc import URIError
 
 __all__ = [
     'URI',

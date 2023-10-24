@@ -1,27 +1,17 @@
+import itertools
 import json
 import pathlib
+import pytest
+import re
 import tempfile
 import uuid
-import itertools
-import re
-
-import pytest
 from unittest.mock import patch
 
-from jschon import (
-    Catalog,
-    CatalogError,
-    URI,
-    JSONPointer,
-    JSONSchema,
-    JSON,
-    create_catalog,
-    LocalSource,
-    RemoteSource,
-)
+from jschon import Catalog, JSON, JSONPointer, JSONSchema, LocalSource, RemoteSource, URI, create_catalog
 from jschon.catalog import Source
-from jschon.vocabulary import Metaschema, Keyword
-from tests import example_schema, metaschema_uri_2020_12, core_vocab_uri_2020_12
+from jschon.exc import CatalogError
+from jschon.vocabulary import Keyword, Metaschema
+from tests import core_vocab_uri_2020_12, example_schema, metaschema_uri_2020_12
 
 json_example = {"foo": "bar"}
 

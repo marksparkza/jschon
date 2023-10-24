@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import re
 import inspect
+import re
 from typing import Any, Dict, Mapping, Optional, Sequence, TYPE_CHECKING, Tuple, Type
 
+from jschon.exc import JSONSchemaError
 from jschon.json import JSON, JSONCompatible
 from jschon.jsonschema import JSONSchema, Result
-from jschon.exceptions import JSONSchemaError
 from jschon.uri import URI
 
 if TYPE_CHECKING:

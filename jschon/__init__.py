@@ -1,5 +1,4 @@
 from .catalog import Catalog, LocalSource, RemoteSource
-from .exceptions import CatalogError, JSONError, JSONPatchError, JSONPointerError, JSONSchemaError, URIError
 from .json import JSON, JSONCompatible
 from .jsonpatch import JSONPatch, JSONPatchOperation
 from .jsonpointer import JSONPointer, RelativeJSONPointer
@@ -8,15 +7,15 @@ from .uri import URI
 
 __all__ = [
     'Catalog',
+    'LocalSource',
+    'RemoteSource',
     'JSON',
     'JSONCompatible',
     'JSONPatch',
     'JSONPatchOperation',
     'JSONPointer',
-    'JSONSchema',
-    'LocalSource',
     'RelativeJSONPointer',
-    'RemoteSource',
+    'JSONSchema',
     'Result',
     'URI',
     'create_catalog',

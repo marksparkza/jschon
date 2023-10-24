@@ -6,7 +6,7 @@ from functools import cached_property
 from os import PathLike
 from typing import Any, Dict, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Type, Union
 
-from jschon.exceptions import JSONError, JSONPointerError
+from jschon.exc import JSONError, JSONPointerError
 from jschon.jsonpointer import JSONPointer
 from jschon.utils import json_dumpf, json_dumps, json_loadf, json_loadr, json_loads
 

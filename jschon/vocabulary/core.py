@@ -1,6 +1,6 @@
 from typing import Mapping
 
-from jschon.exceptions import CatalogError, JSONSchemaError, URIError
+from jschon.exc import CatalogError, JSONSchemaError, URIError
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, Result
 from jschon.uri import URI

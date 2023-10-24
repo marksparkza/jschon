@@ -1,9 +1,8 @@
 import pathlib
+import pytest
 from copy import deepcopy
 
-import pytest
-
-from jschon.exceptions import JSONPatchError
+from jschon.exc import JSONPatchError
 from jschon.jsonpatch import JSONPatch, JSONPatchOperation
 from jschon.utils import json_loadf
 

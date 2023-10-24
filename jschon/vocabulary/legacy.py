@@ -1,4 +1,4 @@
-from jschon.exceptions import JSONSchemaError
+from jschon.exc import JSONSchemaError
 from jschon.json import JSON
 from jschon.jsonschema import JSONSchema, Result
 from jschon.vocabulary import ArrayOfSubschemas, Keyword, Subschema

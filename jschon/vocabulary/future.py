@@ -1,6 +1,4 @@
-from typing import Mapping
-
-from jschon.exceptions import JSONSchemaError
+from jschon.exc import JSONSchemaError
 from jschon.jsonschema import JSONSchema
 from jschon.uri import URI
 from jschon.vocabulary import Keyword

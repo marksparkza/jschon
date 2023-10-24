@@ -1,9 +1,9 @@
 import ipaddress
-
 import pytest
 from hypothesis import given, strategies as hs
 
-from jschon import JSON, JSONPointer, JSONPointerError, JSONSchema
+from jschon import JSON, JSONPointer, JSONSchema
+from jschon.exc import JSONPointerError
 from jschon.jsonschema import Result
 from jschon.vocabulary.format import FormatKeyword, format_validator
 from tests.strategies import jsonpointer

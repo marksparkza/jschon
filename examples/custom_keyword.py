@@ -1,7 +1,8 @@
 import pathlib
 import pprint
 
-from jschon import create_catalog, URI, JSON, JSONSchema, JSONSchemaError, LocalSource
+from jschon import JSON, JSONSchema, LocalSource, URI, create_catalog
+from jschon.exc import JSONSchemaError
 from jschon.jsonschema import Result
 from jschon.vocabulary import Keyword
 
