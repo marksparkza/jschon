@@ -17,9 +17,9 @@ def pytest_addoption(parser):
     testsuite.addoption(
         "--testsuite-version",
         action="append",
-        choices=["2019-09", "2020-12", "next"],
-        help="JSON Schema version to test. The option may be repeated to test multiple versions. "
-             "(default: {2019-09,2020-12})",
+        choices=["2019-09", "2020-12", "next", "all"],
+        help="JSON Schema version to test. The option may be repeated to test multiple versions, "
+             "or the value 'all' can be used to run all versions. (default: {2019-09,2020-12})",
     )
     testsuite.addoption(
         "--testsuite-optionals",
@@ -30,6 +30,11 @@ def pytest_addoption(parser):
         "--testsuite-formats",
         action="store_true",
         help="Include format tests.",
+    )
+    testsuite.addoption(
+        "--testsuite-all",
+        action="store_true",
+        help="Include all possible JSON Schema test suite cases (all versions, optionals, and formats).",
     )
     testsuite.addoption(
         "--testsuite-file",

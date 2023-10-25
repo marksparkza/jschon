@@ -8,6 +8,8 @@ from jschon import JSON, JSONSchema, LocalSource, URI
 from jschon.utils import json_loadf
 from tests import metaschema_uri_2019_09, metaschema_uri_2020_12, metaschema_uri_next
 
+ALL_VERSIONS = ('2019-09', '2020-12', 'next')
+
 testsuite_dir = pathlib.Path(__file__).parent / 'JSON-Schema-Test-Suite'
 
 
@@ -95,9 +97,10 @@ def pytest_generate_tests(metafunc):
     testids = []
 
     gen_status_data = metafunc.config.getoption("testsuite_generate_status")
+    run_all = metafunc.config.getoption("testsuite_all")
     status_data = SuiteStatus.get_instance(metafunc, gen_status_data)
-    if gen_status_data:
-        test_versions = ('2019-09', '2020-12', 'next')
+    if gen_status_data or run_all:
+        test_versions = ALL_VERSIONS
         include_optionals = True
         include_formats = True
         test_files = []
@@ -111,6 +114,8 @@ def pytest_generate_tests(metafunc):
 
     if not test_versions:
         test_versions = ['2019-09', '2020-12']
+    elif test_versions == ['all']:
+        test_versions = ALL_VERSIONS
 
     base_dir = testsuite_dir / 'tests'
     version_dirs = {
