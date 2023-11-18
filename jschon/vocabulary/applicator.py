@@ -190,7 +190,20 @@ class ItemsKeyword(Keyword, Subschema):
 class UnevaluatedItemsKeyword(Keyword, Subschema):
     key = "unevaluatedItems"
     instance_types = "array",
-    depends_on = "prefixItems", "items", "contains", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
+    depends_on = (
+        "prefixItems",
+        "items",
+        "contains",
+        "if",
+        "then",
+        "else",
+        "allOf",
+        "anyOf",
+        "oneOf",
+        "not",
+        "$ref",
+        "$dynamicRef",
+    )
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         last_evaluated_item = -1
@@ -333,9 +346,21 @@ class AdditionalPropertiesKeyword(Keyword, Subschema):
 class UnevaluatedPropertiesKeyword(Keyword, Subschema):
     key = "unevaluatedProperties"
     instance_types = "object",
-    depends_on = "properties", "patternProperties", "additionalProperties", \
-                 "if", "then", "else", "dependentSchemas", \
-                 "allOf", "anyOf", "oneOf", "not",
+    depends_on = (
+        "properties",
+        "patternProperties",
+        "additionalProperties",
+        "if",
+        "then",
+        "else",
+        "dependentSchemas",
+        "allOf",
+        "anyOf",
+        "oneOf",
+        "not",
+        "$ref",
+        "$dynamicRef",
+    )
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         evaluated_names = set()

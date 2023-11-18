@@ -46,7 +46,7 @@ def initialize(catalog: Catalog):
         PropertiesKeyword,
         PatternPropertiesKeyword,
         AdditionalPropertiesKeyword,
-        UnevaluatedPropertiesKeyword,
+        UnevaluatedPropertiesKeyword_2019_09,
         PropertyNamesKeyword,
     )
 

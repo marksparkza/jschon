@@ -9,6 +9,7 @@ __all__ = [
     'ItemsKeyword_2019_09',
     'AdditionalItemsKeyword_2019_09',
     'UnevaluatedItemsKeyword_2019_09',
+    'UnevaluatedPropertiesKeyword_2019_09',
 ]
 
 
@@ -114,7 +115,19 @@ class AdditionalItemsKeyword_2019_09(Keyword, Subschema):
 class UnevaluatedItemsKeyword_2019_09(Keyword, Subschema):
     key = "unevaluatedItems"
     instance_types = "array",
-    depends_on = "items", "additionalItems", "if", "then", "else", "allOf", "anyOf", "oneOf", "not",
+    depends_on = (
+        "items",
+        "additionalItems",
+        "if",
+        "then",
+        "else",
+        "allOf",
+        "anyOf",
+        "oneOf",
+        "not",
+        "$ref",
+        "$recursiveRef",
+    )
 
     def evaluate(self, instance: JSON, result: Result) -> None:
         last_evaluated_item = -1
@@ -144,6 +157,53 @@ class UnevaluatedItemsKeyword_2019_09(Keyword, Subschema):
                 error += [index]
                 # reset to passed for the next iteration
                 result.pass_()
+
+        if error:
+            result.fail(error)
+        else:
+            result.annotate(annotation)
+
+
+class UnevaluatedPropertiesKeyword_2019_09(Keyword, Subschema):
+    key = "unevaluatedProperties"
+    instance_types = "object",
+    depends_on = (
+        "properties",
+        "patternProperties",
+        "additionalProperties",
+        "if",
+        "then",
+        "else",
+        "dependentSchemas",
+        "allOf",
+        "anyOf",
+        "oneOf",
+        "not",
+        "$ref",
+        "$recursiveRef",
+    )
+
+    def evaluate(self, instance: JSON, result: Result) -> None:
+        evaluated_names = set()
+        for properties_annotation in result.parent.collect_annotations(instance, "properties"):
+            evaluated_names |= set(properties_annotation)
+        for pattern_properties_annotation in result.parent.collect_annotations(instance, "patternProperties"):
+            evaluated_names |= set(pattern_properties_annotation)
+        for additional_properties_annotation in result.parent.collect_annotations(instance, "additionalProperties"):
+            evaluated_names |= set(additional_properties_annotation)
+        for unevaluated_properties_annotation in result.parent.collect_annotations(instance, "unevaluatedProperties"):
+            evaluated_names |= set(unevaluated_properties_annotation)
+
+        annotation = []
+        error = []
+        for name, item in instance.items():
+            if name not in evaluated_names:
+                if self.json.evaluate(item, result).passed:
+                    annotation += [name]
+                else:
+                    error += [name]
+                    # reset to passed for the next iteration
+                    result.pass_()
 
         if error:
             result.fail(error)

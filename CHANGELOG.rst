@@ -3,6 +3,10 @@ Changelog
 
 v0.12.0 (unreleased)
 --------------------
+Bug Fixes:
+
+* "unevaluated*" must be evaluated after reference keywords
+
 Deprecation removals:
 
 * Exception classes dropped from the top-level package API
