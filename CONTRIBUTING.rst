@@ -61,10 +61,10 @@ of the test suite, jschon provides the following pytest command line options::
                         --testsuite-optionals and --testsuite-formats to be
                         ignored.
   --testsuite-description=TESTSUITE_DESCRIPTION
-                        Run only test groups and tests whose descriptions
-                        contain the given substring. Matching is case
-                        insensitive. The option may be repeated to match
-                        alternative substrings.
+                        Run only tests where the test or test case description
+                        matches the given regular expression. Matching is case
+                        insensitive and not anchored to the start or end of
+                        string.
   --testsuite-generate-status
                         Run all possible tests from all supported versions and
                         update the tests/suite_status.json file.  If a failed

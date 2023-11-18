@@ -41,9 +41,9 @@ def pytest_addoption(parser):
     )
     testsuite.addoption(
         "--testsuite-description",
-        action="append",
-        help="Run only test groups and tests whose descriptions contain the given substring. "
-             "Matching is case insensitive. The option may be repeated to match alternative substrings.",
+        action="store",
+        help="Run only tests where the test or test case description matches the given regular "
+             "expression. Matching is case insensitive and not anchored to the start or end of string.",
     )
     testsuite.addoption(
         "--testsuite-generate-status",

@@ -1,5 +1,6 @@
 import json
 import pathlib
+import re
 import warnings
 
 import pytest
@@ -101,13 +102,15 @@ def pytest_generate_tests(metafunc):
         include_optionals = True
         include_formats = True
         test_files = []
-        test_descriptions = []
+        testsuite_description = None
     else:
         test_versions = metafunc.config.getoption("testsuite_version")
         include_optionals = metafunc.config.getoption("testsuite_optionals")
         include_formats = metafunc.config.getoption("testsuite_formats")
         test_files = metafunc.config.getoption("testsuite_file")
-        test_descriptions = metafunc.config.getoption("testsuite_description")
+        testsuite_description = metafunc.config.getoption("testsuite_description")
+
+    description_regex = re.compile(testsuite_description, re.IGNORECASE) if testsuite_description else None
 
     if not test_versions:
         test_versions = ['2019-09', '2020-12']
@@ -143,9 +146,10 @@ def pytest_generate_tests(metafunc):
             testcases = json_loadf(testfile_path)
             for testcase in testcases:
                 for test in testcase['tests']:
-                    if test_descriptions and not any(
-                            s.lower() in testcase['description'].lower() or s.lower() in test['description'].lower()
-                            for s in test_descriptions
+                    if (
+                            description_regex
+                            and description_regex.search(test['description']) is None
+                            and description_regex.search(testcase['description']) is None
                     ):
                         continue
 

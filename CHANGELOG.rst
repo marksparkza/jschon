@@ -8,6 +8,9 @@ Deprecation removals:
 * Exception classes dropped from the top-level package API
 * ``jschon.exceptions`` module renamed to ``jschon.exc``
 
+Miscellaneous:
+
+* pytest ``--testsuite-description`` option now takes a regex
 
 v0.11.1 (2023-10-22)
 --------------------
