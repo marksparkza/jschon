@@ -22,6 +22,11 @@ def pytest_addoption(parser):
              "(default: {2019-09,2020-12})",
     )
     testsuite.addoption(
+        "--testsuite-version-all",
+        action="store_true",
+        help="Test all available JSON Schema versions. Overrides --testsuite-version",
+    )
+    testsuite.addoption(
         "--testsuite-optionals",
         action="store_true",
         help="Include optional tests.",

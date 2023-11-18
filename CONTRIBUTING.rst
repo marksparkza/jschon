@@ -49,6 +49,9 @@ of the test suite, jschon provides the following pytest command line options::
   --testsuite-version={2019-09,2020-12,next}
                         JSON Schema version to test. The option may be repeated
                         to test multiple versions. (default: {2019-09,2020-12})
+  --testsuite-version-all
+                        Test all available JSON Schema versions. Overrides
+                        --testsuite-version
   --testsuite-optionals
                         Include optional tests.
   --testsuite-formats   Include format tests.

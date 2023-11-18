@@ -268,6 +268,16 @@
           "status": "xfail",
           "reason": "unsupported optional test"
         }
+      },
+      "reference internals of known non-applicator": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
       }
     },
     "optional/format/date-time.json": {
@@ -693,6 +703,10 @@
           "reason": "format assertions not supported"
         },
         "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "netmask is not a part of ipv4 address": {
           "status": "xfail",
           "reason": "format assertions not supported"
         }
@@ -1400,6 +1414,16 @@
           "status": "xfail",
           "reason": "unsupported optional test"
         }
+      },
+      "reference internals of known non-applicator": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
       }
     },
     "optional/format/date-time.json": {
@@ -1833,6 +1857,10 @@
           "reason": "format assertions not supported"
         },
         "invalid non-ASCII '\u09e8' (a Bengali 2)": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
+        },
+        "netmask is not a part of ipv4 address": {
           "status": "xfail",
           "reason": "format assertions not supported"
         }
@@ -2328,6 +2356,24 @@
           "status": "xfail",
           "reason": "draft-next support in progress"
         }
+      },
+      "multiple dynamic paths to the $dynamicRef keyword": {
+        "number list with number values": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "number list with string values": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "string list with number values": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "string list with string values": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
       }
     },
     "id.json": {
@@ -2413,6 +2459,16 @@
       },
       "unevaluatedProperties can see inside propertyDependencies": {
         "allows bar if foo = foo1": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        }
+      },
+      "unevaluatedProperties with $dynamicRef": {
+        "with no unevaluated properties": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "with unevaluated properties": {
           "status": "xfail",
           "reason": "draft-next support in progress"
         }
@@ -2694,6 +2750,16 @@
         }
       },
       "reference of an arbitrary keyword of a sub-schema": {
+        "match": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        },
+        "mismatch": {
+          "status": "xfail",
+          "reason": "unsupported optional test"
+        }
+      },
+      "reference internals of known non-applicator": {
         "match": {
           "status": "xfail",
           "reason": "unsupported optional test"
@@ -3137,6 +3203,10 @@
         "invalid non-ASCII '\u09e8' (a Bengali 2)": {
           "status": "xfail",
           "reason": "format assertions not supported"
+        },
+        "netmask is not a part of ipv4 address": {
+          "status": "xfail",
+          "reason": "format assertions not supported"
         }
       }
     },
@@ -3553,6 +3623,18 @@
         "dashes in the wrong spot": {
           "status": "xfail",
           "reason": "format assertions not supported"
+        }
+      }
+    },
+    "unevaluatedItems.json": {
+      "unevaluatedItems with $dynamicRef": {
+        "with no unevaluated items": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
+        },
+        "with unevaluated items": {
+          "status": "xfail",
+          "reason": "draft-next support in progress"
         }
       }
     }

@@ -98,22 +98,26 @@ def pytest_generate_tests(metafunc):
     gen_status_data = metafunc.config.getoption("testsuite_generate_status")
     status_data = SuiteStatus.get_instance(metafunc, gen_status_data)
     if gen_status_data:
-        test_versions = ('2019-09', '2020-12', 'next')
+        test_versions = None
+        test_all_versions = True
         include_optionals = True
         include_formats = True
         test_files = []
-        testsuite_description = None
+        test_description = None
     else:
         test_versions = metafunc.config.getoption("testsuite_version")
+        test_all_versions = metafunc.config.getoption("testsuite_version_all")
         include_optionals = metafunc.config.getoption("testsuite_optionals")
         include_formats = metafunc.config.getoption("testsuite_formats")
         test_files = metafunc.config.getoption("testsuite_file")
-        testsuite_description = metafunc.config.getoption("testsuite_description")
+        test_description = metafunc.config.getoption("testsuite_description")
 
-    description_regex = re.compile(testsuite_description, re.IGNORECASE) if testsuite_description else None
+    description_regex = re.compile(test_description, re.IGNORECASE) if test_description else None
 
-    if not test_versions:
-        test_versions = ['2019-09', '2020-12']
+    if test_all_versions:
+        test_versions = ('2019-09', '2020-12', 'next')
+    elif not test_versions:
+        test_versions = ('2019-09', '2020-12')
 
     base_dir = testsuite_dir / 'tests'
     version_dirs = {

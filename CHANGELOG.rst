@@ -15,6 +15,8 @@ Deprecation removals:
 Miscellaneous:
 
 * pytest ``--testsuite-description`` option now takes a regex
+* pytest ``--testsuite-version-all`` option added
+
 
 v0.11.1 (2023-10-22)
 --------------------
