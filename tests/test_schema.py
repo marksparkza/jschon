@@ -137,6 +137,10 @@ def test_keyword_dependency_resolution_2019_09(value: list):
         ("oneOf", "unevaluatedProperties"),
         ("not", "unevaluatedProperties"),
         ("contentMediaType", "contentSchema"),
+        ("$ref", "unevaluatedItems"),
+        ("$ref", "unevaluatedProperties"),
+        ("$recursiveRef", "unevaluatedItems"),
+        ("$recursiveRef", "unevaluatedProperties"),
     ])
 
 
@@ -180,6 +184,10 @@ def test_keyword_dependency_resolution_2020_12(value: list):
         ("oneOf", "unevaluatedProperties"),
         ("not", "unevaluatedProperties"),
         ("contentMediaType", "contentSchema"),
+        ("$ref", "unevaluatedItems"),
+        ("$ref", "unevaluatedProperties"),
+        ("$dynamicRef", "unevaluatedItems"),
+        ("$dynamicRef", "unevaluatedProperties"),
     ])
 
 

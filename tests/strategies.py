@@ -73,4 +73,7 @@ interdependent_keywords = hs.lists(hs.sampled_from([
     "not",
     "contentMediaType",
     "contentSchema",
+    "$ref",
+    "$recursiveRef",
+    "$dynamicRef",
 ]), unique=True)
