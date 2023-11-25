@@ -169,6 +169,10 @@ class JSON(MutableSequence['JSON'], MutableMapping[str, 'JSON']):
             return {key: item.value for key, item in self.data.items()}
         return self.data
 
+    @cached_property
+    def document_root(self) -> JSON:
+        return self if self.parent is None else self.parent.document_root
+
     def _invalidate_path(self) -> None:
         try:
             del self.path
