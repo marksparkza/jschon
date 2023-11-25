@@ -24,15 +24,41 @@ __all__ = [
 
 
 class Source:
+    """The base class for sources to be used with :meth:`Catalog.add_uri_source`."""
+
     def __init__(self, suffix: str = None) -> None:
+        """Initialize a :class:`Source` instance.
+
+        :param suffix: a string such as ``.json`` to be appended to the
+            ``relative_path`` parameter to the :meth:`__call__` method.
+        """
         self.suffix = suffix
 
     def __call__(self, relative_path: str) -> JSONCompatible:
+        """Invoked to load a schema from this :class:`Source`.
+
+        :param relative_path: a URI reference relative to the ``base_uri``
+            parameter with which this :class:`Source` was registered using
+            :meth:`Catalog.add_uri_source`
+        :returns: The schema contents to be passed to the
+            :class:`~jschon.jsonschema.JSONSchema` constructor
+        """
         raise NotImplementedError
 
 
 class LocalSource(Source):
+    """A :class:`Source` that loads schema from a local filesystem."""
+
     def __init__(self, base_dir: Union[str, PathLike], **kwargs: Any) -> None:
+        """Initialize a :class:`LocalSource` instance.
+
+        :param base_dir: the local directory to which the ``relative_path``
+            parameter to the :meth:`__call__` method is appended, along
+            with the :data:`suffix` string, if any, to produce the schema
+            file name
+        :param kwargs: additional parameters to be passed to the base
+            class constructor
+        """
         super().__init__(**kwargs)
         self.base_dir = base_dir
 
@@ -55,7 +81,24 @@ class LocalSource(Source):
 
 
 class RemoteSource(Source):
+    """A :class:`Source` that loads schemas over HTTP(S).
+
+    As noted in the JSON Schema Core specification, an ``http://`` or
+    ``https://`` URI does not necessarily mean that a referenced schema
+    is network-accessible, and care should be taken to avoid overloading
+    servers with requests for schemas.
+    """
+
     def __init__(self, base_url: URI, **kwargs: Any) -> None:
+        """Initialize a :class:`RemoteSource` instance.
+
+        :param base_url: a base URL against which the ``relative_path``
+            parameter to the :meth:`__call__` method is resolved, along
+            with the :data:`suffix` string, if any, to produce the schema
+            URL to retrieve
+        :param kwargs: additional parameters to be passed to the base
+            class constructor
+        """
         super().__init__(**kwargs)
         self.base_url = base_url
 
@@ -82,6 +125,12 @@ class Catalog:
 
     def __init__(self, name: str = 'catalog') -> None:
         """Initialize a :class:`Catalog` instance.
+
+        In most cases, the :func:`jschon.create_catalog` function should
+        be used instead of instantiating a :class:`Catalog` directly,
+        as it pre-populates the created catalog with the standard metaschemas
+        for the specified JSON Schema version(s).  Direct instantiation
+        is useful if only custom metaschemas will be used.
 
         :param name: a unique name for this :class:`Catalog` instance
         """
