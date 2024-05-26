@@ -3,7 +3,17 @@ jschon
 
 |python| |pypi| |docs| |tests| |codecov| |license| |downloads|
 
-A JSON toolkit for Python developers.
+An object-oriented JSON Schema implementation for Python.
+
+----
+
+**Note from the author:**
+
+Hi! I'm Mark, and this is my personal Python-powered project.
+Work on jschon is currently on hold due to other commitments.
+Development will resume as and when time allows.
+
+----
 
 Features
 --------
