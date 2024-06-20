@@ -70,6 +70,16 @@ def weird_parent_schema(catalog):
     )
 
 
+def test_document_root(weird_parent_schema):
+    wps = weird_parent_schema
+    assert wps['foo'].document_root is wps
+    assert wps['foo']['$defs']['a'].document_root is wps
+    assert wps['foo']['$defs']['a']['$defs']['b'] \
+        .document_root is wps
+    assert wps['foo']['$defs']['a']['$defs']['b']['properties']['c'] \
+        .document_root is wps
+
+
 def test_document_rootschema(weird_parent_schema):
     wps = weird_parent_schema
     assert wps['foo'].document_rootschema is wps['foo']
