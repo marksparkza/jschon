@@ -26,6 +26,8 @@ Features:
 * ``JSONPointer`` and ``RelativeJSONPointer`` now have class attributes defining
   the exceptions that they use, which can be overidden in subclasses
 * Cached properties for accessing document and resource root schemas from subschemas
+* JSON.instantiate_{sequence|mapping}() functions allow more
+  fine-grained control of JSON subclass document structure
 
 Documentation:
 
@@ -71,8 +73,6 @@ Bug Fixes:
 Documentation:
 
 * Spell 'meta-schema' consistently in tutorials and examples
-
-
 v0.10.2 (2023-04-20)
 --------------------
 Experimental:
