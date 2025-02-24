@@ -121,12 +121,38 @@ class JSONPatch(MutableSequence[JSONPatchOperation]):
             for operation in operations
         ]
 
-    def evaluate(self, document: JSONCompatible) -> JSONCompatible:
+    def evaluate(self, document: JSONCompatible, resolve_array_inserts: bool = False) -> JSONCompatible:
         """Return the result of sequentially applying all patch operations
-        to `document`, as a new document. `document` itself is not modified."""
+        to `document`, as a new document. `document` itself is not modified.
+
+        :param document: The initial value of the result.
+        :param resolve_array_inserts: When a patch operation appends a new array item
+            (path ends with "/-"), then subsequent patch operations into the new item
+            (path matches up to "/-") are modified such that "-" is replaced with the
+            actual array index. Supported for one array level only.
+        """
         result = deepcopy(document)
-        for operation in self._operations:
-            result = operation.apply(result)
+
+        if resolve_array_inserts:
+            array, ptr = None, None
+            for operation in self._operations:
+                if operation.op == PatchOp.ADD:
+                    if operation.path and operation.path[-1] == '-':
+                        array = operation.path[:-1].evaluate(result)
+                        ptr = operation.path
+                    elif array is not None and str(operation.path).startswith(str(ptr)):
+                        operation.path = ptr[:-1] / str(len(array) - 1) / operation.path[len(ptr):]
+                    else:
+                        array, ptr = None, None
+                else:
+                    array, ptr = None, None
+
+                result = operation.apply(result)
+
+        else:
+            for operation in self._operations:
+                result = operation.apply(result)
+
         return result
 
     def aslist(self) -> List[Dict[str, JSONCompatible]]:
